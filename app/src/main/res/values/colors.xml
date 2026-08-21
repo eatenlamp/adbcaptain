@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="navy_base">#0B1B2B</color>
+    <color name="navy_surface">#122A40</color>
+    <color name="teal_500">#14B8A6</color>
+    <color name="teal_200">#8DEBD9</color>
+    <color name="teal_700">#0E7C6F</color>
+    <color name="copper_500">#D4A843</color>
+    <color name="copper_200">#E9C078</color>
+    <color name="copper_700">#966C1E</color>
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>

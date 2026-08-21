@@ -1,0 +1,241 @@
+<resources>
+    <string name="app_name">ADB Captain</string>
+
+    <!-- Navigation -->
+    <string name="tab_terminal">Терминал</string>
+    <string name="tab_devices">Устройства</string>
+    <string name="tab_apps">Приложения</string>
+    <string name="tab_logcat">Логи</string>
+    <string name="tab_sideload">Установка</string>
+    <string name="tab_files">Файлы</string>
+    <string name="tab_monitor">Монитор</string>
+    <string name="tab_settings">Настройки</string>
+
+    <!-- Setup Screen -->
+    <string name="setup_required">Требуется Shizuku</string>
+    <string name="setup_description">Для работы ADB Captain необходимо запущенное приложение Shizuku. Оно позволяет выполнять команды без Root-прав.</string>
+    <string name="setup_step_1">1. Установите Shizuku из Play Store</string>
+    <string name="setup_step_2">2. Запустите сервис Shizuku</string>
+    <string name="setup_open_button">Открыть Shizuku</string>
+
+    <!-- Terminal Screen -->
+    <string name="terminal_welcome_title">Добро пожаловать в Терминал</string>
+    <string name="terminal_welcome_subtitle">Здесь вы можете выполнять ADB-команды напрямую.</string>
+    <string name="terminal_placeholder">Введите команду...</string>
+    <string name="cmd_list_apps">Список приложений</string>
+    <string name="cmd_battery_status">Статус батареи</string>
+    <string name="cmd_screen_size">Размер экрана</string>
+    <string name="cmd_device_model">Модель устройства</string>
+    <string name="cmd_free_space">Свободное место</string>
+    <string name="cmd_top_processes">Топ процессов</string>
+    <string name="cmd_event_log">Лог событий</string>
+
+    <!-- Terminal Help & History -->
+    <string name="term_history_title">История</string>
+    <string name="term_history_empty">Команд пока нет</string>
+    <string name="term_history_clear">Очистить историю</string>
+    <string name="term_history_hint">Нажмите на команду, чтобы подставить её</string>
+    <string name="term_help_title">= Помощь ADB Captain =</string>
+    <string name="term_help_intro">Этот терминал выполняет реальные команды ADB через Shizuku — root не нужен. Просто введите команду и нажмите отправить.\n\n</string>
+    <string name="term_help_commands">Частые команды:\n  pm list packages -3             пользовательские приложения\n  pm path &lt;pkg&gt;                   путь к APK\n  pm clear &lt;pkg&gt;                  очистить данные приложения\n  am force-stop &lt;pkg&gt;             остановить приложение\n  getprop ro.product.model        модель устройства\n  wm size                         размер экрана\n  dumpsys battery                 состояние батареи\n  settings get global adb_enabled проверка ADB\n  screencap -p /sdcard/s.png      скриншот\n  input keyevent KEYCODE_HOME     нажать Home\n  logcat -d -t 100                последние 100 строк лога\n\n</string>
+    <string name="term_help_features">Другие экраны:\n  Apps     управление и экспорт приложений, батч-действия\n  Devices  переключатели, батарея, перезагрузка, диагностика\n  Monitor  живой CPU / RAM / процессы\n  Logcat   живые системные логи\n  Sideload установка APK, запись экрана, макросы\n  Files    файловый менеджер\n\n</string>
+    <string name="term_help_tips">Советы:\n  введите help в любой момент, чтобы увидеть этот текст\n  нажмите на иконку часов, чтобы выбрать прошлую команду\n  история сохраняется локально (см. Настройки)</string>
+
+    <!-- Apps Screen -->
+    <string name="apps_search_placeholder">Поиск пакета...</string>
+    <string name="apps_filter_all">Все</string>
+    <string name="apps_filter_user">Пользовательские</string>
+    <string name="apps_version">Версия: %s</string>
+    <string name="apps_delete">Удалить</string>
+    <string name="apps_more">Дополнительно</string>
+    <string name="apps_force_stop">Остановить</string>
+    <string name="apps_clear_data">Очистить данные</string>
+    <string name="apps_disable">Отключить</string>
+    <string name="apps_enable">Включить</string>
+    <string name="apps_badge_disabled">Отключено</string>
+    <string name="apps_safe_to_delete">Безопасно удалить</string>
+    <string name="apps_not_safe_to_delete">КРИТИЧЕСКИ ВАЖНО</string>
+    <string name="apps_delete_if_needed">Удалить при необходимости</string>
+    <string name="apps_export_apk">Экспорт APK</string>
+    <string name="apps_exporting">Экспорт…</string>
+    <string name="apps_export_saved">APK экспортирован в %s</string>
+    <string name="apps_export_failed">Ошибка экспорта: %s</string>
+    <string name="apps_export_list">Экспорт списка</string>
+    <string name="apps_export_csv">Экспорт в CSV</string>
+    <string name="apps_export_json">Экспорт в JSON</string>
+    <string name="apps_details">Подробнее</string>
+    <string name="apps_tap_hint">Нажмите для деталей, удерживайте для выбора</string>
+    <string name="apps_close">Закрыть</string>
+    <string name="apps_selected_count">Выбрано: %d</string>
+    <string name="apps_cancel">Отмена</string>
+    <string name="apps_details_package">Пакет</string>
+    <string name="apps_details_version">Версия</string>
+    <string name="apps_details_target_sdk">Target SDK</string>
+    <string name="apps_details_min_sdk">Min SDK</string>
+    <string name="apps_details_path">Путь к APK</string>
+    <string name="apps_details_data_dir">Папка данных</string>
+    <string name="apps_details_launch_activity">Запускаемое Activity</string>
+    <string name="apps_details_permissions">Разрешения (%d)</string>
+    <string name="apps_run">Запустить</string>
+
+    <!-- Devices Screen -->
+    <string name="device_serial">Серийный номер: %s</string>
+    <string name="device_android_version">Версия Android: %1$s (API %2$d)</string>
+    <string name="device_battery_level">Заряд батареи: %d%%</string>
+    <string name="device_reboot">Перезагрузить</string>
+    <string name="device_label_unknown">Устройство (%s)</string>
+    <string name="reboot_confirm_title">Перезагрузить?</string>
+    <string name="reboot_confirm_message">Вы абсолютно уверены, что хотите перезагрузить телефон сейчас?</string>
+    <string name="reboot_confirm_yes">ПЕРЕЗАГРУЗИТЬ</string>
+    <string name="reboot_confirm_no">ОТМЕНА</string>
+    <string name="global_switches_title">Глобальные переключатели</string>
+    <string name="switch_show_touches">Показ касаний</string>
+    <string name="switch_show_touches_desc">Показывать визуальную обратную связь при касаниях</string>
+    <string name="switch_animation_scale">Скорость анимаций</string>
+    <string name="switch_animation_scale_desc">Текущая: %s</string>
+    <string name="switch_usb_debugging">USB-отладка</string>
+    <string name="switch_usb_debugging_desc">Разрешить подключение по USB-отладке</string>
+    <string name="switch_oem_unlock">Разблокировка OEM</string>
+    <string name="switch_oem_unlock_desc">Разрешить разблокировку загрузчика</string>
+    <string name="switch_wifi_adb">Wi-Fi ADB</string>
+    <string name="switch_wifi_adb_desc">Включить ADB по сети</string>
+    <string name="switch_demo_mode">Демо-режим</string>
+    <string name="switch_demo_mode_desc">Чистый статус-бар для скриншотов</string>
+    <string name="device_reboot_recovery">Recovery</string>
+    <string name="device_reboot_bootloader">Bootloader</string>
+    <string name="battery_details_title">Детали батареи</string>
+    <string name="battery_level">Заряд</string>
+    <string name="battery_status">Статус</string>
+    <string name="battery_health">Состояние</string>
+    <string name="battery_temperature">Температура</string>
+    <string name="battery_voltage">Напряжение</string>
+    <string name="battery_plugged">Питание</string>
+    <string name="battery_current">Ток: %d мА</string>
+    <string name="battery_technology">Технология: %s</string>
+    <string name="diagnostic_title">Диагностический отчёт</string>
+    <string name="diagnostic_desc">Соберите информацию об устройстве, батарее, памяти и процессах в один файл.</string>
+    <string name="diagnostic_generate">Сформировать отчёт</string>
+
+    <!-- Logcat Screen -->
+    <string name="logcat_search_placeholder">Поиск по тегу или сообщению…</string>
+    <string name="logcat_level_all">Все</string>
+    <string name="logcat_clear">Очистить</string>
+    <string name="logcat_toggle">Воспроизведение / Пауза</string>
+    <string name="logcat_jump_to_bottom">Вниз</string>
+    <string name="logcat_copied">Запись лога скопирована в буфер обмена</string>
+    <string name="logcat_empty">Логов нет. Нажмите «Пуск», чтобы начать поток.</string>
+
+    <!-- Sideload & Tools Screen -->
+    <string name="sideload_apk">Установка APK</string>
+    <string name="sideload_apk_subtitle">Установите APK-файл из памяти устройства, как через adb install.</string>
+    <string name="sideload_pick_apk">Выбрать APK</string>
+    <string name="sideload_installing">Установка…</string>
+    <string name="sideload_success">APK успешно установлен</string>
+    <string name="sideload_failed">Ошибка установки</string>
+    <string name="capture">Запись</string>
+    <string name="capture_screenshot">Скриншот</string>
+    <string name="record_start">Запись</string>
+    <string name="record_stop">Стоп</string>
+    <string name="device_controls">Управление устройством</string>
+    <string name="device_wake">Включить</string>
+    <string name="device_unlock">Разблокировать</string>
+    <string name="device_stay_awake">Не выключать экран</string>
+    <string name="device_wifi">Wi-Fi</string>
+    <string name="device_bluetooth">Bluetooth</string>
+    <string name="device_airplane">Авиарежим</string>
+    <string name="device_volume">Громкость медиа</string>
+    <string name="input_links">Ввод и ссылки</string>
+    <string name="input_text">Текст для ввода на устройстве</string>
+    <string name="input_send">Отправить текст</string>
+    <string name="input_url">Открыть URL</string>
+    <string name="input_url_placeholder">https://example.com</string>
+    <string name="screenshot_saved">Скриншот сохранён: %s</string>
+
+    <!-- Files Screen -->
+    <string name="files_up">Наверх</string>
+    <string name="files_refresh">Обновить</string>
+    <string name="files_new_folder">Новая папка</string>
+    <string name="files_folder_name_hint">Имя папки</string>
+    <string name="files_create">Создать</string>
+    <string name="files_cancel">Отмена</string>
+    <string name="files_more">Дополнительно</string>
+    <string name="files_open">Открыть</string>
+    <string name="files_install">Установить</string>
+    <string name="files_delete">Удалить</string>
+    <string name="files_is_directory">Папка</string>
+    <string name="files_size">Размер: %s</string>
+    <string name="files_modified">Изменён: %s</string>
+    <string name="files_install_apk">Установка APK</string>
+    <string name="files_install_apk_confirm">Установить %s?</string>
+
+    <!-- Macros -->
+    <string name="macros_title">Макросы ввода</string>
+    <string name="macros_desc">Напишите последовательность команд ввода. По одной на строку: input tap X Y, input swipe X1 Y1 X2 Y2 ДЛИТЕЛЬНОСТЬ, input keyevent KEYCODE_NAME, delay МИЛЛИСЕКУНД</string>
+    <string name="macros_script">Скрипт</string>
+    <string name="macros_run">Запустить макрос</string>
+    <string name="macros_running">Выполняется…</string>
+
+    <!-- Monitor -->
+    <string name="monitor_cpu">ЦП</string>
+    <string name="monitor_memory">Память</string>
+    <string name="monitor_percent">%.1f%%</string>
+    <string name="monitor_per_core">По ядрам: %s</string>
+    <string name="monitor_frequency">Частота (МГц): %s</string>
+    <string name="monitor_unavailable">Недоступно</string>
+    <string name="monitor_top_processes">Топ процессов</string>
+    <string name="monitor_no_processes">Нет данных о процессах</string>
+    <string name="monitor_mem_used">Использовано: %s</string>
+    <string name="monitor_mem_total">Всего: %s</string>
+    <string name="monitor_mem_available">Доступно: %s</string>
+    <string name="monitor_mem_swap">Своп: %1$s свободно из %2$s</string>
+    <string name="monitor_pid">PID %d</string>
+
+    <!-- Overlay -->
+    <string name="overlay_toggle">Плавающая кнопка</string>
+    <string name="overlay_notification">Плавающая кнопка активна — нажмите ADB, чтобы сделать скриншот или записать экран</string>
+    <string name="overlay_notification_channel">Сервис оверлея</string>
+    <string name="overlay_bubble">ADB</string>
+    <string name="overlay_shot">Снимок</string>
+    <string name="overlay_record">Запись</string>
+    <string name="overlay_stop">Стоп</string>
+    <string name="overlay_close">Закрыть</string>
+    <string name="overlay_shot_done">Скриншот сохранён: %s</string>
+    <string name="overlay_start_failed">Не удалось показать оверлей — возможно, нет разрешения «поверх других приложений»</string>
+    <string name="shizuku_not_running">Shizuku не запущен</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_help">Справка и обучение</string>
+    <string name="settings_open_help">Как работает ADB Captain</string>
+    <string name="settings_appearance">Внешний вид</string>
+    <string name="settings_dark_theme">Темная тема</string>
+    <string name="settings_features">Функции</string>
+    <string name="settings_auto_complete">Автодополнение</string>
+    <string name="settings_shizuku">Shizuku</string>
+    <string name="settings_shizuku_status_running">Статус: Shizuku запущен</string>
+    <string name="settings_shizuku_status_not_running">Статус: Shizuku НЕ запущен</string>
+    <string name="settings_version">ADB Captain v1.0</string>
+    <string name="settings_language">Язык</string>
+
+
+    <!-- Help / Tutorial -->
+    <string name="help_title">Как это работает</string>
+    <string name="help_back">Назад</string>
+    <string name="help_intro_title">Добро пожаловать в ADB Captain</string>
+    <string name="help_intro_body">ADB Captain переносит Android Debug Bridge на ваш телефон — без компьютера и без root. Всё работает через сервис Shizuku.</string>
+    <string name="help_shizuku_title">Что такое Shizuku?</string>
+    <string name="help_shizuku_body">Shizuku позволяет приложению выполнять shell-команды как ADB. Чтобы пользоваться ADB Captain: 1) установите Shizuku из Play Store, 2) запустите его сервис, 3) откройте ADB Captain. Если Shizuku выключен — вы увидите экран настройки.</string>
+    <string name="help_terminal_title">Терминал</string>
+    <string name="help_terminal_body">Выполняйте любые ADB-команды (pm, am, dumpsys, settings, input…). Быстрые чипы запускают частые команды. История команд сохраняется локально (переключатель в Настройках).</string>
+    <string name="help_autocomplete_title">Что делает автодополнение?</string>
+    <string name="help_autocomplete_body">Пока вы печатаете в Терминале, ADB Captain предлагает команды из вашей истории, начинающиеся с введённого текста. Нажмите на подсказку, чтобы подставить её. Включается в Настройках → Автодополнение.</string>
+    <string name="help_apps_title">Приложения</string>
+    <string name="help_apps_body">Список всех установленных приложений с поиском и фильтрами «Все»/«Пользовательские». У каждого приложения есть бейдж безопасности (зелёный = можно удалить, красный = критично). Нажмите ⋮ или удерживайте карточку для действий: остановить, очистить данные, отключить/включить, удалить.</string>
+    <string name="help_devices_title">Устройства</string>
+    <string name="help_devices_body">Информация о вашем телефоне: модель, версия Android, батарея. Скриншот в один тап или перезагрузка с подтверждением.</string>
+    <string name="help_logcat_title">Логи (Logcat)</string>
+    <string name="help_logcat_body">Живой просмотр системных логов. Фильтр по уровню (V/D/I/W/E/F) или поиск по тексту, пауза потока; нажатие на запись копирует её. Список автоматически следует вниз, только когда вы внизу.</string>
+    <string name="help_sideload_title">Установка и инструменты</string>
+    <string name="help_sideload_body">Установка APK из памяти, запись экрана, управление Wi-Fi/Bluetooth/авиарежимом и громкостью, ввод текста и открытие ссылок. Плавающая кнопка даёт скриншоты и запись экрана в один тап из любого приложения.</string>
+    <string name="help_safety_title">Безопасность</string>
+    <string name="help_safety_body">Это реальные системные команды. Перезагрузка, удаление, отключение и очистка данных — мощные действия, используйте их аккуратно. Вы отвечаете за изменения, которые делаете.</string>
+</resources>

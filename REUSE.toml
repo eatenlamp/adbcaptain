@@ -1,0 +1,28 @@
+version = 1
+SPDX-PackageName = "ADB Captain"
+SPDX-PackageSupplier = "eatenlamp <eatenlamp@proton.me>"
+SPDX-PackageDownloadLocation = "https://github.com/eatenlamp/ADBCaptain"
+
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "eatenlamp <eatenlamp@proton.me>"
+SPDX-License-Identifier = "AGPL-3.0-or-later"
+
+[[annotations]]
+path = "gradlew"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2007-2020 the original author or authors"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "app/src/main/res/font/inter_**.ttf"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2016-2023 The Inter Project Authors"
+SPDX-License-Identifier = "OFL-1.1"
+
+[[annotations]]
+path = "app/src/main/res/font/jetbrains_mono_**.ttf"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2020 The JetBrains Mono Project Authors"
+SPDX-License-Identifier = "OFL-1.1"

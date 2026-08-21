@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ADB Captain</string>
+
+    <!-- Navigation -->
+    <string name="tab_terminal">Terminal</string>
+    <string name="tab_devices">Devices</string>
+    <string name="tab_apps">Apps</string>
+    <string name="tab_logcat">Logcat</string>
+    <string name="tab_sideload">Sideload</string>
+    <string name="tab_files">Files</string>
+    <string name="tab_monitor">Monitor</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- Setup Screen -->
+    <string name="setup_required">Shizuku Required</string>
+    <string name="setup_description">ADB Captain requires the Shizuku app to be running. It allows executing commands without Root privileges.</string>
+    <string name="setup_step_1">1. Install Shizuku from Play Store</string>
+    <string name="setup_step_2">2. Start Shizuku service</string>
+    <string name="setup_open_button">Open Shizuku</string>
+
+    <!-- Terminal Screen -->
+    <string name="terminal_welcome_title">Welcome to Terminal</string>
+    <string name="terminal_welcome_subtitle">Execute ADB commands directly here.</string>
+    <string name="terminal_placeholder">Enter command...</string>
+    <string name="cmd_list_apps">App List</string>
+    <string name="cmd_battery_status">Battery Status</string>
+    <string name="cmd_screen_size">Screen Size</string>
+    <string name="cmd_device_model">Device Model</string>
+    <string name="cmd_free_space">Free Space</string>
+    <string name="cmd_top_processes">Top Processes</string>
+    <string name="cmd_event_log">Event Log</string>
+
+    <!-- Terminal Help & History -->
+    <string name="term_history_title">History</string>
+    <string name="term_history_empty">No commands yet</string>
+    <string name="term_history_clear">Clear history</string>
+    <string name="term_history_hint">Tap a command to fill it</string>
+    <string name="term_help_title">= ADB Captain Help =</string>
+    <string name="term_help_intro">This terminal runs real ADB commands through Shizuku — no root needed. Just type a command and press send.\n\n</string>
+    <string name="term_help_commands">Common commands:\n  pm list packages -3             user apps\n  pm path &lt;pkg&gt;                   APK path\n  pm clear &lt;pkg&gt;                  wipe app data\n  am force-stop &lt;pkg&gt;             stop an app\n  getprop ro.product.model        device model\n  wm size                         screen size\n  dumpsys battery                 battery info\n  settings get global adb_enabled check ADB\n  screencap -p /sdcard/s.png      screenshot\n  input keyevent KEYCODE_HOME     press Home\n  logcat -d -t 100                last 100 log lines\n\n</string>
+    <string name="term_help_features">Other screens:\n  Apps     manage and export apps, batch actions\n  Devices  switches, battery, reboot, diagnostics\n  Monitor  live CPU / RAM / processes\n  Logcat   live system logs\n  Sideload APK install, record screen, macros\n  Files    file manager\n\n</string>
+    <string name="term_help_tips">Tips:\n  type help anytime to see this text\n  tap the clock icon to pick a past command\n  history is saved locally (see Settings)</string>
+
+    <!-- Apps Screen -->
+    <string name="apps_search_placeholder">Search package...</string>
+    <string name="apps_filter_all">All</string>
+    <string name="apps_filter_user">User</string>
+    <string name="apps_version">Version: %s</string>
+    <string name="apps_delete">Delete</string>
+    <string name="apps_more">More options</string>
+    <string name="apps_force_stop">Force stop</string>
+    <string name="apps_clear_data">Clear data</string>
+    <string name="apps_disable">Disable</string>
+    <string name="apps_enable">Enable</string>
+    <string name="apps_badge_disabled">Disabled</string>
+    <string name="apps_safe_to_delete">Safe to delete</string>
+    <string name="apps_not_safe_to_delete">CRITICAL (Do not delete)</string>
+    <string name="apps_delete_if_needed">Delete if needed</string>
+    <string name="apps_export_apk">Export APK</string>
+    <string name="apps_exporting">Exporting...</string>
+    <string name="apps_export_saved">APK exported to %s</string>
+    <string name="apps_export_failed">Export failed: %s</string>
+    <string name="apps_export_list">Export list</string>
+    <string name="apps_export_csv">Export as CSV</string>
+    <string name="apps_export_json">Export as JSON</string>
+    <string name="apps_details">Details</string>
+    <string name="apps_tap_hint">Tap for details, hold to select</string>
+    <string name="apps_close">Close</string>
+    <string name="apps_selected_count">%d selected</string>
+    <string name="apps_cancel">Cancel</string>
+    <string name="apps_details_package">Package</string>
+    <string name="apps_details_version">Version</string>
+    <string name="apps_details_target_sdk">Target SDK</string>
+    <string name="apps_details_min_sdk">Min SDK</string>
+    <string name="apps_details_path">APK Path</string>
+    <string name="apps_details_data_dir">Data Dir</string>
+    <string name="apps_details_launch_activity">Launch Activity</string>
+    <string name="apps_details_permissions">Permissions (%d)</string>
+    <string name="apps_run">Run</string>
+
+    <!-- Devices Screen -->
+    <string name="device_serial">Serial Number: %s</string>
+    <string name="device_android_version">Android Version: %1$s (API %2$d)</string>
+    <string name="device_battery_level">Battery Level: %d%%</string>
+    <string name="device_reboot">Reboot</string>
+    <string name="device_label_unknown">Device (%s)</string>
+    <string name="reboot_confirm_title">Reboot device?</string>
+    <string name="reboot_confirm_message">Are you absolutely sure you want to reboot the phone now?</string>
+    <string name="reboot_confirm_yes">REBOOT</string>
+    <string name="reboot_confirm_no">CANCEL</string>
+    <string name="global_switches_title">Global Switches</string>
+    <string name="switch_show_touches">Show Touches</string>
+    <string name="switch_show_touches_desc">Show visual feedback for touches on screen</string>
+    <string name="switch_animation_scale">Animation Scale</string>
+    <string name="switch_animation_scale_desc">Current: %s</string>
+    <string name="switch_usb_debugging">USB Debugging</string>
+    <string name="switch_usb_debugging_desc">Allow USB Debugging connection</string>
+    <string name="switch_oem_unlock">OEM Unlock</string>
+    <string name="switch_oem_unlock_desc">Allow the bootloader to be unlocked</string>
+    <string name="switch_wifi_adb">Wi-Fi ADB</string>
+    <string name="switch_wifi_adb_desc">Enable ADB over the network</string>
+    <string name="switch_demo_mode">Demo Mode</string>
+    <string name="switch_demo_mode_desc">Clean status bar for screenshots</string>
+    <string name="device_reboot_recovery">Recovery</string>
+    <string name="device_reboot_bootloader">Bootloader</string>
+    <string name="battery_details_title">Battery Details</string>
+    <string name="battery_level">Level</string>
+    <string name="battery_status">Status</string>
+    <string name="battery_health">Health</string>
+    <string name="battery_temperature">Temperature</string>
+    <string name="battery_voltage">Voltage</string>
+    <string name="battery_plugged">Power</string>
+    <string name="battery_current">Current: %d mA</string>
+    <string name="battery_technology">Technology: %s</string>
+    <string name="diagnostic_title">Diagnostic Report</string>
+    <string name="diagnostic_desc">Collect device, battery, memory and process info into a single report file.</string>
+    <string name="diagnostic_generate">Generate Report</string>
+
+    <!-- Logcat Screen -->
+    <string name="logcat_search_placeholder">Search tag or message...</string>
+    <string name="logcat_level_all">All</string>
+    <string name="logcat_clear">Clear</string>
+    <string name="logcat_toggle">Play / Pause</string>
+    <string name="logcat_jump_to_bottom">Jump to bottom</string>
+    <string name="logcat_copied">Log entry copied to clipboard</string>
+    <string name="logcat_empty">No logs. Press play to start streaming.</string>
+
+    <!-- Sideload &amp; Tools Screen -->
+    <string name="sideload_apk">Sideload APK</string>
+    <string name="sideload_apk_subtitle">Install an APK file from your storage, just like adb install.</string>
+    <string name="sideload_pick_apk">Pick APK</string>
+    <string name="sideload_installing">Installing...</string>
+    <string name="sideload_success">APK installed successfully</string>
+    <string name="sideload_failed">Install failed</string>
+    <string name="capture">Capture</string>
+    <string name="capture_screenshot">Screenshot</string>
+    <string name="record_start">Record</string>
+    <string name="record_stop">Stop</string>
+    <string name="device_controls">Device Controls</string>
+    <string name="device_wake">Wake</string>
+    <string name="device_unlock">Unlock</string>
+    <string name="device_stay_awake">Stay awake</string>
+    <string name="device_wifi">Wi-Fi</string>
+    <string name="device_bluetooth">Bluetooth</string>
+    <string name="device_airplane">Airplane mode</string>
+    <string name="device_volume">Media volume</string>
+    <string name="input_links">Input &amp; Links</string>
+    <string name="input_text">Text to type on device</string>
+    <string name="input_send">Send text</string>
+    <string name="input_url">Open URL</string>
+    <string name="input_url_placeholder">https://example.com</string>
+    <string name="screenshot_saved">Screenshot saved to %s</string>
+
+    <!-- Files Screen -->
+    <string name="files_up">Up</string>
+    <string name="files_refresh">Refresh</string>
+    <string name="files_new_folder">New Folder</string>
+    <string name="files_folder_name_hint">Folder name</string>
+    <string name="files_create">Create</string>
+    <string name="files_cancel">Cancel</string>
+    <string name="files_more">More options</string>
+    <string name="files_open">Open</string>
+    <string name="files_install">Install</string>
+    <string name="files_delete">Delete</string>
+    <string name="files_is_directory">Directory</string>
+    <string name="files_size">Size: %s</string>
+    <string name="files_modified">Modified: %s</string>
+    <string name="files_install_apk">Install APK</string>
+    <string name="files_install_apk_confirm">Install %s?</string>
+
+    <!-- Macros -->
+    <string name="macros_title">Input Macros</string>
+    <string name="macros_desc">Write a sequence of input commands. One per line: input tap X Y, input swipe X1 Y1 X2 Y2 DURATION, input keyevent KEYCODE_NAME, delay MILLIS</string>
+    <string name="macros_script">Script</string>
+    <string name="macros_run">Run Macro</string>
+    <string name="macros_running">Running...</string>
+
+    <!-- Monitor -->
+    <string name="monitor_cpu">CPU</string>
+    <string name="monitor_memory">Memory</string>
+    <string name="monitor_percent">%.1f%%</string>
+    <string name="monitor_per_core">Per core: %s</string>
+    <string name="monitor_frequency">Freq (MHz): %s</string>
+    <string name="monitor_unavailable">Unavailable</string>
+    <string name="monitor_top_processes">Top Processes</string>
+    <string name="monitor_no_processes">No process data available</string>
+    <string name="monitor_mem_used">Used: %s</string>
+    <string name="monitor_mem_total">Total: %s</string>
+    <string name="monitor_mem_available">Available: %s</string>
+    <string name="monitor_mem_swap">Swap: %1$s free of %2$s</string>
+    <string name="monitor_pid">PID %d</string>
+
+    <!-- Overlay -->
+    <string name="overlay_toggle">Floating overlay</string>
+    <string name="overlay_notification">Floating overlay active - tap the ADB button to take screenshots or record the screen</string>
+    <string name="overlay_notification_channel">Overlay service</string>
+    <string name="overlay_bubble">ADB</string>
+    <string name="overlay_shot">Shot</string>
+    <string name="overlay_record">Record</string>
+    <string name="overlay_stop">Stop</string>
+    <string name="overlay_close">Close</string>
+    <string name="overlay_shot_done">Screenshot saved to %s</string>
+    <string name="overlay_start_failed">Could not show the overlay - the draw-over-apps permission may be missing</string>
+    <string name="shizuku_not_running">Shizuku is not running</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_help">Help &amp; Tutorial</string>
+    <string name="settings_open_help">How ADB Captain works</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_dark_theme">Dark Theme</string>
+    <string name="settings_features">Features</string>
+    <string name="settings_auto_complete">Auto-complete</string>
+    <string name="settings_shizuku">Shizuku</string>
+    <string name="settings_shizuku_status_running">Status: Shizuku is running</string>
+    <string name="settings_shizuku_status_not_running">Status: Shizuku NOT running</string>
+    <string name="settings_version">ADB Captain v1.0</string>
+    <string name="settings_language">Language</string>
+
+
+    <!-- Help / Tutorial -->
+    <string name="help_title">How it works</string>
+    <string name="help_back">Back</string>
+    <string name="help_intro_title">Welcome to ADB Captain</string>
+    <string name="help_intro_body">ADB Captain brings the Android Debug Bridge to your phone - no computer and no root required. Everything runs through the Shizuku service.</string>
+    <string name="help_shizuku_title">What is Shizuku?</string>
+    <string name="help_shizuku_body">Shizuku lets this app run shell commands as ADB. To use ADB Captain: 1) install Shizuku from the Play Store, 2) start its service, 3) open ADB Captain. If Shizuku is off, you will see a setup screen.</string>
+    <string name="help_terminal_title">Terminal</string>
+    <string name="help_terminal_body">Run any ADB command (pm, am, dumpsys, settings, input...). Use the quick chips to launch common commands. Your command history is saved locally (toggle in Settings).</string>
+    <string name="help_autocomplete_title">What does auto-complete do?</string>
+    <string name="help_autocomplete_body">While you type in the Terminal, ADB Captain suggests commands from your history that start with what you typed. Tap a suggestion to fill it in. Turn it on/off in Settings - Auto-complete.</string>
+    <string name="help_apps_title">Apps</string>
+    <string name="help_apps_body">Browse every installed app with search and User/System filters. Each app has a safety badge (green = safe to delete, red = critical). Tap the ... button or long-press a card for actions: force stop, clear data, disable/enable, uninstall.</string>
+    <string name="help_devices_title">Devices</string>
+    <string name="help_devices_body">Shows your phone info: model, Android version, battery. Take a screenshot with one tap, or reboot with confirmation.</string>
+    <string name="help_logcat_title">Logcat</string>
+    <string name="help_logcat_body">Watch system logs live. Filter by level (V/D/I/W/E/F) or search text, pause the stream, and tap any entry to copy it. The list auto-follows only while you are at the bottom.</string>
+    <string name="help_sideload_title">Sideload &amp; Tools</string>
+    <string name="help_sideload_body">Install APK files from storage, record the screen, control Wi-Fi/Bluetooth/airplane mode and volume, type text, and open links. The floating overlay button gives one-tap screenshots and screen recording from any app.</string>
+    <string name="help_safety_title">Safety</string>
+    <string name="help_safety_body">These are real system commands. Reboot, uninstall, disable and clear-data are powerful actions - use them carefully. You are responsible for the changes you make.</string>
+</resources>

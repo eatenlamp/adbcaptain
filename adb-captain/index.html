@@ -1,0 +1,752 @@
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ADB Captain — A rootless ADB toolkit for Android</title>
+  <meta name="description" content="ADB Captain is a free, open-source Android app that turns your phone into a full ADB toolkit. No root, no PC. Powered by Shizuku." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            ocean: {
+              950: '#030712',
+              900: '#0B1221',
+              800: '#111B2E',
+              700: '#172642',
+              600: '#203154',
+            },
+            copper: {
+              400: '#D9936A',
+              500: '#C97E4F',
+              600: '#A8643A',
+            },
+            teal: {
+              400: '#2DD4BF',
+              500: '#14B8A6',
+              600: '#0D9488',
+            }
+          },
+          boxShadow: {
+            'glow-copper': '0 0 40px -10px rgba(201, 126, 79, 0.35)',
+            'glow-teal': '0 0 40px -10px rgba(20, 184, 166, 0.3)',
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'scan': 'scan 3s linear infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-12px)' },
+            },
+            scan: {
+              '0%': { transform: 'translateY(-100%)' },
+              '100%': { transform: 'translateY(100%)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --ocean-950: #030712;
+      --ocean-900: #0B1221;
+      --ocean-800: #111B2E;
+      --copper-500: #C97E4F;
+      --teal-500: #14B8A6;
+    }
+
+    body {
+      background-color: var(--ocean-950);
+      color: #E2E8F0;
+    }
+
+    .gradient-radial {
+      background: radial-gradient(ellipse at 50% 0%, rgba(20, 184, 166, 0.12) 0%, transparent 55%);
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #E2E8F0 0%, #94A3B8 50%, #14B8A6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .gradient-copper {
+      background: linear-gradient(135deg, #D9936A 0%, #C97E4F 100%);
+    }
+
+    .glass {
+      background: rgba(17, 27, 46, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(148, 163, 184, 0.08);
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .phone-frame {
+      box-shadow:
+        0 0 0 2px #1E293B,
+        0 0 0 6px #0F172A,
+        0 25px 80px -20px rgba(0, 0, 0, 0.7),
+        0 0 60px -20px rgba(20, 184, 166, 0.25);
+    }
+
+    .scanline {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent 50%, rgba(20, 184, 166, 0.03) 51%, transparent 52%);
+      background-size: 100% 8px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .nav-scrolled {
+      background: rgba(3, 7, 18, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+    }
+
+    .feature-card {
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(20, 184, 166, 0.25);
+      box-shadow: 0 20px 50px -20px rgba(20, 184, 166, 0.15);
+    }
+
+    .btn-primary {
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px -10px rgba(201, 126, 79, 0.4);
+    }
+
+    .btn-secondary {
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(20, 184, 166, 0.1);
+      border-color: rgba(20, 184, 166, 0.4);
+    }
+
+    .faq-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+    }
+
+    .faq-item.open .faq-content {
+      max-height: 300px;
+    }
+
+    .faq-icon {
+      transition: transform 0.3s ease;
+    }
+
+    .faq-item.open .faq-icon {
+      transform: rotate(180deg);
+    }
+
+    .terminal-cursor::after {
+      content: '_';
+      animation: blink 1s step-end infinite;
+      color: var(--teal-500);
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(148, 163, 184, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+  </style>
+</head>
+<body class="antialiased overflow-x-hidden">
+
+  <!-- Navigation -->
+  <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-4">
+    <div class="max-w-6xl mx-auto px-6 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-2 group">
+        <div class="w-8 h-8 rounded-lg gradient-copper flex items-center justify-center text-white font-mono font-bold text-sm shadow-glow-copper group-hover:scale-105 transition-transform">A</div>
+        <span class="font-bold text-lg tracking-tight text-slate-100">ADB Captain</span>
+      </a>
+
+      <div class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+        <a href="#features" class="hover:text-teal-400 transition-colors">Features</a>
+        <a href="#how-it-works" class="hover:text-teal-400 transition-colors">How it works</a>
+        <a href="#screenshots" class="hover:text-teal-400 transition-colors">Screenshots</a>
+        <a href="#faq" class="hover:text-teal-400 transition-colors">FAQ</a>
+        <a href="https://github.com" target="_blank" class="text-copper-400 hover:text-copper-300 transition-colors">GitHub</a>
+      </div>
+
+      <a href="#download" class="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-ocean-800 border border-copper-500/30 text-copper-400 text-sm font-medium hover:bg-copper-500/10 transition-colors">
+        Download
+      </a>
+
+      <button id="mobile-menu-btn" class="md:hidden text-slate-300 hover:text-white p-2" aria-label="Open menu">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 right-0 glass border-t border-slate-700/30">
+      <div class="px-6 py-4 flex flex-col gap-4 text-sm font-medium">
+        <a href="#features" class="text-slate-300 hover:text-teal-400 transition-colors py-2">Features</a>
+        <a href="#how-it-works" class="text-slate-300 hover:text-teal-400 transition-colors py-2">How it works</a>
+        <a href="#screenshots" class="text-slate-300 hover:text-teal-400 transition-colors py-2">Screenshots</a>
+        <a href="#faq" class="text-slate-300 hover:text-teal-400 transition-colors py-2">FAQ</a>
+        <a href="#download" class="text-copper-400 hover:text-copper-300 transition-colors py-2">Download</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="relative min-h-screen flex items-center pt-20 pb-16 gradient-radial grid-bg overflow-hidden">
+    <div class="absolute inset-0 pointer-events-none">
+      <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-copper-500/5 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center relative z-10">
+      <div class="reveal">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ocean-800 border border-teal-500/20 text-teal-400 text-xs font-mono font-medium mb-6">
+          <span class="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span>
+          FOSS • No root • No PC
+        </div>
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6">
+          A command deck <br class="hidden sm:block" />
+          for your <span class="gradient-text">Android</span>.
+        </h1>
+        <p class="text-lg sm:text-xl text-slate-400 leading-relaxed mb-8 max-w-xl">
+          ADB Captain is a powerful, rootless ADB toolkit for Android, powered by Shizuku. Run real ADB commands, manage apps, read logs, sideload APKs — all from the phone itself.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 mb-8" id="download">
+          <a href="#" class="btn-primary inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl gradient-copper text-white font-semibold shadow-glow-copper">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            Get it on F-Droid
+          </a>
+          <a href="#" class="btn-secondary inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-ocean-800 border border-slate-700 text-slate-200 font-semibold hover:text-teal-400">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg>
+            GitHub Releases
+          </a>
+          <a href="#" class="btn-secondary inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-ocean-800 border border-slate-700 text-slate-200 font-semibold hover:text-teal-400">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2h8v2H8V8zm0 4h8v2H8v-2z"/></svg>
+            RuStore
+          </a>
+        </div>
+
+        <div class="flex items-center gap-4 text-xs text-slate-500 font-mono">
+          <span class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            AGPL-3.0-or-later
+          </span>
+          <span>Android 7.0+</span>
+          <span>API 24+</span>
+        </div>
+      </div>
+
+      <!-- Phone mockup -->
+      <div class="reveal flex justify-center lg:justify-end">
+        <div class="phone-frame relative w-[280px] sm:w-[320px] h-[560px] sm:h-[640px] bg-ocean-950 rounded-[3rem] border-4 border-slate-800 overflow-hidden animate-float">
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-xl z-20"></div>
+          <div class="scanline"></div>
+
+          <!-- Status bar -->
+          <div class="relative z-10 flex items-center justify-between px-5 pt-3 pb-2 text-[10px] font-medium text-slate-400">
+            <span>09:41</span>
+            <div class="flex items-center gap-1.5">
+              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+            </div>
+          </div>
+
+          <!-- App header -->
+          <div class="relative z-10 px-5 py-4 border-b border-slate-800/50">
+            <div class="flex items-center gap-2 mb-3">
+              <div class="w-8 h-8 rounded-lg gradient-copper flex items-center justify-center text-white font-mono font-bold text-xs">A</div>
+              <div>
+                <div class="text-sm font-bold text-slate-100">ADB Captain</div>
+                <div class="text-[10px] text-teal-400 font-mono">shizuku connected</div>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <span class="px-2 py-1 rounded bg-ocean-800 text-[10px] text-copper-400 font-mono">Terminal</span>
+              <span class="px-2 py-1 rounded bg-ocean-800 text-[10px] text-slate-400 font-mono">Apps</span>
+              <span class="px-2 py-1 rounded bg-ocean-800 text-[10px] text-slate-400 font-mono">Logcat</span>
+            </div>
+          </div>
+
+          <!-- Terminal content -->
+          <div class="relative z-10 px-4 py-4 font-mono text-[10px] leading-relaxed h-full overflow-hidden">
+            <div class="text-slate-500 mb-1">$ adb shell</div>
+            <div class="text-teal-400 mb-2">bullhead:/ $</div>
+            <div class="text-slate-300 mb-1"><span class="text-copper-400">pm</span> list packages -3</div>
+            <div class="text-slate-400 mb-0.5">package:com.example.app</div>
+            <div class="text-slate-400 mb-0.5">package:org.foss.tool</div>
+            <div class="text-slate-400 mb-2">package:me.captain.adb</div>
+            <div class="text-slate-300 mb-1"><span class="text-copper-400">dumpsys</span> battery</div>
+            <div class="text-emerald-400 mb-0.5">AC powered: false</div>
+            <div class="text-emerald-400 mb-0.5">USB powered: true</div>
+            <div class="text-emerald-400 mb-2">level: 87</div>
+            <div class="text-slate-300 mb-1"><span class="text-copper-400">am</span> start -a android.intent.action.VIEW</div>
+            <div class="text-slate-500 mb-2">Starting: Intent { act=android.intent.action.VIEW }</div>
+            <div class="text-teal-400 terminal-cursor">bullhead:/ $</div>
+          </div>
+
+          <!-- Bottom nav -->
+          <div class="absolute bottom-0 left-0 right-0 z-10 px-5 py-3 bg-ocean-900/95 border-t border-slate-800/50 flex justify-between text-[10px] text-slate-400 font-mono">
+            <span class="text-copper-400">[term]</span>
+            <span>[apps]</span>
+            <span>[device]</span>
+            <span>[logs]</span>
+            <span>[tools]</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="py-24 bg-ocean-900 grid-bg">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="max-w-2xl mb-16 reveal">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4">Everything ADB, <span class="text-copper-400">in your pocket</span></h2>
+        <p class="text-slate-400 text-lg">No tethering to a laptop. No trust-me-bro debloaters. Just the actual tools, running locally, under your control.</p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Feature 1 -->
+        <div class="feature-card reveal glass rounded-2xl p-6 border border-slate-700/30">
+          <div class="w-11 h-11 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center mb-5">
+            <svg class="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          </div>
+          <h3 class="text-lg font-bold mb-2">Terminal</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">A real ADB shell right in the app. Run <code class="text-copper-400 font-mono text-xs">pm</code>, <code class="text-copper-400 font-mono text-xs">am</code>, <code class="text-copper-400 font-mono text-xs">dumpsys</code>, <code class="text-copper-400 font-mono text-xs">input</code>, whatever you need. Command history, smart autocomplete, and ANSI-colored output so the logs actually make sense.</p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-card reveal glass rounded-2xl p-6 border border-slate-700/30">
+          <div class="w-11 h-11 rounded-xl bg-copper-500/10 border border-copper-500/20 flex items-center justify-center mb-5">
+            <svg class="w-5 h-5 text-copper-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+          </div>
+          <h3 class="text-lg font-bold mb-2">Apps</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Browse every installed package. Filter user vs system, search by name or package ID, and get a straight answer on whether it's safe to remove. Force-stop, clear data, disable, or uninstall — no sketchy "AI cleaner" junk involved.</p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-card reveal glass rounded-2xl p-6 border border-slate-700/30">
+          <div class="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-5">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          </div>
+          <h3 class="text-lg font-bold mb-2">Device</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Live device info: model, Android version, API level, battery, connection status. Reboot with a confirmation dialog so you don't nuke a long-running task. One-tap screenshots saved cleanly to <code class="font-mono text-xs text-slate-300">DCIM/ADBCaptain</code>.</p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="feature-card reveal glass rounded-2xl p-6 border border-slate-700/30">
+          <div class="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-5">
+            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <h3 class="text-lg font-bold mb-2">Logcat</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Live system log viewer with level filters from Verbose to Fatal. Search text, auto-scroll to the latest line, tap any entry to copy it. Great for catching that one app that's spamming the log or crashing on launch.</p>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="feature-card reveal glass rounded-2xl p-6 border border-slate-700/30">
+          <div class="w-11 h-11 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-5">
+            <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          </div>
+          <h3 class="text-lg font-bold mb-2">Sideload & Tools</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Install APKs from storage. Record the screen with an elapsed timer so you know how long you've been capturing. Wake, unlock, toggle Wi-Fi, Bluetooth, airplane mode, adjust volume, type text, or open URLs remotely.</p>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="feature-card reveal glass rounded-2xl p-6 border border-slate-700/30">
+          <div class="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-5">
+            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          </div>
+          <h3 class="text-lg font-bold mb-2">Settings</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Dark theme by default, command history toggles, English or Russian UI. One-tap Shizuku status check so you're never guessing whether the service is actually running.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how-it-works" class="py-24 bg-ocean-950 relative overflow-hidden">
+    <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-700/30 to-transparent"></div>
+    <div class="max-w-5xl mx-auto px-6">
+      <div class="text-center max-w-2xl mx-auto mb-16 reveal">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4">Three steps to <span class="text-teal-400">take the helm</span></h2>
+        <p class="text-slate-400 text-lg">ADB Captain doesn't ask for root. It asks for Shizuku. Once that's running, you're good to go.</p>
+      </div>
+
+      <div class="grid sm:grid-cols-3 gap-8 relative">
+        <div class="hidden sm:block absolute top-12 left-[16.67%] right-[16.67%] h-px bg-gradient-to-r from-transparent via-copper-500/30 to-transparent"></div>
+
+        <div class="reveal text-center relative">
+          <div class="w-24 h-24 mx-auto rounded-2xl bg-ocean-800 border border-slate-700 flex items-center justify-center mb-6 shadow-glow-teal">
+            <span class="text-3xl font-mono font-bold text-teal-400">01</span>
+          </div>
+          <h3 class="text-lg font-bold mb-2">Install Shizuku</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Grab Shizuku from GitHub or F-Droid. It's the bridge that lets ADB Captain run shell commands without root.</p>
+        </div>
+
+        <div class="reveal text-center relative" style="transition-delay: 100ms;">
+          <div class="w-24 h-24 mx-auto rounded-2xl bg-ocean-800 border border-slate-700 flex items-center justify-center mb-6">
+            <span class="text-3xl font-mono font-bold text-copper-400">02</span>
+          </div>
+          <h3 class="text-lg font-bold mb-2">Start the service</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Launch Shizuku and start it via wireless debugging or ADB pairing. The app will detect it automatically.</p>
+        </div>
+
+        <div class="reveal text-center relative" style="transition-delay: 200ms;">
+          <div class="w-24 h-24 mx-auto rounded-2xl bg-ocean-800 border border-slate-700 flex items-center justify-center mb-6">
+            <span class="text-3xl font-mono font-bold text-teal-400">03</span>
+          </div>
+          <h3 class="text-lg font-bold mb-2">Press go</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Open ADB Captain, grant the Shizuku permission, and start running commands. That's it. No PC cable.</p>
+        </div>
+      </div>
+
+      <!-- Shizuku note -->
+      <div class="mt-16 reveal glass rounded-2xl p-6 sm:p-8 border border-teal-500/20">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div>
+            <h3 class="text-lg font-bold mb-2">Why Shizuku?</h3>
+            <p class="text-slate-400 text-sm leading-relaxed max-w-xl">Android locks down shell access for regular apps. Shizuku uses the same ADB permission model you already trust, but lets apps request it locally. It's clean, well-maintained, and doesn't require unlocking your bootloader or patching system files.</p>
+          </div>
+          <div class="flex flex-col gap-3 sm:text-right">
+            <a href="https://shizuku.rikka.app" target="_blank" class="inline-flex items-center justify-center sm:justify-end gap-2 text-teal-400 hover:text-teal-300 font-medium text-sm">
+              shizuku.rikka.app
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            </a>
+            <a href="https://shizuku.rikka.app" target="_blank" class="btn-secondary inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-ocean-800 border border-slate-700 text-slate-200 text-sm font-medium hover:text-teal-400">
+              Install Shizuku
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screenshots -->
+  <section id="screenshots" class="py-24 bg-ocean-900 grid-bg">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="max-w-2xl mb-12 reveal">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4">On-device <span class="text-copper-400">screenshots</span></h2>
+        <p class="text-slate-400 text-lg">Dark mode throughout. Readable type. No clutter. Built to actually use with your thumbs.</p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="reveal glass rounded-2xl p-3 border border-slate-700/30">
+          <div class="aspect-[9/19] rounded-xl bg-ocean-950 border border-slate-800 overflow-hidden relative">
+            <div class="absolute inset-0 p-3 font-mono text-[8px] leading-relaxed">
+              <div class="text-slate-500 mb-1">$ pm list packages</div>
+              <div class="text-slate-400">package:com.android...</div>
+              <div class="text-slate-400">package:org.fdroid...</div>
+              <div class="text-emerald-400">package:me.captain</div>
+              <div class="text-slate-500 mt-2">$ dumpsys battery</div>
+              <div class="text-teal-400">level: 87</div>
+            </div>
+          </div>
+          <p class="text-center text-xs text-slate-500 mt-3 font-medium">Terminal</p>
+        </div>
+
+        <div class="reveal glass rounded-2xl p-3 border border-slate-700/30" style="transition-delay: 100ms;">
+          <div class="aspect-[9/19] rounded-xl bg-ocean-950 border border-slate-800 overflow-hidden relative">
+            <div class="absolute inset-0 p-3">
+              <div class="text-[8px] font-bold text-slate-200 mb-2">Apps</div>
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between p-1.5 rounded bg-ocean-800/50">
+                  <span class="text-[7px] text-slate-300">Maps</span>
+                  <span class="text-[6px] px-1 rounded bg-emerald-500/20 text-emerald-400">safe</span>
+                </div>
+                <div class="flex items-center justify-between p-1.5 rounded bg-ocean-800/50">
+                  <span class="text-[7px] text-slate-300">Browser</span>
+                  <span class="text-[6px] px-1 rounded bg-amber-500/20 text-amber-400">careful</span>
+                </div>
+                <div class="flex items-center justify-between p-1.5 rounded bg-ocean-800/50">
+                  <span class="text-[7px] text-slate-300">SystemUI</span>
+                  <span class="text-[6px] px-1 rounded bg-red-500/20 text-red-400">keep</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="text-center text-xs text-slate-500 mt-3 font-medium">Package manager</p>
+        </div>
+
+        <div class="reveal glass rounded-2xl p-3 border border-slate-700/30" style="transition-delay: 200ms;">
+          <div class="aspect-[9/19] rounded-xl bg-ocean-950 border border-slate-800 overflow-hidden relative">
+            <div class="absolute inset-0 p-3 font-mono text-[7px] leading-snug">
+              <div class="flex gap-1 mb-2">
+                <span class="text-red-400">F</span>
+                <span class="text-amber-400">E</span>
+                <span class="text-emerald-400">I</span>
+                <span class="text-blue-400">D</span>
+                <span class="text-slate-400">V</span>
+              </div>
+              <div class="text-red-400">FATAL: crash...</div>
+              <div class="text-amber-400">ERROR: bind...</div>
+              <div class="text-slate-400">D: starting...</div>
+              <div class="text-slate-500">V: tick...</div>
+            </div>
+          </div>
+          <p class="text-center text-xs text-slate-500 mt-3 font-medium">Logcat</p>
+        </div>
+
+        <div class="reveal glass rounded-2xl p-3 border border-slate-700/30" style="transition-delay: 300ms;">
+          <div class="aspect-[9/19] rounded-xl bg-ocean-950 border border-slate-800 overflow-hidden relative">
+            <div class="absolute inset-0 p-3">
+              <div class="text-[8px] font-bold text-slate-200 mb-2">Tools</div>
+              <div class="grid grid-cols-2 gap-1.5">
+                <div class="p-1.5 rounded bg-ocean-800/50 text-[6px] text-center text-slate-300">Screenshot</div>
+                <div class="p-1.5 rounded bg-ocean-800/50 text-[6px] text-center text-slate-300">Screenrec</div>
+                <div class="p-1.5 rounded bg-ocean-800/50 text-[6px] text-center text-slate-300">Wake</div>
+                <div class="p-1.5 rounded bg-ocean-800/50 text-[6px] text-center text-slate-300">Wi-Fi</div>
+                <div class="p-1.5 rounded bg-ocean-800/50 text-[6px] text-center text-slate-300">Bluetooth</div>
+                <div class="p-1.5 rounded bg-ocean-800/50 text-[6px] text-center text-slate-300">Sideload</div>
+              </div>
+            </div>
+          </div>
+          <p class="text-center text-xs text-slate-500 mt-3 font-medium">Tools deck</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Compatibility -->
+  <section class="py-16 bg-ocean-950 border-y border-slate-800/50">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="reveal flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-ocean-800 border border-slate-700 flex items-center justify-center">
+            <svg class="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold">Compatibility</h3>
+            <p class="text-slate-400 text-sm">Works on Android 7.0 and up, API 24+.</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 text-xs font-mono text-slate-500">
+          <span class="px-3 py-1.5 rounded-lg bg-ocean-800 border border-slate-700">Android 7.0</span>
+          <span class="px-3 py-1.5 rounded-lg bg-ocean-800 border border-slate-700">API 24</span>
+          <span class="px-3 py-1.5 rounded-lg bg-ocean-800 border border-slate-700">Shizuku</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="py-24 bg-ocean-900 grid-bg">
+    <div class="max-w-3xl mx-auto px-6">
+      <div class="text-center max-w-2xl mx-auto mb-12 reveal">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4">Questions? <span class="text-teal-400">Answers.</span></h2>
+        <p class="text-slate-400 text-lg">The stuff people actually ask.</p>
+      </div>
+
+      <div class="space-y-3">
+        <div class="faq-item reveal glass rounded-xl border border-slate-700/30 overflow-hidden">
+          <button class="faq-toggle w-full px-6 py-4 flex items-center justify-between text-left">
+            <span class="font-semibold text-slate-200">Does it need root?</span>
+            <svg class="faq-icon w-5 h-5 text-copper-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-content px-6">
+            <p class="text-slate-400 text-sm leading-relaxed pb-4">No. That's the whole point. ADB Captain uses Shizuku to get ADB-level access without rooting your device.</p>
+          </div>
+        </div>
+
+        <div class="faq-item reveal glass rounded-xl border border-slate-700/30 overflow-hidden">
+          <button class="faq-toggle w-full px-6 py-4 flex items-center justify-between text-left">
+            <span class="font-semibold text-slate-200">Why do I need Shizuku?</span>
+            <svg class="faq-icon w-5 h-5 text-copper-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-content px-6">
+            <p class="text-slate-400 text-sm leading-relaxed pb-4">Android doesn't let normal apps run shell commands. Shizuku is a trusted, open-source service that bridges that gap using the same ADB permission model. It's the cleanest way to do this without root.</p>
+          </div>
+        </div>
+
+        <div class="faq-item reveal glass rounded-xl border border-slate-700/30 overflow-hidden">
+          <button class="faq-toggle w-full px-6 py-4 flex items-center justify-between text-left">
+            <span class="font-semibold text-slate-200">Is it really free?</span>
+            <svg class="faq-icon w-5 h-5 text-copper-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-content px-6">
+            <p class="text-slate-400 text-sm leading-relaxed pb-4">Yes. Free as in beer and free as in freedom. AGPL-3.0-or-later. Use it, inspect it, fork it, whatever.</p>
+          </div>
+        </div>
+
+        <div class="faq-item reveal glass rounded-xl border border-slate-700/30 overflow-hidden">
+          <button class="faq-toggle w-full px-6 py-4 flex items-center justify-between text-left">
+            <span class="font-semibold text-slate-200">Any ads or tracking?</span>
+            <svg class="faq-icon w-5 h-5 text-copper-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-content px-6">
+            <p class="text-slate-400 text-sm leading-relaxed pb-4">No ads. No analytics SDKs. No cloud calls. The app does what it says and talks to your device, not some backend.</p>
+          </div>
+        </div>
+
+        <div class="faq-item reveal glass rounded-xl border border-slate-700/30 overflow-hidden">
+          <button class="faq-toggle w-full px-6 py-4 flex items-center justify-between text-left">
+            <span class="font-semibold text-slate-200">What's the minimum Android version?</span>
+            <svg class="faq-icon w-5 h-5 text-copper-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-content px-6">
+            <p class="text-slate-400 text-sm leading-relaxed pb-4">Android 7.0, API 24. Anything newer should work fine.</p>
+          </div>
+        </div>
+
+        <div class="faq-item reveal glass rounded-xl border border-slate-700/30 overflow-hidden">
+          <button class="faq-toggle w-full px-6 py-4 flex items-center justify-between text-left">
+            <span class="font-semibold text-slate-200">Is there a Russian UI?</span>
+            <svg class="faq-icon w-5 h-5 text-copper-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-content px-6">
+            <p class="text-slate-400 text-sm leading-relaxed pb-4">Yes. Toggle between English and Russian in Settings. More languages may come if people want to contribute translations.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Open source -->
+  <section class="py-24 bg-ocean-950 relative overflow-hidden">
+    <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-700/30 to-transparent"></div>
+    <div class="max-w-4xl mx-auto px-6 text-center reveal">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ocean-800 border border-slate-700 text-slate-400 text-xs font-mono font-medium mb-6">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+        100% FOSS
+      </div>
+      <h2 class="text-3xl sm:text-4xl font-bold mb-4">Open source, <span class="text-copper-400">always</span></h2>
+      <p class="text-slate-400 text-lg mb-8 max-w-2xl mx-auto">No proprietary blobs. No hidden behavior. The code is out there for anyone to audit, improve, or learn from. Licensed under AGPL-3.0-or-later.</p>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="#" class="btn-secondary inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-ocean-800 border border-slate-700 text-slate-200 font-semibold hover:text-teal-400">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg>
+          View on GitHub
+        </a>
+        <span class="px-4 py-2 rounded-lg bg-ocean-800 border border-slate-700 text-slate-400 text-sm font-mono">AGPL-3.0-or-later</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 bg-ocean-950 border-t border-slate-800/50">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-md gradient-copper flex items-center justify-center text-white font-mono font-bold text-xs">A</div>
+          <span class="font-bold text-slate-200">ADB Captain</span>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-400">
+          <a href="#features" class="hover:text-teal-400 transition-colors">Features</a>
+          <a href="#how-it-works" class="hover:text-teal-400 transition-colors">How it works</a>
+          <a href="#screenshots" class="hover:text-teal-400 transition-colors">Screenshots</a>
+          <a href="#faq" class="hover:text-teal-400 transition-colors">FAQ</a>
+          <a href="#" class="hover:text-copper-400 transition-colors">GitHub</a>
+        </div>
+
+        <div class="text-xs text-slate-600 font-mono">
+          &copy; <span id="year"></span> ADB Captain contributors.
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Current year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Navbar scroll behavior
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 20) {
+        navbar.classList.add('nav-scrolled');
+      } else {
+        navbar.classList.remove('nav-scrolled');
+      }
+    });
+
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+
+    // Close mobile menu when clicking a link
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.add('hidden');
+      });
+    });
+
+    // Scroll reveal
+    const revealElements = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    });
+
+    revealElements.forEach(el => revealObserver.observe(el));
+
+    // FAQ accordion
+    const faqItems = document.querySelectorAll('.faq-item');
+    faqItems.forEach(item => {
+      const toggle = item.querySelector('.faq-toggle');
+      toggle.addEventListener('click', () => {
+        const isOpen = item.classList.contains('open');
+        // Close all
+        faqItems.forEach(i => i.classList.remove('open'));
+        // Open clicked if it wasn't open
+        if (!isOpen) {
+          item.classList.add('open');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
