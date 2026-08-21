@@ -9,7 +9,9 @@ data class LogEntry(
     val tag: String,
     val message: String,
     val pid: Int = 0,
-    val tid: Int = 0
+    val tid: Int = 0,
+    /** Monotonic id assigned on arrival; guarantees unique LazyColumn keys. */
+    val id: Long = 0
 )
 
 enum class LogLevel {

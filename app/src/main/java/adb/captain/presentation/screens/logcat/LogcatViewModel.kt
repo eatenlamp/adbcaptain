@@ -23,6 +23,7 @@ class LogcatViewModel @Inject constructor(
     val uiState: StateFlow<LogcatUiState> = _uiState.asStateFlow()
 
     private var logcatJob: Job? = null
+    private var nextEntryId = 0L
 
     fun toggleStream() {
         if (_uiState.value.isPaused) {
@@ -44,8 +45,9 @@ class LogcatViewModel @Inject constructor(
         _uiState.update { it.copy(isPaused = false) }
         logcatJob = viewModelScope.launch {
             useCase.streamLogcat().collect { entry ->
+                val withId = entry.copy(id = nextEntryId++)
                 _uiState.update { state ->
-                    state.copy(logs = (state.logs + entry).takeLast(3000))
+                    state.copy(logs = (state.logs + withId).takeLast(3000))
                 }
             }
         }

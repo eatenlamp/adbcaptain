@@ -154,7 +154,7 @@ fun LogcatScreen(
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    items(visibleLogs, key = { "${it.timestamp}-${it.pid}-${it.hashCode()}" }) { entry ->
+                    items(visibleLogs, key = { it.id }) { entry ->
                         LogItem(
                             entry = entry,
                             onClick = {

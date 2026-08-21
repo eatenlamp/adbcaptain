@@ -1,0 +1,1 @@
+Run ADB commands on your phone. No root, no PC — via Shizuku.

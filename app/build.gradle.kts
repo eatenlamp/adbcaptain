@@ -72,6 +72,13 @@ android {
     buildFeatures {
         compose = true
     }
+
+    // Required for F-Droid Reproducible Builds: do not embed the
+    // dependency list / signing blob into the APK.
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
 }
 
 dependencies {
