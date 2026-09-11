@@ -1,6 +1,7 @@
 # F-Droid package metadata for adb.captain
 # Place this file in your fork of https://gitlab.com/fdroid/fdroiddata
 # as: metadata/adb.captain.yml
+Name: ADB Captain
 Categories:
   - System
   - Development
@@ -40,5 +41,3 @@ Builds:
 
 AutoUpdateMode: Version v%v
 UpdateCheckMode: Tags
-CurrentVersion: 1.0
-CurrentVersionCode: 1

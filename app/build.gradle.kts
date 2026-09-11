@@ -45,9 +45,13 @@ android {
 
     buildTypes {
         release {
-            optimization {
-                enable = false
-            }
+            // Keep R8 off: required for F-Droid reproducible builds.
+            // Rules live in proguard-rules.pro for when minification is re-enabled.
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             signingConfig = if (keystoreProps != null) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
         }
     }
