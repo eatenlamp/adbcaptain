@@ -11,7 +11,7 @@
     <string name="tab_settings">設定</string>
     <string name="setup_required">Shizuku が必要です</string>
     <string name="setup_description">ADB Captain には Shizuku アプリの実行が必要です。Root 権限なしでコマンドを実行できます。</string>
-    <string name="setup_step_1">1. Play Store から Shizuku をインストール</string>
+    <string name="setup_step_1">1. Shizuku をインストール (F-Droid または ADB 経由)</string>
     <string name="setup_step_2">2. Shizuku サービスを起動</string>
     <string name="setup_open_button">Shizuku を開く</string>
     <string name="terminal_welcome_title">ターミナルへようこそ</string>
@@ -186,7 +186,7 @@
     <string name="help_intro_title">ADB Captain へようこそ</string>
     <string name="help_intro_body">ADB Captain は Android Debug Bridge をスマホにもたらします - パソコンも root も不要です。すべて Shizuku サービスを通じて動作します。</string>
     <string name="help_shizuku_title">Shizuku とは？</string>
-    <string name="help_shizuku_body">Shizuku を使うと、このアプリは ADB としてシェルコマンドを実行できます。使用方法: 1) Play Store から Shizuku をインストール、2) サービスを起動、3) ADB Captain を開く。Shizuku がオフの場合は、設定画面が表示されます。</string>
+    <string name="help_shizuku_body">Shizuku を使うと、このアプリは ADB としてシェルコマンドを実行できます。使用方法: 1) Shizuku をインストール (F-Droid または ADB 経由)、2) サービスを起動、3) ADB Captain を開く。Shizuku がオフの場合は、設定画面が表示されます。</string>
     <string name="help_terminal_title">ターミナル</string>
     <string name="help_terminal_body">任意の ADB コマンド（pm、am、dumpsys、settings、input...）を実行します。クイックチップでよく使うコマンドを起動できます。コマンド履歴はローカルに保存されます（設定のトグル）。</string>
     <string name="help_autocomplete_title">自動補完は何をする？</string>

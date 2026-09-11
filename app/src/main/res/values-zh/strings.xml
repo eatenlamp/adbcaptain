@@ -11,7 +11,7 @@
     <string name="tab_settings">设置</string>
     <string name="setup_required">需要 Shizuku</string>
     <string name="setup_description">ADB Captain 需要 Shizuku 应用正在运行。它允许在没有 Root 权限的情况下执行命令。</string>
-    <string name="setup_step_1">1. 从 Play Store 安装 Shizuku</string>
+    <string name="setup_step_1">1. 安装 Shizuku (F-Droid 或通过 ADB)</string>
     <string name="setup_step_2">2. 启动 Shizuku 服务</string>
     <string name="setup_open_button">打开 Shizuku</string>
     <string name="terminal_welcome_title">欢迎使用终端</string>
@@ -186,7 +186,7 @@
     <string name="help_intro_title">欢迎使用 ADB Captain</string>
     <string name="help_intro_body">ADB Captain 将 Android 调试桥带到您的手机上 - 无需电脑，也无需 root。一切均通过 Shizuku 服务运行。</string>
     <string name="help_shizuku_title">什么是 Shizuku？</string>
-    <string name="help_shizuku_body">Shizuku 让此应用可以像 ADB 一样运行 shell 命令。使用方法：1）从 Play Store 安装 Shizuku，2）启动其服务，3）打开 ADB Captain。如果 Shizuku 已关闭，您会看到设置屏幕。</string>
+    <string name="help_shizuku_body">Shizuku 让此应用可以像 ADB 一样运行 shell 命令。使用方法：1）安装 Shizuku（F-Droid 或通过 ADB），2）启动其服务，3）打开 ADB Captain。如果 Shizuku 已关闭，您会看到设置屏幕。</string>
     <string name="help_terminal_title">终端</string>
     <string name="help_terminal_body">运行任意 ADB 命令（pm、am、dumpsys、settings、input...）。使用快捷按钮启动常用命令。您的命令历史将保存在本地（在设置中切换）。</string>
     <string name="help_autocomplete_title">自动补全有什么用？</string>

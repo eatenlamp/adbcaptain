@@ -59,11 +59,7 @@ android {
     productFlavors {
         create("fdroid") {
             dimension = "store"
-            // FOSS version for GitHub / F-Droid — all features included, no tracking
-        }
-        create("rustore") {
-            dimension = "store"
-            // RuStore version — identical FOSS build, no paid features
+            // Pure FOSS build for F-Droid and GitHub Releases. All features, no tracking.
         }
     }
     compileOptions {
@@ -83,6 +79,12 @@ android {
         includeInApk = false
         includeInBundle = false
     }
+}
+
+// Store-specific flavor, isolated from the F-Droid build graph.
+// Enable with: ./gradlew assembleRustoreRelease -Prustore
+if (project.hasProperty("rustore")) {
+    apply(from = "rustore.gradle.kts")
 }
 
 dependencies {

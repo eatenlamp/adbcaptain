@@ -11,7 +11,7 @@
     <string name="tab_settings">Налаштування</string>
     <string name="setup_required">Потрібен Shizuku</string>
     <string name="setup_description">ADB Captain потребує запущеного застосунку Shizuku. Він дозволяє виконувати команди без прав Root.</string>
-    <string name="setup_step_1">1. Встановіть Shizuku з Play Store</string>
+    <string name="setup_step_1">1. Встановіть Shizuku (F-Droid або через ADB)</string>
     <string name="setup_step_2">2. Запустіть службу Shizuku</string>
     <string name="setup_open_button">Відкрити Shizuku</string>
     <string name="terminal_welcome_title">Ласкаво просимо до Терміналу</string>
@@ -186,7 +186,7 @@
     <string name="help_intro_title">Ласкаво просимо до ADB Captain</string>
     <string name="help_intro_body">ADB Captain приносить Android Debug Bridge на ваш телефон - без комп\'ютера та без root. Усе працює через службу Shizuku.</string>
     <string name="help_shizuku_title">Що таке Shizuku?</string>
-    <string name="help_shizuku_body">Shizuku дозволяє цьому застосунку виконувати команди оболонки як ADB. Щоб користуватися: 1) встановіть Shizuku з Play Store, 2) запустіть службу, 3) відкрийте ADB Captain. Якщо Shizuku вимкнено, ви побачите екран налаштування.</string>
+    <string name="help_shizuku_body">Shizuku дозволяє цьому застосунку виконувати команди оболонки як ADB. Щоб користуватися: 1) встановіть Shizuku (F-Droid або через ADB), 2) запустіть службу, 3) відкрийте ADB Captain. Якщо Shizuku вимкнено, ви побачите екран налаштування.</string>
     <string name="help_terminal_title">Термінал</string>
     <string name="help_terminal_body">Виконуйте будь-які команди ADB (pm, am, dumpsys, settings, input...). Використовуйте швидкі кнопки для поширених команд. Історія команд зберігається локально (перемикач у Налаштуваннях).</string>
     <string name="help_autocomplete_title">Що робить автодоповнення?</string>

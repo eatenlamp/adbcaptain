@@ -11,7 +11,7 @@
     <string name="tab_settings">Nastavení</string>
     <string name="setup_required">Vyžadován Shizuku</string>
     <string name="setup_description">ADB Captain vyžaduje spuštěnou aplikaci Shizuku. Umožňuje spouštět příkazy bez oprávnění root.</string>
-    <string name="setup_step_1">1. Nainstalujte Shizuku z Play Store</string>
+    <string name="setup_step_1">1. Nainstalujte Shizuku (F-Droid nebo přes ADB)</string>
     <string name="setup_step_2">2. Spusťte službu Shizuku</string>
     <string name="setup_open_button">Otevřít Shizuku</string>
     <string name="terminal_welcome_title">Vítejte v Terminálu</string>
@@ -186,7 +186,7 @@
     <string name="help_intro_title">Vítejte v ADB Captain</string>
     <string name="help_intro_body">ADB Captain přináší Android Debug Bridge do vašeho telefonu - bez počítače a bez rootu. Vše běží přes službu Shizuku.</string>
     <string name="help_shizuku_title">Co je Shizuku?</string>
-    <string name="help_shizuku_body">Shizuku umožňuje této aplikaci spouštět příkazy shellu jako ADB. Použití: 1) nainstalujte Shizuku z Play Store, 2) spusťte jeho službu, 3) otevřete ADB Captain. Pokud je Shizuku vypnutý, uvidíte obrazovku nastavení.</string>
+    <string name="help_shizuku_body">Shizuku umožňuje této aplikaci spouštět příkazy shellu jako ADB. Použití: 1) nainstalujte Shizuku (F-Droid nebo přes ADB), 2) spusťte jeho službu, 3) otevřete ADB Captain. Pokud je Shizuku vypnutý, uvidíte obrazovku nastavení.</string>
     <string name="help_terminal_title">Terminál</string>
     <string name="help_terminal_body">Spouštějte libovolné příkazy ADB (pm, am, dumpsys, settings, input...). Pro běžné příkazy používejte rychlé čipy. Historie příkazů se ukládá lokálně (přepínač v Nastavení).</string>
     <string name="help_autocomplete_title">Co dělá automatické doplňování?</string>

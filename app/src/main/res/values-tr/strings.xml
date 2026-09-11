@@ -11,7 +11,7 @@
     <string name="tab_settings">Ayarlar</string>
     <string name="setup_required">Shizuku gerekli</string>
     <string name="setup_description">ADB Captain, Shizuku uygulamasının çalışıyor olmasını gerektirir. Root ayrıcalıkları olmadan komutların çalıştırılmasını sağlar.</string>
-    <string name="setup_step_1">1. Play Store\'dan Shizuku\'yu kurun</string>
+    <string name="setup_step_1">1. Shizuku\'yu kurun (F-Droid veya ADB ile)</string>
     <string name="setup_step_2">2. Shizuku hizmetini başlatın</string>
     <string name="setup_open_button">Shizuku\'yu Aç</string>
     <string name="terminal_welcome_title">Terminale Hoş Geldiniz</string>
@@ -186,7 +186,7 @@
     <string name="help_intro_title">ADB Captain\'a Hoş Geldiniz</string>
     <string name="help_intro_body">ADB Captain, Android Debug Bridge\'i telefonunuza getirir - bilgisayar ve root gerekmez. Her şey Shizuku hizmeti üzerinden çalışır.</string>
     <string name="help_shizuku_title">Shizuku nedir?</string>
-    <string name="help_shizuku_body">Shizuku, bu uygulamanın ADB olarak kabuk komutları çalıştırmasını sağlar. Kullanım: 1) Play Store\'dan Shizuku\'yu kurun, 2) hizmetini başlatın, 3) ADB Captain\'ı açın. Shizuku kapalıysa bir kurulum ekranı görürsünüz.</string>
+    <string name="help_shizuku_body">Shizuku, bu uygulamanın ADB olarak kabuk komutları çalıştırmasını sağlar. Kullanım: 1) Shizuku\'yu kurun (F-Droid veya ADB ile), 2) hizmetini başlatın, 3) ADB Captain\'ı açın. Shizuku kapalıysa bir kurulum ekranı görürsünüz.</string>
     <string name="help_terminal_title">Terminal</string>
     <string name="help_terminal_body">Herhangi bir ADB komutunu çalıştırın (pm, am, dumpsys, settings, input...). Yaygın komutlar için hızlı çipleri kullanın. Komut geçmişiniz yerel olarak kaydedilir (Ayarlar\'da anahtar).</string>
     <string name="help_autocomplete_title">Otomatik tamamlama ne yapar?</string>

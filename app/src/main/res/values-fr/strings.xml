@@ -11,7 +11,7 @@
     <string name="tab_settings">Paramètres</string>
     <string name="setup_required">Shizuku requis</string>
     <string name="setup_description">ADB Captain nécessite l\'application Shizuku en cours d\'exécution. Elle permet d\'exécuter des commandes sans privilèges root.</string>
-    <string name="setup_step_1">1. Installez Shizuku depuis le Play Store</string>
+    <string name="setup_step_1">1. Installez Shizuku (F-Droid ou via ADB)</string>
     <string name="setup_step_2">2. Démarrez le service Shizuku</string>
     <string name="setup_open_button">Ouvrir Shizuku</string>
     <string name="terminal_welcome_title">Bienvenue dans le Terminal</string>
@@ -186,7 +186,7 @@
     <string name="help_intro_title">Bienvenue dans ADB Captain</string>
     <string name="help_intro_body">ADB Captain apporte Android Debug Bridge sur votre téléphone - sans ordinateur et sans root. Tout passe par le service Shizuku.</string>
     <string name="help_shizuku_title">Qu\'est-ce que Shizuku ?</string>
-    <string name="help_shizuku_body">Shizuku permet à cette application d\'exécuter des commandes shell comme ADB. Pour utiliser ADB Captain : 1) installez Shizuku depuis le Play Store, 2) démarrez son service, 3) ouvrez ADB Captain. Si Shizuku est éteint, vous verrez un écran de configuration.</string>
+    <string name="help_shizuku_body">Shizuku permet à cette application d\'exécuter des commandes shell comme ADB. Pour utiliser ADB Captain : 1) installez Shizuku (F-Droid ou via ADB), 2) démarrez son service, 3) ouvrez ADB Captain. Si Shizuku est éteint, vous verrez un écran de configuration.</string>
     <string name="help_terminal_title">Terminal</string>
     <string name="help_terminal_body">Exécutez n\'importe quelle commande ADB (pm, am, dumpsys, settings, input...). Utilisez les raccourcis pour les commandes courantes. Votre historique est enregistré localement (interrupteur dans Paramètres).</string>
     <string name="help_autocomplete_title">Que fait l\'autocomplétion ?</string>

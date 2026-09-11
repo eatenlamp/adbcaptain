@@ -34,7 +34,7 @@ object ShizukuManager {
     }
 
     /**
-     * Открывает приложение Shizuku или страницу в Play Store, если оно не установлено.
+     * Открывает приложение Shizuku или его официальную страницу, если оно не установлено.
      */
     fun openShizukuApp(context: Context) {
         val packageName = "moe.shizuku.privileged.api"
@@ -43,13 +43,11 @@ object ShizukuManager {
             context.startActivity(intent)
         } else {
             try {
-                val playIntent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName"))
-                playIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                context.startActivity(playIntent)
-            } catch (e: Exception) {
-                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName"))
+                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://shizuku.rikka.app/"))
                 browserIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 context.startActivity(browserIntent)
+            } catch (e: Exception) {
+                // ignore
             }
         }
     }

@@ -11,7 +11,7 @@
     <string name="tab_settings">Instellingen</string>
     <string name="setup_required">Shizuku vereist</string>
     <string name="setup_description">ADB Captain vereist dat de Shizuku-app draait. Hiermee kunt u opdrachten uitvoeren zonder rootrechten.</string>
-    <string name="setup_step_1">1. Installeer Shizuku uit de Play Store</string>
+    <string name="setup_step_1">1. Installeer Shizuku (F-Droid of via ADB)</string>
     <string name="setup_step_2">2. Start de Shizuku-service</string>
     <string name="setup_open_button">Shizuku openen</string>
     <string name="terminal_welcome_title">Welkom bij Terminal</string>
@@ -186,7 +186,7 @@
     <string name="help_intro_title">Welkom bij ADB Captain</string>
     <string name="help_intro_body">ADB Captain brengt de Android Debug Bridge naar uw telefoon - geen computer en geen root nodig. Alles loopt via de Shizuku-service.</string>
     <string name="help_shizuku_title">Wat is Shizuku?</string>
-    <string name="help_shizuku_body">Shizuku laat deze app shell-opdrachten als ADB uitvoeren. Gebruik: 1) installeer Shizuku uit de Play Store, 2) start de service, 3) open ADB Captain. Als Shizuku uit staat, ziet u een instellingsscherm.</string>
+    <string name="help_shizuku_body">Shizuku laat deze app shell-opdrachten als ADB uitvoeren. Gebruik: 1) installeer Shizuku (F-Droid of via ADB), 2) start de service, 3) open ADB Captain. Als Shizuku uit staat, ziet u een instellingsscherm.</string>
     <string name="help_terminal_title">Terminal</string>
     <string name="help_terminal_body">Voer elke ADB-opdracht uit (pm, am, dumpsys, settings, input...). Gebruik de snelle chips voor veelvoorkomende opdrachten. Uw opdrachtgeschiedenis wordt lokaal opgeslagen (schakelaar in Instellingen).</string>
     <string name="help_autocomplete_title">Wat doet automatisch aanvullen?</string>

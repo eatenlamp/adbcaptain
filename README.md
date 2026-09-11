@@ -68,7 +68,7 @@ Tune ADB Captain to your workflow.
 
 ADB Captain runs ADB commands using the [Shizuku](https://shizuku.rikka.app/) service, which grants apps shell-level permissions through ADB — **no root required**. To get started:
 
-1. Install **Shizuku** from the Play Store (or via ADB on a computer).
+1. Install **Shizuku** from F-Droid or via ADB on a computer.
 2. Start the Shizuku service from the Shizuku app.
 3. Open ADB Captain — it automatically detects Shizuku and is ready to go.
 
@@ -95,19 +95,13 @@ ADB Captain runs ADB commands using the [Shizuku](https://shizuku.rikka.app/) se
 # Free, full-featured FOSS build (F-Droid / GitHub)
 ./gradlew assembleFdroidDebug
 
-# RuStore build — identical FOSS build, no paid features
-./gradlew assembleRustoreDebug
-
 # Signed release builds (requires keystore.properties, see below)
-./gradlew assembleFdroidRelease assembleRustoreRelease
+./gradlew assembleFdroidRelease
 ```
 
-The project has two product flavors that share the same code:
+The project uses a single `fdroid` product flavor — pure FOSS, all features included, no tracking.
 
-- **`fdroid`** — free, full-featured FOSS build. Ready for F-Droid and GitHub Releases.
-- **`rustore`** — identical FOSS build for RuStore. No paid features, no analytics, no DonationAlerts.
-
-> ADB Captain is fully free and open source in both variants. There are no paid ("PRO") features and no donation links — this stays true for every store.
+> Store-specific builds (e.g. RuStore) are kept out of the main config. See [`RUSTORE.md`](RUSTORE.md).
 
 ## 🔑 Signing release builds
 
