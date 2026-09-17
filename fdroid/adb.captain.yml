@@ -6,6 +6,8 @@ Categories:
   - System
   - Development
 License: AGPL-3.0-or-later
+AuthorName: eatenlamp
+AuthorEmail: eatenlamp@proton.me
 WebSite: https://adb-captain.vercel.app
 SourceCode: https://github.com/eatenlamp/adbcaptain
 IssueTracker: https://github.com/eatenlamp/adbcaptain/issues
