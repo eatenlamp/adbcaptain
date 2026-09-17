@@ -20,7 +20,7 @@ val keystoreProps = loadKeystore()
 
 android {
     namespace = "adb.captain"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "adb.captain"

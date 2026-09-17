@@ -26,9 +26,13 @@ jobs:
 
       - name: Set up Android SDK
         run: |
-          SDK_MGR=$(ls -d /usr/local/lib/android/sdk/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          SDK_MGR=/usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager
+          echo "--- available sdkmanager dirs ---"
+          ls /usr/local/lib/android/sdk/cmdline-tools/
           yes | "$SDK_MGR" --licenses || true
-          "$SDK_MGR" --install "platforms;android-36" "platform-tools"
+          "$SDK_MGR" --install "platforms;android-37" "platform-tools" --channel=3 || \
+            "$SDK_MGR" --install "platforms;android-37" "platform-tools"
           echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
 
       - name: Grant gradlew permissions
