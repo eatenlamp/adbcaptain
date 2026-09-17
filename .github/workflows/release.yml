@@ -1,0 +1,71 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+env:
+  JAVA_VERSION: "21"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant gradlew permissions
+        run: chmod +x gradlew
+
+      - name: Decode signing keystore
+        run: |
+          mkdir -p keystore
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/release.jks
+          echo "storeFile=keystore/release.jks" > keystore.properties
+          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> keystore.properties
+          echo "keyAlias=${{ secrets.KEYSTORE_ALIAS }}" >> keystore.properties
+          echo "keyPassword=${{ secrets.KEYSTORE_KEY_PASSWORD }}" >> keystore.properties
+
+      - name: Build signed release APK
+        run: ./gradlew :app:assembleFdroidRelease
+
+      - name: Rename APK
+        run: |
+          mv app/build/outputs/apk/fdroid/release/app-fdroid-release.apk \
+             app/build/outputs/apk/fdroid/release/adb-captain-v${{ github.ref_name }}.apk
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ADB Captain ${{ github.ref_name }}
+          body: |
+            **ADB Captain** — rootless ADB toolkit powered by Shizuku.
+
+            ## What's in this release
+
+            - Terminal: run any ADB command (pm, am, dumpsys, settings, input), autocomplete from history
+            - Apps: installed packages in one list, user/system separated, safety ratings
+            - Devices: model, Android version, battery, connection status, reboot, screenshots
+            - Logcat: live system log, filterable by level and text
+            - Sideload & tools: install APKs, screen recording, quick toggles, type text, open links
+
+            ## Build
+
+            - Flavor: `fdroid` (pure FOSS, no ads, no analytics, no accounts)
+            - Signed with the project release key
+            - License: AGPL-3.0-or-later
+          files: app/build/outputs/apk/fdroid/release/adb-captain-*.apk
