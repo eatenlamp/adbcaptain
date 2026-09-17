@@ -9,6 +9,9 @@ on:
 env:
   JAVA_VERSION: "21"
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
