@@ -25,7 +25,9 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        run: |
+          sdkmanager --install "platforms;android-37" "platform-tools"
+          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
 
       - name: Grant gradlew permissions
         run: chmod +x gradlew
