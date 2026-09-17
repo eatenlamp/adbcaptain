@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*"
+      - "release/v*"
   workflow_dispatch:
     inputs:
       version:
@@ -54,6 +55,12 @@ jobs:
         run: |
           if [ -n "$INPUT_VERSION" ]; then
             v="${INPUT_VERSION#v}"
+            echo "version=$v" >> "$GITHUB_OUTPUT"
+            echo "tag=v$v" >> "$GITHUB_OUTPUT"
+            echo "bump=true" >> "$GITHUB_OUTPUT"
+          elif [[ "$GITHUB_REF_NAME" == release/v* ]]; then
+            v="${GITHUB_REF_NAME#release/v}"
+            v="${v#v}"
             echo "version=$v" >> "$GITHUB_OUTPUT"
             echo "tag=v$v" >> "$GITHUB_OUTPUT"
             echo "bump=true" >> "$GITHUB_OUTPUT"
