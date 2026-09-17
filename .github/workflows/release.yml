@@ -5,12 +5,25 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
-
-env:
-  JAVA_VERSION: "21"
+    inputs:
+      version:
+        description: "Release version without leading v (e.g. 1.1). Leave empty to build an existing tag."
+        required: false
+      version_code:
+        description: "versionCode (optional; auto-increments when empty)"
+        required: false
 
 permissions:
   contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  JAVA_VERSION: "21"
+  INPUT_VERSION: ${{ github.event.inputs.version }}
+  INPUT_VERSION_CODE: ${{ github.event.inputs.version_code }}
 
 jobs:
   build:
@@ -19,6 +32,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'main' || github.ref }}
           fetch-depth: 0
 
       - name: Set up JDK
@@ -34,6 +48,55 @@ jobs:
           yes | "$SDK_MGR" --licenses || true
           "$SDK_MGR" --install "platforms;android-37.0" "platforms;android-37.1" "build-tools;37.0.0" "platform-tools"
           echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+
+      - name: Resolve version and tag
+        id: ver
+        run: |
+          if [ -n "$INPUT_VERSION" ]; then
+            v="${INPUT_VERSION#v}"
+            echo "version=$v" >> "$GITHUB_OUTPUT"
+            echo "tag=v$v" >> "$GITHUB_OUTPUT"
+            echo "bump=true" >> "$GITHUB_OUTPUT"
+          else
+            tag="$GITHUB_REF_NAME"
+            echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+            echo "tag=$tag" >> "$GITHUB_OUTPUT"
+            echo "bump=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Bump version and push tag
+        if: steps.ver.outputs.bump == 'true'
+        run: |
+          set -e
+          f=app/build.gradle.kts
+          tag="${{ steps.ver.outputs.tag }}"
+          newv="${{ steps.ver.outputs.version }}"
+
+          if git rev-parse "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "Tag $tag already exists" >&2
+            exit 1
+          fi
+
+          if [ -n "$INPUT_VERSION_CODE" ]; then
+            newc="$INPUT_VERSION_CODE"
+          else
+            cur=$(grep -oP 'versionCode\s*=\s*\K[0-9]+' "$f")
+            newc=$((cur + 1))
+          fi
+
+          sed -i -E "s/versionCode[[:space:]]*=[[:space:]]*[0-9]+/versionCode = $newc/" "$f"
+          sed -i -E "s/versionName[[:space:]]*=[[:space:]]*\"[^\"]*\"/versionName = \"$newv\"/" "$f"
+
+          echo "Bumping to versionName=$newv versionCode=$newc"
+          git diff -- "$f"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$f"
+          git commit -m "Release $tag"
+          git tag "$tag"
+          git push origin HEAD:main
+          git push origin "$tag"
 
       - name: Grant gradlew permissions
         run: chmod +x gradlew
@@ -53,13 +116,13 @@ jobs:
       - name: Rename APK
         run: |
           mv app/build/outputs/apk/fdroid/release/app-fdroid-release.apk \
-             app/build/outputs/apk/fdroid/release/adb-captain-${{ github.ref_name }}.apk
+             app/build/outputs/apk/fdroid/release/adb-captain-${{ steps.ver.outputs.tag }}.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: ADB Captain ${{ github.ref_name }}
+          tag_name: ${{ steps.ver.outputs.tag }}
+          name: ADB Captain ${{ steps.ver.outputs.tag }}
           body: |
             **ADB Captain** — rootless ADB toolkit powered by Shizuku.
 
