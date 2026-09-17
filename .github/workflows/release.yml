@@ -53,7 +53,7 @@ jobs:
       - name: Rename APK
         run: |
           mv app/build/outputs/apk/fdroid/release/app-fdroid-release.apk \
-             app/build/outputs/apk/fdroid/release/adb-captain-v${{ github.ref_name }}.apk
+             app/build/outputs/apk/fdroid/release/adb-captain-${{ github.ref_name }}.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
