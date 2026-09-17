@@ -11,7 +11,7 @@ SourceCode: https://github.com/eatenlamp/adbcaptain
 IssueTracker: https://github.com/eatenlamp/adbcaptain/issues
 Changelog: https://github.com/eatenlamp/adbcaptain/releases
 # Binaries: optional — enable only if you publish reproducible signed APKs on GitHub Releases:
-# Binaries: https://github.com/eatenlamp/adbcaptain/releases/download/v%v/app-fdroid-release.apk
+# Binaries: https://github.com/eatenlamp/adbcaptain/releases/download/v%v/adb-captain-v%v.apk
 
 AutoName: ADB Captain
 Summary: Rootless ADB toolkit powered by Shizuku
