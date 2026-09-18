@@ -1,0 +1,1 @@
+Maintenance release: version bump for the F-Droid listing. No functional changes.
