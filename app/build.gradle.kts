@@ -53,6 +53,9 @@ android {
                 "proguard-rules.pro"
             )
             signingConfig = if (keystoreProps != null) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
+            vcsInfo {
+                include = false
+            }
         }
     }
     flavorDimensions += "store"
