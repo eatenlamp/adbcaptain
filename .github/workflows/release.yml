@@ -143,7 +143,7 @@ jobs:
         with:
           tag_name: ${{ steps.ver.outputs.tag }}
           name: ADB Captain ${{ steps.ver.outputs.tag }}
-          update_existing: true
+          overwrite_files: true
           body: |
             **ADB Captain** — rootless ADB toolkit powered by Shizuku.
 
