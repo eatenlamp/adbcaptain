@@ -109,6 +109,8 @@ jobs:
             sed -i -E "s/^  - versionName: .*/  - versionName: '$newv'/" "$meta"
             sed -i -E "s/^    versionCode: .*/    versionCode: $newc/" "$meta"
             sed -i -E "s/^    commit: .*/    commit: $src_sha/" "$meta"
+            sed -i -E "s/^CurrentVersion: .*/CurrentVersion: '$newv'/" "$meta"
+            sed -i -E "s/^CurrentVersionCode: .*/CurrentVersionCode: $newc/" "$meta"
             git add "$meta"
             git commit -m "Sync F-Droid metadata for $tag"
           fi
