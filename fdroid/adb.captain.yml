@@ -1,6 +1,3 @@
-# F-Droid package metadata for adb.captain
-# Place this file in your fork of https://gitlab.com/fdroid/fdroiddata
-# as: metadata/adb.captain.yml
 Name: ADB Captain
 Categories:
   - System
@@ -12,34 +9,19 @@ WebSite: https://adb-captain.vercel.app
 SourceCode: https://github.com/eatenlamp/adbcaptain
 IssueTracker: https://github.com/eatenlamp/adbcaptain/issues
 Changelog: https://github.com/eatenlamp/adbcaptain/releases
-# Binaries: optional — enable only if you publish reproducible signed APKs on GitHub Releases:
-# Binaries: https://github.com/eatenlamp/adbcaptain/releases/download/v%v/adb-captain-v%v.apk
-
-AutoName: ADB Captain
-Summary: Rootless ADB toolkit powered by Shizuku
-Description: |-
-    ADB Captain runs ADB commands right on your phone. No computer, no root — it works through Shizuku.
-
-    What's inside:
-
-    * Terminal. pm, am, dumpsys, settings, input — anything adb shell takes. Autocomplete pulls from your command history.
-    * Apps. Every installed package in one list, user and system apps separated. Each one gets a plain safety rating, so you know what's safe to disable or remove.
-    * Devices. Model, Android version, battery, connection status. Reboot and screenshots from the same screen.
-    * Logcat. Live system log, filterable by level and text.
-    * Sideload and tools. Install an APK from storage, record the screen, flip Wi-Fi, Bluetooth or airplane mode, type text, open links.
-
-    AGPL-3.0. No ads, no analytics, no accounts.
 
 RepoType: git
 Repo: https://github.com/eatenlamp/adbcaptain.git
 
 Builds:
-  - versionName: 1.1
+  - versionName: '1.1'
     versionCode: 2
-    commit: v1.1
+    commit: 68063ef50ac9a7f5db8cd4ad579b08bbfb39bb47
     subdir: app
     gradle:
       - fdroid
 
 AutoUpdateMode: Version v%v
 UpdateCheckMode: Tags
+Binaries: https://github.com/eatenlamp/adbcaptain/releases/download/v%v/adb-captain-v%v.apk
+AllowedAPKSigningKeys: 6749c6539f8c85019abf66589601a512fe7bb761dbc66f80fb88f54e061c07be

@@ -97,19 +97,22 @@ jobs:
           echo "Bumping to versionName=$newv versionCode=$newc"
           git diff -- "$f"
 
-          meta=fdroid/adb.captain.yml
-          if [ -f "$meta" ]; then
-            sed -i -E "s/^  - versionName: .*/  - versionName: $newv/" "$meta"
-            sed -i -E "s/^    versionCode: .*/    versionCode: $newc/" "$meta"
-            sed -i -E "s/^    commit: .*/    commit: $tag/" "$meta"
-            git add "$meta"
-          fi
-
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "$f"
           git commit -m "Release $tag"
+          src_sha=$(git rev-parse HEAD)
           git tag "$tag"
+
+          meta=fdroid/adb.captain.yml
+          if [ -f "$meta" ]; then
+            sed -i -E "s/^  - versionName: .*/  - versionName: '$newv'/" "$meta"
+            sed -i -E "s/^    versionCode: .*/    versionCode: $newc/" "$meta"
+            sed -i -E "s/^    commit: .*/    commit: $src_sha/" "$meta"
+            git add "$meta"
+            git commit -m "Sync F-Droid metadata for $tag"
+          fi
+
           git push origin HEAD:main
           git push origin "$tag"
 
