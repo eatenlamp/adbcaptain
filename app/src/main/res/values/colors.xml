@@ -10,4 +10,5 @@
     <color name="copper_700">#966C1E</color>
     <color name="black">#000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="ic_launcher_background">#0B1B2B</color>
 </resources>
