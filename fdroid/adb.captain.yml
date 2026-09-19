@@ -17,16 +17,18 @@ Binaries:
   https://github.com/eatenlamp/adbcaptain/releases/download/v%v/adb-captain-v%v.apk
 
 Builds:
-  - versionName: '1.1'
-    versionCode: 2
-    commit: 68063ef50ac9a7f5db8cd4ad579b08bbfb39bb47
+  - versionName: '1.2'
+    versionCode: 3
+    commit: 20226c0752944bd4d54e4e7649ed93c7fc0e3085
     subdir: app
     gradle:
       - fdroid
 
 AllowedAPKSigningKeys: 6749c6539f8c85019abf66589601a512fe7bb761dbc66f80fb88f54e061c07be
 
-AutoUpdateMode: None
-UpdateCheckMode: None
-CurrentVersion: '1.1'
-CurrentVersionCode: 2
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+UpdateCheckData: 
+  app/build.gradle.kts|versionCode\s*=\s*(\d+)|.|versionName\s*=\s*"([^"]+)"
+CurrentVersion: '1.2'
+CurrentVersionCode: 3
