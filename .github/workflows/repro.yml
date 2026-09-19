@@ -1,0 +1,85 @@
+name: Reproducibility check
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repro-${{ github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: "21"
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Android SDK
+        run: |
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          SDK_MGR=/usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager
+          yes | "$SDK_MGR" --licenses || true
+          "$SDK_MGR" --install "platforms;android-37.0" "platforms;android-37.1" "build-tools;37.0.0" "platform-tools"
+          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+
+      - name: Grant gradlew permissions
+        run: chmod +x gradlew
+
+      - name: Decode signing keystore
+        run: |
+          mkdir -p keystore
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/release.jks
+          echo "storeFile=keystore/release.jks" > keystore.properties
+          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> keystore.properties
+          echo "keyAlias=${{ secrets.KEYSTORE_ALIAS }}" >> keystore.properties
+          echo "keyPassword=${{ secrets.KEYSTORE_KEY_PASSWORD }}" >> keystore.properties
+
+      - name: Build signed release APK
+        run: ./gradlew :app:assembleFdroidRelease
+
+      - name: Wait for published asset
+        run: |
+          asset="adb-captain-${GITHUB_REF_NAME}.apk"
+          url="https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/${asset}"
+          for i in $(seq 1 36); do
+            code=$(curl -sL -o /dev/null -w "%{http_code}" "$url")
+            if [ "$code" = "200" ]; then
+              echo "asset ready after ~$((i * 20))s"
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "::error::Published asset not available after 12 minutes"
+          exit 1
+
+      - name: Compare rebuilt with published
+        run: |
+          asset="adb-captain-${GITHUB_REF_NAME}.apk"
+          url="https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/${asset}"
+          curl -sL -o published.apk "$url"
+          rebuilt="app/build/outputs/apk/fdroid/release/app-fdroid-release.apk"
+          echo "published sha256: $(sha256sum published.apk | cut -d' ' -f1)"
+          echo "rebuilt   sha256: $(sha256sum "$rebuilt" | cut -d' ' -f1)"
+          if cmp -s published.apk "$rebuilt"; then
+            echo "OK: release APK is reproducible (byte-identical to this rebuild)"
+          else
+            echo "::error::Rebuilt APK differs from the published release asset — reproducibility broken!"
+            exit 1
+          fi
