@@ -139,7 +139,7 @@ jobs:
              app/build/outputs/apk/fdroid/release/adb-captain-${{ steps.ver.outputs.tag }}.apk
 
       - name: Build RuStore release APK
-        run: ./gradlew -Prustore :app:assembleRustoreRelease
+        run: ./gradlew :app:assembleRustoreRelease
 
       - name: Rename RuStore APK
         run: |

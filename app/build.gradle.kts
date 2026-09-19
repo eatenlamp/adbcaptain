@@ -64,6 +64,16 @@ android {
             dimension = "store"
             // Pure FOSS build for F-Droid and GitHub Releases. All features, no tracking.
         }
+        create("rustore") {
+            dimension = "store"
+            // Same FOSS build for RuStore. No paid features, no analytics.
+            // Unique package so it can be installed alongside the F-Droid build.
+            applicationId = "adb.captain.rustore"
+            // Store-specific source set (app/src/rustore) makes Russian the
+            // default language and renames the app to "ADB Капитан".
+            // This source set touches only the rustore variant, so the
+            // fdroid variant's output stays byte-identical.
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
@@ -87,12 +97,6 @@ android {
         includeInApk = false
         includeInBundle = false
     }
-}
-
-// Store-specific flavor, isolated from the F-Droid build graph.
-// Enable with: ./gradlew assembleRustoreRelease -Prustore
-if (project.hasProperty("rustore")) {
-    apply(from = "rustore.gradle.kts")
 }
 
 dependencies {
