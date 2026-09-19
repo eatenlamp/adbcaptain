@@ -14,3 +14,8 @@ captures/
 *.keystore
 keystore.properties
 keystore/
+
+# RuStore signing identity (isolated from the F-Droid key). Never commit these.
+rustore-keystore.properties
+rustore-keystore.jks
+rustore.jks

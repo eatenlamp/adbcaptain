@@ -8,15 +8,16 @@ plugins {
 
 import java.util.Properties
 
-fun loadKeystore(): Properties? {
-    val propsFile = rootProject.file("keystore.properties")
+fun loadProps(fileName: String): Properties? {
+    val propsFile = rootProject.file(fileName)
     if (!propsFile.exists()) return null
     val props = Properties()
     propsFile.inputStream().use { props.load(it) }
     return props
 }
 
-val keystoreProps = loadKeystore()
+val keystoreProps = loadProps("keystore.properties")            // F-Droid / GitHub Releases signing key
+val rustoreKeystoreProps = loadProps("rustore-keystore.properties") // separate RuStore signing key (isolated identity)
 
 android {
     namespace = "adb.captain"
@@ -39,6 +40,17 @@ android {
                 storePassword = keystoreProps["storePassword"] as String
                 keyAlias = keystoreProps["keyAlias"] as String
                 keyPassword = keystoreProps["keyPassword"] as String
+            }
+        }
+        // A separate RuStore signing identity. Isolated from the F-Droid key:
+        // if either store's key leaks, the other build's signature stays valid
+        // and no F-Droid metadata re-signing is needed.
+        if (rustoreKeystoreProps != null) {
+            create("rustore") {
+                storeFile = rootProject.file(rustoreKeystoreProps["storeFile"] as String)
+                storePassword = rustoreKeystoreProps["storePassword"] as String
+                keyAlias = rustoreKeystoreProps["keyAlias"] as String
+                keyPassword = rustoreKeystoreProps["keyPassword"] as String
             }
         }
     }
@@ -73,6 +85,11 @@ android {
             // default language and renames the app to "ADB Капитан".
             // This source set touches only the rustore variant, so the
             // fdroid variant's output stays byte-identical.
+            // RuStore build is signed with its own key (signingConfig "rustore"),
+            // isolated from the F-Droid/GitHub key that release builds use.
+            if (rustoreKeystoreProps != null) {
+                signingConfig = signingConfigs.getByName("rustore")
+            }
         }
     }
     compileOptions {
