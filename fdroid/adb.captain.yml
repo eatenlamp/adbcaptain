@@ -28,7 +28,6 @@ AllowedAPKSigningKeys: 6749c6539f8c85019abf66589601a512fe7bb761dbc66f80fb88f54e0
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-UpdateCheckData: 
-  app/build.gradle.kts|versionCode\s*=\s*(\d+)|.|versionName\s*=\s*"([^"]+)"
+UpdateCheckData: app/build.gradle.kts|versionCode\s*=\s*(\d+)|.|versionName\s*=\s*"([^"]+)"
 CurrentVersion: '1.2'
 CurrentVersionCode: 3
