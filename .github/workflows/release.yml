@@ -138,6 +138,23 @@ jobs:
           mv app/build/outputs/apk/fdroid/release/app-fdroid-release.apk \
              app/build/outputs/apk/fdroid/release/adb-captain-${{ steps.ver.outputs.tag }}.apk
 
+      - name: Build RuStore release APK
+        run: ./gradlew -Prustore :app:assembleRustoreRelease
+
+      - name: Rename RuStore APK
+        run: |
+          mv app/build/outputs/apk/rustore/release/app-rustore-release.apk \
+             app/build/outputs/apk/rustore/release/adb-captain-rustore-${{ steps.ver.outputs.tag }}.apk
+
+      - name: Inspect APKs
+        run: |
+          AAPT2="$ANDROID_HOME/build-tools/37.0.0/aapt2"
+          for apk in app/build/outputs/apk/*/release/adb-captain-*.apk; do
+            echo "== $apk =="
+            "$AAPT2" dump badging "$apk" | grep -E "^(package|application-label-|sdkVersion|targetSdkVersion):" || true
+            sha256sum "$apk"
+          done
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -157,7 +174,7 @@ jobs:
 
             ## Build
 
-            - Flavor: `fdroid` (pure FOSS, no ads, no analytics, no accounts)
-            - Signed with the project release key
+            - Flavor: `fdroid` (pure FOSS, no ads, no analytics, no accounts) — signed with the project release key
+            - Flavor: `rustore` (RuStore variant, Russian by default) — attached as `adb-captain-rustore-*.apk`
             - License: AGPL-3.0-or-later
-          files: app/build/outputs/apk/fdroid/release/adb-captain-*.apk
+          files: app/build/outputs/apk/*/release/adb-captain-*.apk
