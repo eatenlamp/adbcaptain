@@ -130,6 +130,18 @@ jobs:
           echo "keyAlias=${{ secrets.KEYSTORE_ALIAS }}" >> keystore.properties
           echo "keyPassword=${{ secrets.KEYSTORE_KEY_PASSWORD }}" >> keystore.properties
 
+      - name: Decode RuStore signing keystore (isolated identity)
+        if: env.RUSTORE_JKS_BASE64 != ''
+        env:
+          RUSTORE_JKS_BASE64: ${{ secrets.RUSTORE_JKS_BASE64 }}
+        run: |
+          mkdir -p keystore
+          echo "$RUSTORE_JKS_BASE64" | base64 -d > keystore/rustore.jks
+          echo "storeFile=keystore/rustore.jks" > rustore-keystore.properties
+          echo "storePassword=${{ secrets.RUSTORE_STORE_PASSWORD }}" >> rustore-keystore.properties
+          echo "keyAlias=${{ secrets.RUSTORE_KEY_ALIAS }}" >> rustore-keystore.properties
+          echo "keyPassword=${{ secrets.RUSTORE_KEY_PASSWORD }}" >> rustore-keystore.properties
+
       - name: Build signed release APK
         run: ./gradlew :app:assembleFdroidRelease
 
