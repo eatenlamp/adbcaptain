@@ -7,4 +7,9 @@ import dagger.hilt.android.HiltAndroidApp
  * Основной класс приложения для инициализации Hilt и других глобальных компонентов.
  */
 @HiltAndroidApp
-class CommanderApp : Application()
+class CommanderApp : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        ShizukuManager.init()
+    }
+}

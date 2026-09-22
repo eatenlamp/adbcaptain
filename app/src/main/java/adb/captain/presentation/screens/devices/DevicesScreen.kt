@@ -126,17 +126,39 @@ fun DevicesScreen(
                         oemUnlock = uiState.oemUnlock,
                         wifiAdb = uiState.wifiAdb,
                         demoMode = uiState.demoMode,
+                        nfcEnabled = uiState.nfcEnabled,
+                        mobileDataEnabled = uiState.mobileDataEnabled,
                         onShowTouchesChange = { viewModel.toggleShowTouches(it) },
                         onAnimationScaleChange = { viewModel.setAnimationScale(it) },
                         onUsbDebuggingChange = { viewModel.toggleUsbDebugging(it) },
                         onOemUnlockChange = { viewModel.toggleOemUnlock(it) },
                         onWifiAdbChange = { viewModel.toggleWifiAdb(it) },
-                        onDemoModeChange = { viewModel.toggleDemoMode(it) }
+                        onDemoModeChange = { viewModel.toggleDemoMode(it) },
+                        onNfcChange = { viewModel.toggleNfc(it) },
+                        onMobileDataChange = { viewModel.toggleMobileData(it) }
                     )
                 }
 
                 item {
-                    BatteryCard(battery = uiState.battery, onRefresh = { viewModel.refreshBattery() })
+                    DisplayCard(
+                        nightMode = uiState.nightMode,
+                        displayDensity = uiState.displayDensity,
+                        displaySize = uiState.displaySize,
+                        onNightModeChange = { viewModel.setNightMode(it) },
+                        onBrightnessSet = { viewModel.setScreenBrightness(it) },
+                        onDensityApply = { viewModel.applyDisplayDensity(it) },
+                        onSizeApply = { w, h -> viewModel.applyDisplaySize(w, h) },
+                        onDisplayReset = { viewModel.resetDisplay() }
+                    )
+                }
+
+                item {
+                    BatteryCard(
+                        battery = uiState.battery,
+                        onRefresh = { viewModel.refreshBattery() },
+                        onSetLevel = { viewModel.setBatteryLevel(it) },
+                        onReset = { viewModel.resetBattery() }
+                    )
                 }
 
                 item {
@@ -227,12 +249,16 @@ fun GlobalSwitchesSection(
     oemUnlock: Boolean,
     wifiAdb: Boolean,
     demoMode: Boolean,
+    nfcEnabled: Boolean,
+    mobileDataEnabled: Boolean,
     onShowTouchesChange: (Boolean) -> Unit,
     onAnimationScaleChange: (Float) -> Unit,
     onUsbDebuggingChange: (Boolean) -> Unit,
     onOemUnlockChange: (Boolean) -> Unit,
     onWifiAdbChange: (Boolean) -> Unit,
-    onDemoModeChange: (Boolean) -> Unit
+    onDemoModeChange: (Boolean) -> Unit,
+    onNfcChange: (Boolean) -> Unit,
+    onMobileDataChange: (Boolean) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -308,6 +334,24 @@ fun GlobalSwitchesSection(
             HorizontalDivider(Modifier.padding(vertical = 16.dp))
 
             SwitchRow(
+                title = stringResource(R.string.switch_nfc),
+                subtitle = stringResource(R.string.switch_nfc_desc),
+                checked = nfcEnabled,
+                onCheckedChange = onNfcChange
+            )
+
+            HorizontalDivider(Modifier.padding(vertical = 16.dp))
+
+            SwitchRow(
+                title = stringResource(R.string.switch_mobile_data),
+                subtitle = stringResource(R.string.switch_mobile_data_desc),
+                checked = mobileDataEnabled,
+                onCheckedChange = onMobileDataChange
+            )
+
+            HorizontalDivider(Modifier.padding(vertical = 16.dp))
+
+            SwitchRow(
                 title = stringResource(R.string.switch_demo_mode),
                 subtitle = stringResource(R.string.switch_demo_mode_desc),
                 checked = demoMode,
@@ -337,7 +381,131 @@ fun SwitchRow(
 }
 
 @Composable
-fun BatteryCard(battery: BatteryDetails?, onRefresh: () -> Unit) {
+fun DisplayCard(
+    nightMode: Int,
+    displayDensity: Int,
+    displaySize: String?,
+    onNightModeChange: (Int) -> Unit,
+    onBrightnessSet: (Int) -> Unit,
+    onDensityApply: (Int) -> Unit,
+    onSizeApply: (Int, Int) -> Unit,
+    onDisplayReset: () -> Unit
+) {
+    var densityInput by remember(displayDensity) { mutableStateOf(if (displayDensity > 0) displayDensity.toString() else "") }
+    val sizeParts = displaySize?.split("x")
+    var widthInput by remember(sizeParts) { mutableStateOf(sizeParts?.getOrNull(0) ?: "") }
+    var heightInput by remember(sizeParts) { mutableStateOf(sizeParts?.getOrNull(1) ?: "") }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(stringResource(R.string.display_title), style = MaterialTheme.typography.titleLarge)
+
+            Spacer(Modifier.height(12.dp))
+
+            Text(stringResource(R.string.night_mode_title), style = MaterialTheme.typography.bodyLarge)
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(selected = nightMode == 0, onClick = { onNightModeChange(0) }, label = { Text(stringResource(R.string.night_mode_auto)) })
+                FilterChip(selected = nightMode == 2, onClick = { onNightModeChange(2) }, label = { Text(stringResource(R.string.night_mode_on)) })
+                FilterChip(selected = nightMode == 1, onClick = { onNightModeChange(1) }, label = { Text(stringResource(R.string.night_mode_off)) })
+            }
+
+            HorizontalDivider(Modifier.padding(vertical = 16.dp))
+
+            Text(stringResource(R.string.brightness_title), style = MaterialTheme.typography.bodyLarge)
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(10, 25, 50, 100).forEach { level ->
+                    AssistChip(onClick = { onBrightnessSet(level) }, label = { Text("$level%") })
+                }
+            }
+
+            HorizontalDivider(Modifier.padding(vertical = 16.dp))
+
+            Text(stringResource(R.string.display_density_title), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                stringResource(R.string.display_density_current, displayDensity),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.outline
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = densityInput,
+                    onValueChange = { densityInput = it },
+                    modifier = Modifier.width(110.dp),
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyMedium,
+                    label = { Text(stringResource(R.string.display_density_label)) }
+                )
+                Spacer(Modifier.width(8.dp))
+                Button(
+                    onClick = { densityInput.toIntOrNull()?.let(onDensityApply) },
+                    enabled = densityInput.toIntOrNull() != null
+                ) {
+                    Text(stringResource(R.string.display_apply))
+                }
+            }
+
+            HorizontalDivider(Modifier.padding(vertical = 16.dp))
+
+            Text(stringResource(R.string.display_size_title), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                stringResource(R.string.display_size_current, displaySize ?: "—"),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.outline
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = widthInput,
+                    onValueChange = { widthInput = it },
+                    modifier = Modifier.width(90.dp),
+                    singleLine = true,
+                    label = { Text("W") }
+                )
+                Spacer(Modifier.width(6.dp))
+                OutlinedTextField(
+                    value = heightInput,
+                    onValueChange = { heightInput = it },
+                    modifier = Modifier.width(90.dp),
+                    singleLine = true,
+                    label = { Text("H") }
+                )
+                Spacer(Modifier.width(8.dp))
+                Button(
+                    onClick = {
+                        val w = widthInput.toIntOrNull()
+                        val h = heightInput.toIntOrNull()
+                        if (w != null && h != null) onSizeApply(w, h)
+                    },
+                    enabled = widthInput.toIntOrNull() != null && heightInput.toIntOrNull() != null
+                ) {
+                    Text(stringResource(R.string.display_apply))
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(onClick = onDisplayReset) {
+                Text(stringResource(R.string.display_reset))
+            }
+        }
+    }
+}
+
+@Composable
+fun BatteryCard(
+    battery: BatteryDetails?,
+    onRefresh: () -> Unit,
+    onSetLevel: (Int) -> Unit,
+    onReset: () -> Unit
+) {
+    var showLevelDialog by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
@@ -393,7 +561,53 @@ fun BatteryCard(battery: BatteryDetails?, onRefresh: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+
+            HorizontalDivider(Modifier.padding(vertical = 16.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilledTonalButton(onClick = { showLevelDialog = true }) {
+                    Icon(Icons.Default.BatteryStd, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.battery_set_level))
+                }
+                OutlinedButton(onClick = onReset) {
+                    Text(stringResource(R.string.battery_reset))
+                }
+            }
         }
+    }
+
+    if (showLevelDialog) {
+        var levelInput by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showLevelDialog = false },
+            title = { Text(stringResource(R.string.battery_set_level)) },
+            text = {
+                OutlinedTextField(
+                    value = levelInput,
+                    onValueChange = { levelInput = it },
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.battery_level)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        levelInput.toIntOrNull()?.let(onSetLevel)
+                        showLevelDialog = false
+                    },
+                    enabled = levelInput.toIntOrNull() != null
+                ) {
+                    Text(stringResource(R.string.display_apply))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLevelDialog = false }) {
+                    Text(stringResource(R.string.apps_cancel))
+                }
+            }
+        )
     }
 }
 

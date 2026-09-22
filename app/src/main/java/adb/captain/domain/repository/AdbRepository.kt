@@ -72,6 +72,33 @@ interface AdbRepository {
     suspend fun createDiagnosticReport(): String
 
     suspend fun runInputMacro(script: String): String
+
+    // Connectivity quick toggles
+    suspend fun isNfcEnabled(): Boolean
+    suspend fun setNfcEnabled(enabled: Boolean): String
+    suspend fun isMobileDataEnabled(): Boolean
+    suspend fun setMobileDataEnabled(enabled: Boolean): String
+
+    // Display / UI mode
+    suspend fun getNightMode(): Int
+    suspend fun setNightMode(mode: Int): String
+    suspend fun setScreenBrightness(percent: Int): String
+
+    // Battery control (like `adb shell cmd battery ...`)
+    suspend fun setBatteryLevel(level: Int): String
+    suspend fun resetBattery(): String
+
+    // Display size / density (like `adb shell wm ...`)
+    suspend fun getDisplayDensity(): Int
+    suspend fun getDisplaySize(): String?
+    suspend fun setDisplayDensity(density: Int): String
+    suspend fun setDisplaySize(width: Int, height: Int): String
+    suspend fun resetDisplay(): String
+
+    // App Ops (fine-grained permissions, no root)
+    suspend fun getAppOps(packageName: String): String
+    suspend fun setAppOp(packageName: String, opName: String, mode: String): String
+    suspend fun resetAppOps(packageName: String): String
 }
 
 data class BatteryDetails(

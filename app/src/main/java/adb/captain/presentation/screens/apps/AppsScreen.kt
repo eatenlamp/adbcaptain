@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -34,6 +35,7 @@ fun AppsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val exportSaved = stringResource(R.string.apps_export_saved)
     val exportFailed = stringResource(R.string.apps_export_failed)
+    val appOpsApplied = stringResource(R.string.appop_applied)
     val filteredApps = remember(uiState.apps, uiState.searchQuery) {
         uiState.apps.filter {
             it.packageName.contains(uiState.searchQuery, ignoreCase = true) ||
@@ -52,6 +54,17 @@ fun AppsScreen(
             }
             snackbarHostState.showSnackbar(text, duration = SnackbarDuration.Long)
             viewModel.clearExportMessage()
+        }
+    }
+
+    LaunchedEffect(uiState.appOpsMessage) {
+        uiState.appOpsMessage?.let { message ->
+            snackbarHostState.showSnackbar(
+                if (message.startsWith("Error") || message.startsWith("Exception")) message
+                else appOpsApplied,
+                duration = SnackbarDuration.Short
+            )
+            viewModel.clearAppOpsMessage()
         }
     }
 
@@ -74,7 +87,12 @@ fun AppsScreen(
             isLoading = uiState.isLoadingDetails,
             onDismiss = { viewModel.clearDetails() },
             onExport = { viewModel.exportApk(details.packageName) },
-            onLaunch = { viewModel.launchApp(details.packageName, details.launchableActivities.firstOrNull()) }
+            onLaunch = { viewModel.launchApp(details.packageName, details.launchableActivities.firstOrNull()) },
+            appOps = uiState.appOps,
+            isLoadingAppOps = uiState.isLoadingAppOps,
+            onLoadAppOps = { viewModel.loadAppOps(details.packageName) },
+            onSetAppOp = { mode, op -> viewModel.setAppOp(details.packageName, op, mode) },
+            onClearAppOps = { viewModel.clearAppOps(details.packageName) }
         )
     }
 
@@ -327,7 +345,12 @@ fun AppDetailsDialog(
     isLoading: Boolean,
     onDismiss: () -> Unit,
     onExport: () -> Unit,
-    onLaunch: () -> Unit
+    onLaunch: () -> Unit,
+    appOps: String?,
+    isLoadingAppOps: Boolean,
+    onLoadAppOps: () -> Unit,
+    onSetAppOp: (mode: String, op: String) -> Unit,
+    onClearAppOps: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -372,6 +395,16 @@ fun AppDetailsDialog(
                             }
                         }
                     }
+                    item {
+                        AppOpsSection(
+                            packageName = details.packageName,
+                            appOps = appOps,
+                            isLoading = isLoadingAppOps,
+                            onLoad = onLoadAppOps,
+                            onSet = onSetAppOp,
+                            onClear = onClearAppOps
+                        )
+                    }
                 }
             }
         },
@@ -394,6 +427,87 @@ fun AppDetailsDialog(
             }
         }
     )
+}
+
+@Composable
+fun AppOpsSection(
+    packageName: String,
+    appOps: String?,
+    isLoading: Boolean,
+    onLoad: () -> Unit,
+    onSet: (mode: String, op: String) -> Unit,
+    onClear: () -> Unit
+) {
+    var expanded by remember { mutableStateOf(appOps != null) }
+    HorizontalDivider(Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant)
+
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            stringResource(R.string.appop_title),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.weight(1f)
+        )
+        TextButton(onClick = {
+            if (expanded && appOps != null) { expanded = false } else { expanded = true; onLoad() }
+        }) {
+            Text(stringResource(if (expanded) R.string.appop_hide else R.string.appop_show))
+        }
+    }
+
+    if (expanded) {
+        Text(
+            stringResource(R.string.appop_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.outline
+        )
+        Spacer(Modifier.height(8.dp))
+
+        val quickOps = listOf(
+            "WRITE_SECURE_SETTINGS" to stringResource(R.string.appop_write_secure_settings),
+            "WRITE_SETTINGS" to stringResource(R.string.appop_write_settings),
+            "GET_USAGE_STATS" to stringResource(R.string.appop_get_usage_stats),
+            "READ_PHONE_STATE" to stringResource(R.string.appop_read_phone_state),
+            "RUN_IN_BACKGROUND" to stringResource(R.string.appop_run_in_background),
+            "SYSTEM_ALERT_WINDOW" to stringResource(R.string.appop_system_alert)
+        )
+        quickOps.forEach { (op, label) ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                TextButton(onClick = { onSet("allow", op) }) { Text(stringResource(R.string.appop_allow)) }
+                TextButton(onClick = { onSet("deny", op) }) { Text(stringResource(R.string.appop_deny)) }
+            }
+        }
+
+        Row {
+            TextButton(onClick = { onSet("ignore", "RUN_IN_BACKGROUND") }) {
+                Text(stringResource(R.string.appop_ignore_background))
+            }
+            TextButton(onClick = onClear) { Text(stringResource(R.string.appop_reset)) }
+        }
+
+        if (isLoading) {
+            Spacer(Modifier.height(8.dp))
+            LinearProgressIndicator(Modifier.fillMaxWidth())
+        }
+
+        appOps?.let { ops ->
+            Spacer(Modifier.height(8.dp))
+            val lines = ops.lines().take(18)
+            Text(
+                text = lines.joinToString("\n"),
+                style = MaterialTheme.typography.bodySmall,
+                fontFamily = FontFamily.Monospace,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            if (ops.lines().size > 18) {
+                Text(
+                    stringResource(R.string.appop_truncated, ops.lines().size - 18),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+            }
+        }
+    }
 }
 
 @Composable

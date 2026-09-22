@@ -8,6 +8,8 @@ import adb.captain.domain.repository.ProcessInfo
 import adb.captain.domain.usecase.DeviceUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,13 +31,20 @@ class MonitorViewModel @Inject constructor(
     fun startMonitoring() {
         if (pollingJob?.isActive == true) return
         pollingJob = viewModelScope.launch {
+            _uiState.update { it.copy(isRunning = true) }
             while (true) {
-                _uiState.update { it.copy(isRunning = true) }
-                val cpu = useCase.getCpuInfo()
-                val mem = useCase.getMemoryInfo()
-                val processes = useCase.getTopProcesses(20)
-                _uiState.update {
-                    it.copy(cpu = cpu, memory = mem, topProcesses = processes, lastUpdate = System.currentTimeMillis())
+                coroutineScope {
+                    val cpu = async { useCase.getCpuInfo() }
+                    val mem = async { useCase.getMemoryInfo() }
+                    val processes = async { useCase.getTopProcesses(20) }
+                    _uiState.update {
+                        it.copy(
+                            cpu = cpu.await(),
+                            memory = mem.await(),
+                            topProcesses = processes.await(),
+                            lastUpdate = System.currentTimeMillis()
+                        )
+                    }
                 }
                 delay(1500)
             }

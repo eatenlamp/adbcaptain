@@ -5,18 +5,48 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import rikka.shizuku.Shizuku
 
 object ShizukuManager {
     const val REQUEST_CODE_SHIZUKU = 1001
 
-    fun isShizukuRunning(): Boolean {
-        return try {
-            Shizuku.pingBinder()
-        } catch (e: Exception) {
-            false
+    private val _isRunning = MutableStateFlow(runningCheck())
+    val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
+
+    private val binderListener = Shizuku.OnBinderReceivedListener { refresh() }
+    private val deadListener = Shizuku.OnBinderDeadListener { refresh() }
+
+    /**
+     * Подписывается на события binder Shizuku: UI обновляется мгновенно,
+     * без затратного polling каждые 2 секунды.
+     */
+    fun init() {
+        try {
+            // Sticky-вариант также сразу вызывает listener, если binder уже активен.
+            Shizuku.addBinderReceivedListenerSticky(binderListener)
+        } catch (_: Throwable) {
+        }
+        try {
+            Shizuku.addBinderDeadListener(deadListener)
+        } catch (_: Throwable) {
         }
     }
+
+    fun refresh() {
+        val state = runningCheck()
+        if (_isRunning.value != state) _isRunning.value = state
+    }
+
+    private fun runningCheck(): Boolean = try {
+        Shizuku.pingBinder()
+    } catch (e: Exception) {
+        false
+    }
+
+    fun isShizukuRunning(): Boolean = runningCheck()
 
     fun checkShizukuPermission(): Boolean {
         return if (Shizuku.isPreV11() || Shizuku.getVersion() < 11) {

@@ -73,6 +73,40 @@ class AppsViewModel @Inject constructor(
         _uiState.update { it.copy(exportMessage = null) }
     }
 
+    fun loadAppOps(packageName: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingAppOps = true, appOps = null) }
+            val ops = useCase.getAppOps(packageName)
+            _uiState.update { it.copy(appOps = ops, isLoadingAppOps = false) }
+        }
+    }
+
+    fun setAppOp(packageName: String, opName: String, mode: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingAppOps = true) }
+            val result = useCase.setAppOp(packageName, opName, mode)
+            val ops = useCase.getAppOps(packageName)
+            _uiState.update {
+                it.copy(
+                    appOps = ops,
+                    isLoadingAppOps = false,
+                    appOpsMessage = if (result.startsWith("Error") || result.startsWith("Exception")) result else "appops ok"
+                )
+            }
+        }
+    }
+
+    fun clearAppOps(packageName: String) {
+        viewModelScope.launch {
+            useCase.resetAppOps(packageName)
+            loadAppOps(packageName)
+        }
+    }
+
+    fun clearAppOpsMessage() {
+        _uiState.update { it.copy(appOpsMessage = null) }
+    }
+
     fun loadDetails(packageName: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingDetails = true) }
@@ -192,5 +226,8 @@ data class AppsUiState(
     val isLoadingDetails: Boolean = false,
     val selected: Set<String> = emptySet(),
     val exportCsv: String? = null,
-    val exportJson: String? = null
+    val exportJson: String? = null,
+    val appOps: String? = null,
+    val isLoadingAppOps: Boolean = false,
+    val appOpsMessage: String? = null
 )

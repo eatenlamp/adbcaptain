@@ -30,7 +30,7 @@ class AdbRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context
 ) : AdbRepository {
 
-    override suspend fun executeCommand(command: String): String = executeCommand(command, timeoutSeconds = 5)
+    override suspend fun executeCommand(command: String): String = executeCommand(command, timeoutSeconds = 15)
 
     private suspend fun executeCommand(command: String, timeoutSeconds: Long): String = withContext(Dispatchers.IO) {
         try {
@@ -68,19 +68,24 @@ class AdbRepositoryImpl @Inject constructor(
 
     override suspend fun getDevices(): List<Device> = withContext(Dispatchers.IO) {
         try {
-            val model = executeCommand("getprop ro.product.model").trim()
-            val version = executeCommand("getprop ro.build.version.release").trim()
-            val api = executeCommand("getprop ro.build.version.sdk").trim().toIntOrNull() ?: 0
-            val battery = getBatteryLevel()
-            
-            listOf(Device(
-                serial = executeCommand("getprop ro.serialno").trim().ifBlank { "Local Device" },
-                model = if (model.isBlank()) "Android Device" else model,
-                androidVersion = version,
-                apiLevel = api,
-                status = DeviceStatus.ONLINE,
-                batteryLevel = battery
-            ))
+            coroutineScope {
+                val model = async { executeCommand("getprop ro.product.model").trim() }
+                val version = async { executeCommand("getprop ro.build.version.release").trim() }
+                val api = async { executeCommand("getprop ro.build.version.sdk").trim().toIntOrNull() ?: 0 }
+                val serial = async { executeCommand("getprop ro.serialno").trim() }
+                val battery = async { getBatteryLevel() }
+
+                listOf(
+                    Device(
+                        serial = serial.await().ifBlank { "Local Device" },
+                        model = model.await().ifBlank { "Android Device" },
+                        androidVersion = version.await(),
+                        apiLevel = api.await(),
+                        status = DeviceStatus.ONLINE,
+                        batteryLevel = battery.await()
+                    )
+                )
+            }
         } catch (e: Exception) {
             emptyList()
         }
@@ -136,12 +141,6 @@ class AdbRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             emptyList()
         }
-    }
-
-    private fun isLikelySystem(pkg: String): Boolean {
-        return pkg.startsWith("android") || pkg.startsWith("com.android") || 
-               pkg.startsWith("com.google.android.overlay") || pkg.contains(".miui.") ||
-               pkg.contains(".samsung.") || pkg.contains(".huawei.")
     }
 
     private fun categorizePackage(pkg: String): BloatwareStatus {
@@ -595,6 +594,23 @@ class AdbRepositoryImpl @Inject constructor(
             sb.appendLine("=== Top Processes ===")
             sb.appendLine(executeCommand("ps -A -o PID,CPU,RSS,NAME"))
             sb.appendLine()
+            sb.appendLine("=== CPU ===")
+            getCpuInfo()?.let { cpu ->
+                sb.appendLine("total usage: ${String.format(java.util.Locale.US, "%.1f", cpu.totalUsage)}%")
+                cpu.frequency.forEachIndexed { idx, freq ->
+                    sb.appendLine("core$idx: $freq MHz  governor: ${cpu.governor.getOrElse(idx) { "n/a" }}")
+                }
+            } ?: sb.appendLine("unavailable")
+            sb.appendLine()
+            sb.appendLine("=== Thermal ===")
+            sb.appendLine(executeCommand("dumpsys thermalservice | head -30"))
+            sb.appendLine()
+            sb.appendLine("=== Sensors ===")
+            sb.appendLine(executeCommand("dumpsys sensorservice | head -25"))
+            sb.appendLine()
+            sb.appendLine("=== Network ===")
+            sb.appendLine(executeCommand("dumpsys netstats | head -40"))
+            sb.appendLine()
             sb.appendLine("=== Installed Packages (count) ===")
             sb.appendLine("total: ${executeCommand("pm list packages").lines().count { it.startsWith("package:") }}")
             sb.appendLine()
@@ -724,15 +740,47 @@ class AdbRepositoryImpl @Inject constructor(
         else -> "Unknown"
     }
 
+    /**
+     * Commands run directly in the device shell (Shizuku), where the host-side
+     * `adb` binary is not available. Strip common `adb` invocations so that
+     * e.g. `adb shell pm grant ...` is executed as `pm grant ...`.
+     */
+    private fun normalizeCommand(command: String): String {
+        val tokens = command.trim().split(SPACE_REGEX)
+        if (tokens.isEmpty()) return command.trim()
+
+        var i = 0
+
+        if (tokens[i].equals("adb", ignoreCase = true)) i++
+
+        while (i < tokens.size && tokens[i].let { it == "-s" || it == "-e" || it == "-d" }) {
+            if (tokens[i] == "-d") {
+                i++
+            } else {
+                i += 2
+            }
+        }
+
+        if (i < tokens.size && tokens[i].equals("shell", ignoreCase = true)) i++
+
+        val rest = tokens.drop(i).joinToString(" ").trim()
+        return if (rest.isEmpty()) command.trim() else rest
+    }
+
     private fun startShizukuProcess(command: String): Process {
-        val newProcessMethod = Shizuku::class.java.getDeclaredMethod(
-            "newProcess",
-            Array<String>::class.java,
-            Array<String>::class.java,
-            String::class.java
-        )
-        newProcessMethod.isAccessible = true
-        return newProcessMethod.invoke(null, arrayOf("sh", "-c", command), null, null) as Process
+        return NEW_PROCESS_METHOD.invoke(null, arrayOf("sh", "-c", normalizeCommand(command)), null, null) as Process
+    }
+
+    private companion object {
+        val SPACE_REGEX = Regex("\\s+")
+        val NEW_PROCESS_METHOD: java.lang.reflect.Method by lazy {
+            Shizuku::class.java.getDeclaredMethod(
+                "newProcess",
+                Array<String>::class.java,
+                Array<String>::class.java,
+                String::class.java
+            ).apply { isAccessible = true }
+        }
     }
 
     private suspend fun getBatteryLevel(): Int {
@@ -749,7 +797,7 @@ class AdbRepositoryImpl @Inject constructor(
         for (line in output.lines()) {
             val trimmed = line.trim()
             if (trimmed.isEmpty() || trimmed.startsWith("total")) continue
-            val fields = trimmed.split("\\s+".toRegex())
+            val fields = trimmed.split(SPACE_REGEX)
             if (fields.size < 9) continue
             val perms = fields[0]
             val isDir = perms.startsWith("d")
@@ -778,7 +826,7 @@ class AdbRepositoryImpl @Inject constructor(
     private fun parseLogcatLine(line: String): LogEntry? {
         // 07-31 11:48:34.530 D/Tag(PID): Message
         return try {
-            val parts = line.split("\\s+".toRegex())
+            val parts = line.split(SPACE_REGEX)
             if (parts.size < 5) return null
             val timestamp = "${parts[0]} ${parts[1]}"
             val levelTag = parts[2]
@@ -791,4 +839,92 @@ class AdbRepositoryImpl @Inject constructor(
             null
         }
     }
+
+    override suspend fun isNfcEnabled(): Boolean {
+        val out = executeCommand("""dumpsys nfc | grep -oE "mState=[a-z]+|mNfcState=[a-z]+|radio_state=[a-z]+" | head -1""").trim()
+        return out.contains("on", ignoreCase = true)
+    }
+
+    override suspend fun setNfcEnabled(enabled: Boolean): String =
+        executeCommand(if (enabled) "svc nfc enable" else "svc nfc disable").ifBlank { "ok" }
+
+    override suspend fun isMobileDataEnabled(): Boolean =
+        executeCommand("settings get global mobile_data").trim() == "1"
+
+    override suspend fun setMobileDataEnabled(enabled: Boolean): String {
+        val svc = executeCommand(if (enabled) "svc data enable" else "svc data disable").ifBlank { "ok" }
+        val settings = executeCommand("settings put global mobile_data ${if (enabled) 1 else 0}").ifBlank { "ok" }
+        return if (svc.startsWith("Error") || svc.startsWith("Exception")) svc else settings
+    }
+
+    override suspend fun getNightMode(): Int {
+        val out = executeCommand("settings get secure ui_night_mode").trim()
+        return out.toIntOrNull() ?: 0
+    }
+
+    override suspend fun setNightMode(mode: Int): String {
+        val word = when (mode) {
+            1 -> "no"
+            2 -> "yes"
+            else -> "auto"
+        }
+        val cmd = executeCommand("cmd uimode night $word")
+        if (cmd.startsWith("Error") || cmd.startsWith("Exception")) {
+            executeCommand("settings put secure ui_night_mode $mode")
+        }
+        return cmd.ifBlank { "ok" }
+    }
+
+    override suspend fun setScreenBrightness(percent: Int): String {
+        val clamped = percent.coerceIn(1, 100)
+        val value = Math.round(255.0 * clamped / 100.0)
+        executeCommand("settings put system screen_brightness_mode 0")
+        return executeCommand("settings put system screen_brightness $value").ifBlank { "ok" }
+    }
+
+    override suspend fun setBatteryLevel(level: Int): String {
+        val clamped = level.coerceIn(0, 100)
+        return executeCommand("cmd battery set-level $clamped").ifBlank { "ok" }
+    }
+
+    override suspend fun resetBattery(): String =
+        executeCommand("cmd battery reset").ifBlank { "ok" }
+
+    override suspend fun getDisplayDensity(): Int {
+        val out = executeCommand("wm density").lines()
+        val override = out.firstOrNull { it.startsWith("Override density") }?.substringAfter(":")
+        val physical = out.firstOrNull { it.startsWith("Physical density") }?.substringAfter(":")
+        return (override ?: physical)?.trim()?.toIntOrNull() ?: 0
+    }
+
+    override suspend fun getDisplaySize(): String? {
+        val out = executeCommand("wm size").lines()
+        val line = out.firstOrNull { it.contains("size") } ?: return null
+        return Regex("(\\d+)x(\\d+)").find(line)?.value
+    }
+
+    override suspend fun setDisplayDensity(density: Int): String =
+        executeCommand("wm density ${density.coerceIn(100, 640)}").ifBlank { "ok" }
+
+    override suspend fun setDisplaySize(width: Int, height: Int): String =
+        executeCommand("wm size ${width.coerceAtLeast(1)}x${height.coerceAtLeast(1)}").ifBlank { "ok" }
+
+    override suspend fun resetDisplay(): String {
+        val size = executeCommand("wm size reset").ifBlank { "ok" }
+        val density = executeCommand("wm density reset").ifBlank { "ok" }
+        return listOf(size, density).joinToString("\n")
+    }
+
+    override suspend fun getAppOps(packageName: String): String {
+        val out = executeCommand("appops get $packageName")
+        return if (out.startsWith("Error") || out.startsWith("Exception")) "" else out
+    }
+
+    override suspend fun setAppOp(packageName: String, opName: String, mode: String): String {
+        val allowedMode = if (mode in listOf("allow", "deny", "ignore", "default")) mode else "allow"
+        return executeCommand("appops set $packageName $opName $allowedMode").ifBlank { "ok" }
+    }
+
+    override suspend fun resetAppOps(packageName: String): String =
+        executeCommand("appops reset $packageName").ifBlank { "ok" }
 }

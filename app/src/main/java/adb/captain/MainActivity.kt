@@ -55,14 +55,11 @@ class MainActivity : AppCompatActivity(), Shizuku.OnRequestPermissionResultListe
             }
 
             ADBCaptainTheme(darkTheme = isDarkTheme) {
-                var isShizukuActive by remember { mutableStateOf(ShizukuManager.isShizukuRunning()) }
+                // Follows Shizuku binder events (no polling), so the UI unlocks instantly.
+                val isShizukuActive by ShizukuManager.isRunning.collectAsState()
 
-                // Status polling for automatic UI unlock
                 LaunchedEffect(Unit) {
-                    while(true) {
-                        isShizukuActive = ShizukuManager.isShizukuRunning()
-                        kotlinx.coroutines.delay(2000)
-                    }
+                    ShizukuManager.refresh()
                 }
 
                 if (!isShizukuActive) {

@@ -10,6 +10,8 @@ import adb.captain.domain.repository.ProcessInfo
 import adb.captain.domain.usecase.DeviceUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,21 +47,33 @@ class DevicesViewModel @Inject constructor(
 
     fun loadGlobalSettings() {
         viewModelScope.launch {
-            val showTouches = useCase.getShowTouches()
-            val animScale = useCase.getAnimationScale()
-            val usbDebugging = useCase.getUsbDebugging()
-            val oemUnlock = useCase.getOemUnlock()
-            val wifiAdb = useCase.getWifiAdbEnabled()
-            val demoMode = useCase.getDemoMode()
-            _uiState.update {
-                it.copy(
-                    showTouches = showTouches,
-                    animationScale = animScale,
-                    usbDebugging = usbDebugging,
-                    oemUnlock = oemUnlock,
-                    wifiAdb = wifiAdb,
-                    demoMode = demoMode
-                )
+            coroutineScope {
+                val showTouches = async { useCase.getShowTouches() }
+                val animScale = async { useCase.getAnimationScale() }
+                val usbDebugging = async { useCase.getUsbDebugging() }
+                val oemUnlock = async { useCase.getOemUnlock() }
+                val wifiAdb = async { useCase.getWifiAdbEnabled() }
+                val demoMode = async { useCase.getDemoMode() }
+                val nfc = async { useCase.isNfcEnabled() }
+                val mobileData = async { useCase.isMobileDataEnabled() }
+                val nightMode = async { useCase.getNightMode() }
+                val density = async { useCase.getDisplayDensity() }
+                val size = async { useCase.getDisplaySize() }
+                _uiState.update {
+                    it.copy(
+                        showTouches = showTouches.await(),
+                        animationScale = animScale.await(),
+                        usbDebugging = usbDebugging.await(),
+                        oemUnlock = oemUnlock.await(),
+                        wifiAdb = wifiAdb.await(),
+                        demoMode = demoMode.await(),
+                        nfcEnabled = nfc.await(),
+                        mobileDataEnabled = mobileData.await(),
+                        nightMode = nightMode.await(),
+                        displayDensity = density.await(),
+                        displaySize = size.await()
+                    )
+                }
             }
         }
     }
@@ -106,6 +120,73 @@ class DevicesViewModel @Inject constructor(
         }
     }
 
+    fun toggleNfc(enabled: Boolean) {
+        viewModelScope.launch {
+            useCase.setNfcEnabled(enabled)
+            _uiState.update { it.copy(nfcEnabled = enabled) }
+        }
+    }
+
+    fun toggleMobileData(enabled: Boolean) {
+        viewModelScope.launch {
+            useCase.setMobileDataEnabled(enabled)
+            _uiState.update { it.copy(mobileDataEnabled = enabled) }
+        }
+    }
+
+    fun setNightMode(mode: Int) {
+        viewModelScope.launch {
+            useCase.setNightMode(mode)
+            _uiState.update { it.copy(nightMode = mode) }
+        }
+    }
+
+    fun setScreenBrightness(percent: Int) {
+        viewModelScope.launch {
+            useCase.setScreenBrightness(percent)
+        }
+    }
+
+    fun setBatteryLevel(level: Int) {
+        viewModelScope.launch {
+            useCase.setBatteryLevel(level)
+            refreshBattery()
+        }
+    }
+
+    fun resetBattery() {
+        viewModelScope.launch {
+            useCase.resetBattery()
+            refreshBattery()
+        }
+    }
+
+    fun applyDisplayDensity(density: Int) {
+        viewModelScope.launch {
+            useCase.setDisplayDensity(density)
+            _uiState.update { it.copy(displayDensity = density) }
+        }
+    }
+
+    fun applyDisplaySize(width: Int, height: Int) {
+        viewModelScope.launch {
+            useCase.setDisplaySize(width, height)
+            _uiState.update { it.copy(displaySize = "${width}x$height") }
+        }
+    }
+
+    fun resetDisplay() {
+        viewModelScope.launch {
+            useCase.resetDisplay()
+            _uiState.update {
+                it.copy(
+                    displayDensity = useCase.getDisplayDensity(),
+                    displaySize = useCase.getDisplaySize()
+                )
+            }
+        }
+    }
+
     fun refreshBattery() {
         viewModelScope.launch {
             val battery = useCase.getBatteryDetails()
@@ -116,12 +197,13 @@ class DevicesViewModel @Inject constructor(
     fun startMonitoring() {
         if (monitorJob?.isActive == true) return
         monitorJob = viewModelScope.launch {
+            _uiState.update { it.copy(isMonitoring = true) }
             while (true) {
-                val cpu = useCase.getCpuInfo()
-                val mem = useCase.getMemoryInfo()
-                val processes = useCase.getTopProcesses(15)
-                _uiState.update {
-                    it.copy(cpu = cpu, memory = mem, topProcesses = processes)
+                coroutineScope {
+                    val cpu = async { useCase.getCpuInfo() }
+                    val mem = async { useCase.getMemoryInfo() }
+                    val processes = async { useCase.getTopProcesses(15) }
+                    _uiState.update { it.copy(cpu = cpu.await(), memory = mem.await(), topProcesses = processes.await()) }
                 }
                 delay(1500)
             }
@@ -131,6 +213,7 @@ class DevicesViewModel @Inject constructor(
     fun stopMonitoring() {
         monitorJob?.cancel()
         monitorJob = null
+        _uiState.update { it.copy(isMonitoring = false) }
     }
 
     fun rebootDevice(serial: String) {
@@ -182,6 +265,7 @@ class DevicesViewModel @Inject constructor(
 data class DevicesUiState(
     val devices: List<Device> = emptyList(),
     val isLoading: Boolean = false,
+    val isMonitoring: Boolean = false,
     val screenshotPath: String? = null,
     val reportPath: String? = null,
     val showTouches: Boolean = false,
@@ -190,6 +274,11 @@ data class DevicesUiState(
     val oemUnlock: Boolean = false,
     val wifiAdb: Boolean = false,
     val demoMode: Boolean = false,
+    val nfcEnabled: Boolean = false,
+    val mobileDataEnabled: Boolean = false,
+    val nightMode: Int = 0,
+    val displayDensity: Int = 0,
+    val displaySize: String? = null,
     val battery: BatteryDetails? = null,
     val cpu: CpuInfo? = null,
     val memory: MemoryInfo? = null,

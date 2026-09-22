@@ -30,6 +30,9 @@
     <string name="cmd_free_space">Free Space</string>
     <string name="cmd_top_processes">Top Processes</string>
     <string name="cmd_event_log">Event Log</string>
+    <string name="cmd_thermal">Thermal Status</string>
+    <string name="cmd_network">Network Stats</string>
+    <string name="cmd_night_on">Night Mode</string>
 
     <!-- Terminal Help & History -->
     <string name="term_history_title">History</string>
@@ -40,7 +43,7 @@
     <string name="term_help_intro">This terminal runs real ADB commands through Shizuku — no root needed. Just type a command and press send.\n\n</string>
     <string name="term_help_commands">Common commands:\n  pm list packages -3             user apps\n  pm path &lt;pkg&gt;                   APK path\n  pm clear &lt;pkg&gt;                  wipe app data\n  am force-stop &lt;pkg&gt;             stop an app\n  getprop ro.product.model        device model\n  wm size                         screen size\n  dumpsys battery                 battery info\n  settings get global adb_enabled check ADB\n  screencap -p /sdcard/s.png      screenshot\n  input keyevent KEYCODE_HOME     press Home\n  logcat -d -t 100                last 100 log lines\n\n</string>
     <string name="term_help_features">Other screens:\n  Apps     manage and export apps, batch actions\n  Devices  switches, battery, reboot, diagnostics\n  Monitor  live CPU / RAM / processes\n  Logcat   live system logs\n  Sideload APK install, record screen, macros\n  Files    file manager\n\n</string>
-    <string name="term_help_tips">Tips:\n  type help anytime to see this text\n  tap the clock icon to pick a past command\n  history is saved locally (see Settings)</string>
+    <string name="term_help_tips">Tips:\n  type help anytime to see this text\n  tap the clock icon to pick a past command\n  history is saved locally (see Settings)\n  an \&quot;adb shell\&quot; prefix is stripped automatically</string>
 
     <!-- Apps Screen -->
     <string name="apps_search_placeholder">Search package...</string>
@@ -78,6 +81,22 @@
     <string name="apps_details_launch_activity">Launch Activity</string>
     <string name="apps_details_permissions">Permissions (%d)</string>
     <string name="apps_run">Run</string>
+    <string name="appop_title">App Ops</string>
+    <string name="appop_show">Show App Ops</string>
+    <string name="appop_hide">Hide App Ops</string>
+    <string name="appop_hint">Grant or revoke app permissions via appops without reinstalling.</string>
+    <string name="appop_write_secure_settings">Write Secure Settings</string>
+    <string name="appop_write_settings">Write System Settings</string>
+    <string name="appop_get_usage_stats">Usage Access</string>
+    <string name="appop_read_phone_state">Read Phone State</string>
+    <string name="appop_run_in_background">Run in Background</string>
+    <string name="appop_system_alert">Overlay Windows</string>
+    <string name="appop_allow">Allow</string>
+    <string name="appop_deny">Deny</string>
+    <string name="appop_ignore_background">Ignore Background Restricts</string>
+    <string name="appop_reset">Reset App Ops</string>
+    <string name="appop_truncated">+%d more ops (shown raw above)</string>
+    <string name="appop_applied">App Ops updated</string>
 
     <!-- Devices Screen -->
     <string name="device_serial">Serial Number: %s</string>
@@ -102,6 +121,25 @@
     <string name="switch_wifi_adb_desc">Enable ADB over the network</string>
     <string name="switch_demo_mode">Demo Mode</string>
     <string name="switch_demo_mode_desc">Clean status bar for screenshots</string>
+    <string name="switch_nfc">NFC</string>
+    <string name="switch_nfc_desc">Turn Near Field Communication on or off</string>
+    <string name="switch_mobile_data">Mobile Data</string>
+    <string name="switch_mobile_data_desc">Toggle the mobile data connection</string>
+    <string name="display_title">Display</string>
+    <string name="night_mode_title">Night Mode</string>
+    <string name="night_mode_auto">Auto</string>
+    <string name="night_mode_on">Night</string>
+    <string name="night_mode_off">Off</string>
+    <string name="brightness_title">Screen Brightness</string>
+    <string name="display_density_title">Display Density</string>
+    <string name="display_density_current">Current: %d</string>
+    <string name="display_density_label">DPI</string>
+    <string name="display_apply">Apply</string>
+    <string name="display_reset">Reset Display</string>
+    <string name="display_size_title">Display Size (px)</string>
+    <string name="display_size_current">Current: %s</string>
+    <string name="battery_set_level">Set Level</string>
+    <string name="battery_reset">Reset Battery</string>
     <string name="device_reboot_recovery">Recovery</string>
     <string name="device_reboot_bootloader">Bootloader</string>
     <string name="battery_details_title">Battery Details</string>

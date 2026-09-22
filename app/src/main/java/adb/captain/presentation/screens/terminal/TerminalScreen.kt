@@ -218,7 +218,10 @@ fun TerminalScreen(
                 R.string.cmd_device_model to "getprop ro.product.model",
                 R.string.cmd_free_space to "df -h",
                 R.string.cmd_top_processes to "top -n 1",
-                R.string.cmd_event_log to "logcat -d -t 50"
+                R.string.cmd_event_log to "logcat -d -t 50",
+                R.string.cmd_thermal to "dumpsys thermalservice",
+                R.string.cmd_network to "dumpsys netstats",
+                R.string.cmd_night_on to "cmd uimode night yes"
             )
             quickCommands.forEach { (labelRes, cmd) ->
                 AssistChip(
@@ -229,14 +232,13 @@ fun TerminalScreen(
             }
         }
 
-        // Auto-complete suggestions from history
+        // Auto-complete suggestions from history and built-in ADB command dictionary
         if (autoCompleteEnabled && command.isNotBlank()) {
             val suggestions = remember(command, uiState.history) {
-                uiState.history
-                    .map { it.text }
+                val words = (uiState.history.map { it.text } + adb.captain.util.CommandDictionary.COMMANDS)
                     .distinct()
                     .filter { it.startsWith(command, ignoreCase = true) && it != command }
-                    .take(5)
+                words.take(5)
             }
             if (suggestions.isNotEmpty()) {
                 Row(

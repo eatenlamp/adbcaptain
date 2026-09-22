@@ -29,6 +29,9 @@
     <string name="cmd_free_space">Свободное место</string>
     <string name="cmd_top_processes">Топ процессов</string>
     <string name="cmd_event_log">Лог событий</string>
+    <string name="cmd_thermal">Термодатчики</string>
+    <string name="cmd_network">Сетевая статистика</string>
+    <string name="cmd_night_on">Ночной режим</string>
 
     <!-- Terminal Help & History -->
     <string name="term_history_title">История</string>
@@ -39,7 +42,7 @@
     <string name="term_help_intro">Этот терминал выполняет реальные команды ADB через Shizuku — root не нужен. Просто введите команду и нажмите отправить.\n\n</string>
     <string name="term_help_commands">Частые команды:\n  pm list packages -3             пользовательские приложения\n  pm path &lt;pkg&gt;                   путь к APK\n  pm clear &lt;pkg&gt;                  очистить данные приложения\n  am force-stop &lt;pkg&gt;             остановить приложение\n  getprop ro.product.model        модель устройства\n  wm size                         размер экрана\n  dumpsys battery                 состояние батареи\n  settings get global adb_enabled проверка ADB\n  screencap -p /sdcard/s.png      скриншот\n  input keyevent KEYCODE_HOME     нажать Home\n  logcat -d -t 100                последние 100 строк лога\n\n</string>
     <string name="term_help_features">Другие экраны:\n  Apps     управление и экспорт приложений, батч-действия\n  Devices  переключатели, батарея, перезагрузка, диагностика\n  Monitor  живой CPU / RAM / процессы\n  Logcat   живые системные логи\n  Sideload установка APK, запись экрана, макросы\n  Files    файловый менеджер\n\n</string>
-    <string name="term_help_tips">Советы:\n  введите help в любой момент, чтобы увидеть этот текст\n  нажмите на иконку часов, чтобы выбрать прошлую команду\n  история сохраняется локально (см. Настройки)</string>
+    <string name="term_help_tips">Советы:\n  введите help в любой момент, чтобы увидеть этот текст\n  нажмите на иконку часов, чтобы выбрать прошлую команду\n  история сохраняется локально (см. Настройки)\n  префикс \&quot;adb shell\&quot; удаляется автоматически</string>
 
     <!-- Apps Screen -->
     <string name="apps_search_placeholder">Поиск пакета...</string>
@@ -77,6 +80,22 @@
     <string name="apps_details_launch_activity">Запускаемое Activity</string>
     <string name="apps_details_permissions">Разрешения (%d)</string>
     <string name="apps_run">Запустить</string>
+    <string name="appop_title">App Ops</string>
+    <string name="appop_show">Показать App Ops</string>
+    <string name="appop_hide">Скрыть App Ops</string>
+    <string name="appop_hint">Выдавайте или отзывайте права приложений через appops без переустановки.</string>
+    <string name="appop_write_secure_settings">Изменение защищённых настроек</string>
+    <string name="appop_write_settings">Изменение настроек системы</string>
+    <string name="appop_get_usage_stats">Доступ к статистике использования</string>
+    <string name="appop_read_phone_state">Чтение состояния телефона</string>
+    <string name="appop_run_in_background">Работа в фоне</string>
+    <string name="appop_system_alert">Окна поверх приложений</string>
+    <string name="appop_allow">Разрешить</string>
+    <string name="appop_deny">Запретить</string>
+    <string name="appop_ignore_background">Игнорировать фоновые ограничения</string>
+    <string name="appop_reset">Сбросить App Ops</string>
+    <string name="appop_truncated">Ещё %d операций (полный вывод выше)</string>
+    <string name="appop_applied">App Ops обновлены</string>
 
     <!-- Devices Screen -->
     <string name="device_serial">Серийный номер: %s</string>
@@ -101,6 +120,25 @@
     <string name="switch_wifi_adb_desc">Включить ADB по сети</string>
     <string name="switch_demo_mode">Демо-режим</string>
     <string name="switch_demo_mode_desc">Чистый статус-бар для скриншотов</string>
+    <string name="switch_nfc">NFC</string>
+    <string name="switch_nfc_desc">Включить или выключить NFC</string>
+    <string name="switch_mobile_data">Мобильные данные</string>
+    <string name="switch_mobile_data_desc">Включить или выключить мобильные данные</string>
+    <string name="display_title">Экран</string>
+    <string name="night_mode_title">Ночной режим</string>
+    <string name="night_mode_auto">Авто</string>
+    <string name="night_mode_on">Ночь</string>
+    <string name="night_mode_off">Выкл</string>
+    <string name="brightness_title">Яркость экрана</string>
+    <string name="display_density_title">Плотность экрана</string>
+    <string name="display_density_current">Текущая: %d</string>
+    <string name="display_density_label">DPI</string>
+    <string name="display_apply">Применить</string>
+    <string name="display_reset">Сбросить экран</string>
+    <string name="display_size_title">Размер экрана (px)</string>
+    <string name="display_size_current">Текущий: %s</string>
+    <string name="battery_set_level">Задать уровень</string>
+    <string name="battery_reset">Сбросить батарею</string>
     <string name="device_reboot_recovery">Recovery</string>
     <string name="device_reboot_bootloader">Bootloader</string>
     <string name="battery_details_title">Детали батареи</string>
