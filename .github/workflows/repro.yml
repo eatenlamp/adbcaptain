@@ -4,16 +4,25 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to verify (defaults to the ref name)"
+        required: false
+        default: ""
 
 permissions:
-  contents: read
+  # write is required to read draft release assets via the REST API
+  # (the release is held as a draft until this gate passes).
+  contents: write
 
 concurrency:
-  group: repro-${{ github.ref_name }}
+  group: repro-${{ github.event.inputs.tag || github.ref_name }}
   cancel-in-progress: true
 
 env:
   JAVA_VERSION: "21"
+  TARGET_TAG: ${{ github.event.inputs.tag != '' && github.event.inputs.tag || github.ref_name }}
 
 jobs:
   rebuild:
@@ -22,7 +31,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ env.TARGET_TAG }}
           fetch-depth: 0
 
       - name: Set up JDK
@@ -54,32 +63,42 @@ jobs:
       - name: Build signed release APK
         run: ./gradlew :app:assembleFdroidRelease
 
-      - name: Wait for published asset
+      - name: Wait for release asset
+        id: asset
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          asset="adb-captain-${GITHUB_REF_NAME}.apk"
-          url="https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/${asset}"
-          for i in $(seq 1 36); do
-            code=$(curl -sL -o /dev/null -w "%{http_code}" "$url")
-            if [ "$code" = "200" ]; then
-              echo "asset ready after ~$((i * 20))s"
+          set -euo pipefail
+          name="adb-captain-${TARGET_TAG}.apk"
+          for i in $(seq 1 60); do
+            id=$(gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
+              --jq ".[] | select(.tag_name == \"${TARGET_TAG}\") | .assets[]? | select(.name == \"${name}\") | .id" \
+              2>/dev/null | head -1 || true)
+            if [ -n "$id" ]; then
+              echo "Asset $name present (id=$id) after ~$((i * 15))s"
+              echo "id=$id" >> "$GITHUB_OUTPUT"
               exit 0
             fi
-            sleep 20
+            sleep 15
           done
-          echo "::error::Published asset not available after 12 minutes"
+          echo "::error::Release asset $name missing after 15 minutes"
           exit 1
 
-      - name: Compare rebuilt with published
+      - name: Compare rebuilt with release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          asset="adb-captain-${GITHUB_REF_NAME}.apk"
-          url="https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/${asset}"
-          curl -sL -o published.apk "$url"
+          set -euo pipefail
+          gh api -H "Accept: application/octet-stream" \
+            "repos/${GITHUB_REPOSITORY}/releases/assets/${{ steps.asset.outputs.id }}" > published.apk
           rebuilt="app/build/outputs/apk/fdroid/release/app-fdroid-release.apk"
-          echo "published sha256: $(sha256sum published.apk | cut -d' ' -f1)"
-          echo "rebuilt   sha256: $(sha256sum "$rebuilt" | cut -d' ' -f1)"
+          echo "release  sha256: $(sha256sum published.apk | cut -d' ' -f1)"
+          echo "rebuilt  sha256: $(sha256sum "$rebuilt" | cut -d' ' -f1)"
           if cmp -s published.apk "$rebuilt"; then
             echo "OK: release APK is reproducible (byte-identical to this rebuild)"
+            echo "byte-identity gate PASSED" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "::error::Rebuilt APK differs from the published release asset — reproducibility broken!"
+            echo "::error::Rebuilt APK differs from the release asset - reproducibility broken!"
+            echo "byte-identity gate FAILED" >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
