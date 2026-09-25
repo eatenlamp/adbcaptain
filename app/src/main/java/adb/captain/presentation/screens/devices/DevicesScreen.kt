@@ -1,8 +1,11 @@
 package adb.captain.presentation.screens.devices
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -10,13 +13,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import adb.captain.R
 import adb.captain.domain.model.Device
 import adb.captain.domain.model.DeviceStatus
 import adb.captain.domain.repository.BatteryDetails
+import adb.captain.domain.repository.BatteryHealth
+import adb.captain.domain.repository.BatteryPowerSource
+import adb.captain.domain.repository.BatteryStatus
 
 @Composable
 fun DevicesScreen(
@@ -532,37 +542,68 @@ fun BatteryCard(
                 return@Column
             }
 
+            Spacer(Modifier.height(20.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                BatteryRing(
+                    level = battery.level,
+                    charging = battery.status == BatteryStatus.CHARGING ||
+                        battery.status == BatteryStatus.FULL
+                )
+                Spacer(Modifier.width(20.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    BatteryStatusPill(battery.status)
+                    BatteryHealthPill(battery.health)
+                    BatteryPowerRow(battery)
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+            HorizontalDivider()
             Spacer(Modifier.height(16.dp))
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                InfoColumn(stringResource(R.string.battery_level), "${battery.level}%")
-                InfoColumn(stringResource(R.string.battery_status), battery.status)
-                InfoColumn(stringResource(R.string.battery_health), battery.health)
-            }
-            Spacer(Modifier.height(12.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                InfoColumn(stringResource(R.string.battery_temperature), "${battery.temperature}°C")
-                InfoColumn(stringResource(R.string.battery_voltage), "${battery.voltage} mV")
-                InfoColumn(stringResource(R.string.battery_plugged), battery.plugged)
-            }
-            if (battery.current != 0) {
-                Spacer(Modifier.height(12.dp))
-                Text(
-                    stringResource(R.string.battery_current, battery.current),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                InfoColumn(
+                    stringResource(R.string.battery_temperature),
+                    "${battery.temperature}°C"
                 )
-            }
-            if (battery.technology.isNotBlank()) {
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    stringResource(R.string.battery_technology, battery.technology),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                InfoColumn(
+                    stringResource(R.string.battery_voltage),
+                    "${battery.voltage} mV"
+                )
+                InfoColumn(
+                    stringResource(R.string.battery_current_label),
+                    if (battery.current != 0) "%+d mA".format(battery.current) else "—"
                 )
             }
 
-            HorizontalDivider(Modifier.padding(vertical = 16.dp))
+            if (battery.capacity > 0 || battery.chargeCounter != null) {
+                Spacer(Modifier.height(12.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    if (battery.capacity > 0) {
+                        InfoColumn(
+                            stringResource(R.string.battery_capacity),
+                            "${battery.capacity} mAh"
+                        )
+                    }
+                    battery.chargeCounter?.let { counter ->
+                        if (counter != 0) {
+                            InfoColumn(
+                                stringResource(R.string.battery_charge_counter),
+                                "$counter µAh"
+                            )
+                        }
+                    }
+                    if (battery.technology.isNotBlank()) {
+                        InfoColumn(
+                            stringResource(R.string.battery_technology_label),
+                            battery.technology
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilledTonalButton(onClick = { showLevelDialog = true }) {
@@ -607,6 +648,174 @@ fun BatteryCard(
                     Text(stringResource(R.string.apps_cancel))
                 }
             }
+        )
+    }
+}
+
+@Composable
+private fun BatteryRing(level: Int, charging: Boolean) {
+    val track = MaterialTheme.colorScheme.surfaceVariant
+    val progress = when {
+        level >= 50 -> Color(0xFF4CAF50)
+        level >= 20 -> Color(0xFFFF9800)
+        else -> MaterialTheme.colorScheme.error
+    }
+    Box(modifier = Modifier.size(116.dp), contentAlignment = Alignment.Center) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val strokeWidth = 12.dp.toPx()
+            val inset = strokeWidth / 2
+            val arcSize = androidx.compose.ui.geometry.Size(
+                size.width - strokeWidth,
+                size.height - strokeWidth
+            )
+            drawArc(
+                color = track,
+                startAngle = 135f,
+                sweepAngle = 270f,
+                useCenter = false,
+                topLeft = androidx.compose.ui.geometry.Offset(inset, inset),
+                size = arcSize,
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+            )
+            drawArc(
+                color = progress,
+                startAngle = 135f,
+                sweepAngle = 270f * (level.coerceIn(0, 100) / 100f),
+                useCenter = false,
+                topLeft = androidx.compose.ui.geometry.Offset(inset, inset),
+                size = arcSize,
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+            )
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                "$level%",
+                style = MaterialTheme.typography.headlineMedium,
+                color = progress
+            )
+            if (charging) {
+                Icon(
+                    Icons.Default.Bolt,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = progress
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BatteryPill(labelRes: Int, color: Color, icon: ImageVector) {
+    Surface(
+        color = color.copy(alpha = 0.15f),
+        contentColor = color,
+        shape = MaterialTheme.shapes.extraLarge
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+        ) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(14.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(stringResource(labelRes), style = MaterialTheme.typography.labelMedium)
+        }
+    }
+}
+
+@Composable
+private fun BatteryStatusPill(status: BatteryStatus) {
+    when (status) {
+        BatteryStatus.CHARGING -> BatteryPill(
+            R.string.battery_charging,
+            Color(0xFF4CAF50),
+            Icons.Default.Bolt
+        )
+        BatteryStatus.DISCHARGING -> BatteryPill(
+            R.string.battery_discharging,
+            Color(0xFF2196F3),
+            Icons.Default.BatteryStd
+        )
+        BatteryStatus.FULL -> BatteryPill(
+            R.string.battery_full,
+            Color(0xFF4CAF50),
+            Icons.Default.BatteryFull
+        )
+        BatteryStatus.NOT_CHARGING -> BatteryPill(
+            R.string.battery_not_charging,
+            Color(0xFFFF9800),
+            Icons.Default.BatteryStd
+        )
+        BatteryStatus.UNKNOWN -> BatteryPill(
+            R.string.battery_status_unknown,
+            MaterialTheme.colorScheme.outline,
+            Icons.Default.BatteryUnknown
+        )
+    }
+}
+
+@Composable
+private fun BatteryHealthPill(health: BatteryHealth) {
+    when (health) {
+        BatteryHealth.GOOD -> BatteryPill(
+            R.string.battery_health_good,
+            Color(0xFF4CAF50),
+            Icons.Default.Verified
+        )
+        BatteryHealth.OVERHEAT -> BatteryPill(
+            R.string.battery_health_overheat,
+            MaterialTheme.colorScheme.error,
+            Icons.Default.Warning
+        )
+        BatteryHealth.DEAD -> BatteryPill(
+            R.string.battery_health_dead,
+            MaterialTheme.colorScheme.error,
+            Icons.Default.Error
+        )
+        BatteryHealth.OVER_VOLTAGE -> BatteryPill(
+            R.string.battery_health_overvoltage,
+            MaterialTheme.colorScheme.error,
+            Icons.Default.Warning
+        )
+        BatteryHealth.FAILURE -> BatteryPill(
+            R.string.battery_health_failure,
+            MaterialTheme.colorScheme.error,
+            Icons.Default.Error
+        )
+        BatteryHealth.COLD -> BatteryPill(
+            R.string.battery_health_cold,
+            Color(0xFF2196F3),
+            Icons.Default.AcUnit
+        )
+        BatteryHealth.UNKNOWN -> BatteryPill(
+            R.string.battery_health_unknown,
+            MaterialTheme.colorScheme.outline,
+            Icons.Default.HelpOutline
+        )
+    }
+}
+
+@Composable
+private fun BatteryPowerRow(battery: BatteryDetails) {
+    val (labelRes, icon) = when (battery.plugged) {
+        BatteryPowerSource.AC -> R.string.battery_power_ac to Icons.Default.Power
+        BatteryPowerSource.USB -> R.string.battery_power_usb to Icons.Default.Usb
+        BatteryPowerSource.WIRELESS -> R.string.battery_power_wireless to Icons.Default.WifiTethering
+        BatteryPowerSource.DOCK -> R.string.battery_power_dock to Icons.Default.Dock
+        BatteryPowerSource.NONE -> R.string.battery_power_none to Icons.Default.BatteryStd
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            icon,
+            contentDescription = null,
+            modifier = Modifier.size(14.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            stringResource(labelRes),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

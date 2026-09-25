@@ -6,6 +6,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import adb.captain.domain.model.*
 import adb.captain.domain.repository.AdbRepository
 import adb.captain.domain.repository.BatteryDetails
+import adb.captain.domain.repository.BatteryHealth
+import adb.captain.domain.repository.BatteryPowerSource
+import adb.captain.domain.repository.BatteryStatus
 import adb.captain.domain.repository.CpuInfo
 import adb.captain.domain.repository.MemoryInfo
 import adb.captain.domain.repository.ProcessInfo
@@ -419,10 +422,11 @@ class AdbRepositoryImpl @Inject constructor(
             val statusNum = findValue("status").toIntOrNull()
             val healthNum = findValue("health").toIntOrNull()
             val pluggedNum = when {
-                lines.any { it.contains("AC powered") && it.contains("true") } -> "AC"
-                lines.any { it.contains("Wireless powered") && it.contains("true") } -> "Wireless"
-                lines.any { it.contains("USB powered") && it.contains("true") } -> "USB"
-                else -> "Unplugged"
+                lines.any { it.contains("AC powered") && it.contains("true") } -> BatteryPowerSource.AC
+                lines.any { it.contains("Wireless powered") && it.contains("true") } -> BatteryPowerSource.WIRELESS
+                lines.any { it.contains("USB powered") && it.contains("true") } -> BatteryPowerSource.USB
+                lines.any { it.contains("Dock powered") && it.contains("true") } -> BatteryPowerSource.DOCK
+                else -> BatteryPowerSource.NONE
             }
 
             BatteryDetails(
@@ -720,24 +724,24 @@ class AdbRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun batteryStatus(status: Int?): String = when (status) {
-        1 -> "Unknown"
-        2 -> "Charging"
-        3 -> "Discharging"
-        4 -> "Not charging"
-        5 -> "Full"
-        else -> "Unknown"
+    private fun batteryStatus(status: Int?): BatteryStatus = when (status) {
+        1 -> BatteryStatus.UNKNOWN
+        2 -> BatteryStatus.CHARGING
+        3 -> BatteryStatus.DISCHARGING
+        4 -> BatteryStatus.NOT_CHARGING
+        5 -> BatteryStatus.FULL
+        else -> BatteryStatus.UNKNOWN
     }
 
-    private fun batteryHealth(health: Int?): String = when (health) {
-        1 -> "Unknown"
-        2 -> "Good"
-        3 -> "Overheat"
-        4 -> "Dead"
-        5 -> "Over voltage"
-        6 -> "Unspecified failure"
-        7 -> "Cold"
-        else -> "Unknown"
+    private fun batteryHealth(health: Int?): BatteryHealth = when (health) {
+        1 -> BatteryHealth.UNKNOWN
+        2 -> BatteryHealth.GOOD
+        3 -> BatteryHealth.OVERHEAT
+        4 -> BatteryHealth.DEAD
+        5 -> BatteryHealth.OVER_VOLTAGE
+        6 -> BatteryHealth.FAILURE
+        7 -> BatteryHealth.COLD
+        else -> BatteryHealth.UNKNOWN
     }
 
     /**

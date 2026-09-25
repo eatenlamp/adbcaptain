@@ -101,16 +101,22 @@ interface AdbRepository {
     suspend fun resetAppOps(packageName: String): String
 }
 
+enum class BatteryStatus { UNKNOWN, CHARGING, DISCHARGING, NOT_CHARGING, FULL }
+
+enum class BatteryHealth { UNKNOWN, GOOD, OVERHEAT, DEAD, OVER_VOLTAGE, FAILURE, COLD }
+
+enum class BatteryPowerSource { NONE, AC, USB, WIRELESS, DOCK }
+
 data class BatteryDetails(
     val level: Int,
-    val status: String,
-    val health: String,
+    val status: BatteryStatus,
+    val health: BatteryHealth,
     val technology: String,
     val temperature: Int,
     val voltage: Int,
     val current: Int,
     val capacity: Int,
-    val plugged: String,
+    val plugged: BatteryPowerSource,
     val chargeCounter: Int? = null
 )
 
