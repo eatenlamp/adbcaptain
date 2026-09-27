@@ -23,6 +23,7 @@ concurrency:
 
 env:
   JAVA_VERSION: "21"
+  DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
   INPUT_VERSION: ${{ github.event.inputs.version }}
   INPUT_VERSION_CODE: ${{ github.event.inputs.version_code }}
 
@@ -33,7 +34,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && 'main' || github.ref }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.repository.default_branch || github.ref }}
           fetch-depth: 0
 
       - name: Set up JDK
@@ -115,7 +116,7 @@ jobs:
             git commit -m "Sync F-Droid metadata for $tag"
           fi
 
-          git push origin HEAD:main
+          git push origin "HEAD:$DEFAULT_BRANCH"
           git push origin "$tag"
 
       - name: Grant gradlew permissions
