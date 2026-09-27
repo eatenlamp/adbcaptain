@@ -19,3 +19,6 @@ keystore/
 rustore-keystore.properties
 rustore-keystore.jks
 rustore.jks
+
+# Local store upload packs (binaries + drafts)
+dist/

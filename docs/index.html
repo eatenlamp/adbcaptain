@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ADB Captain - Privacy Policy</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0 auto; padding: 32px 20px 80px; max-width: 820px; font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; }
+  h1 { font-size: 1.9rem; margin-bottom: 4px; }
+  h2 { font-size: 1.25rem; margin-top: 32px; border-bottom: 1px solid #8884; padding-bottom: 4px; }
+  .sub { color: #777; font-size: 0.9rem; }
+  .lang { margin-bottom: 24px; }
+  .tag { display: inline-block; font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; border: 1px solid #8886; border-radius: 999px; padding: 2px 10px; color: #666; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0 4px; }
+  th, td { border: 1px solid #8884; padding: 8px 10px; text-align: left; font-size: 0.95rem; vertical-align: top; }
+  th { background: #8881; }
+  code { background: #8881; border-radius: 4px; padding: 1px 5px; font-size: 0.9em; }
+  ul { padding-left: 20px; }
+  footer { margin-top: 48px; font-size: 0.85rem; color: #777; }
+  a { color: #2a7fd4; }
+</style>
+</head>
+<body>
+
+<section class="lang" id="en">
+  <p><span class="tag">English</span></p>
+  <h1>ADB Captain - Privacy Policy</h1>
+  <p class="sub">Last updated: 27 September 2026</p>
+
+  <p>ADB Captain is an offline utility for managing Android devices over ADB (Android Debug Bridge). It has no servers, no accounts and no advertising. This policy explains exactly what the app touches on your device.</p>
+
+  <h2>What the app does not do</h2>
+  <ul>
+    <li>No analytics, telemetry, crash reporting or usage tracking</li>
+    <li>No advertising and no ad SDKs</li>
+    <li>No third-party analytics or advertising SDKs at all</li>
+    <li>No data is uploaded anywhere; the app has no backend of its own</li>
+  </ul>
+
+  <h2>Data stored on your device</h2>
+  <table>
+    <tr><th>Data</th><th>Where it is stored</th><th>Purpose</th></tr>
+    <tr><td>Device connection settings (host, port, ADB pairing code or password)</td><td>App-private storage on your phone</td><td>Connecting to the devices you choose. Never leaves the device.</td></tr>
+    <tr><td>Terminal command history and command dictionary state</td><td>App-private storage on your phone</td><td>Convenience features: history, autocompletion.</td></tr>
+    <tr><td>Diagnostic reports you generate</td><td>App-private storage, or a file path you pick (for example <code>/sdcard/Download</code>) when you export a report</td><td>Only after you tap export. Files stay where you put them.</td></tr>
+    <tr><td>Screenshots you capture</td><td>A file path you choose on your device</td><td>Only after you capture a screenshot.</td></tr>
+    <tr><td>Shizuku authorization state</td><td>App-private storage</td><td>Used only to show whether the optional Shizuku helper is available.</td></tr>
+  </table>
+
+  <h2>Permissions and why they are needed</h2>
+  <table>
+    <tr><th>Permission</th><th>Why</th></tr>
+    <tr><td><code>INTERNET</code> (implicit for network ADB)</td><td>Connecting to a device over ADB by Wi-Fi or TCP/IP. All traffic goes to the device address you enter, never to us.</td></tr>
+    <tr><td><code>QUERY_ALL_PACKAGES</code></td><td>Reads the list of installed apps so you can view it locally, manage App Ops permissions and launch apps. The list is shown only in the app and is not transmitted.</td></tr>
+    <tr><td><code>SYSTEM_ALERT_WINDOW</code></td><td>Optional overlay used for the floating ADB session controls. Never granted or used without your action.</td></tr>
+    <tr><td><code>POST_NOTIFICATIONS</code></td><td>Optional status notifications, for example about an active ADB session or a running foreground operation.</td></tr>
+    <tr><td><code>FOREGROUND_SERVICE</code>, <code>FOREGROUND_SERVICE_SPECIAL_USE</code></td><td>Keeps an ADB session alive while you use it in the background, and shows an ongoing notification while it runs.</td></tr>
+    <tr><td>Storage access via the system file picker</td><td>Only used when you choose where to save an exported report or a screenshot.</td></tr>
+  </table>
+
+  <h2>Optional components</h2>
+  <p>The app works without Shizuku. If you install Shizuku (a separate open-source app) and authorize it, ADB Captain communicates with it locally over a system binder to perform a subset of actions with elevated permissions. Shizuku is a separate project with its own privacy policy, and ADB Captain receives no data from it beyond the authorization state.</p>
+
+  <h2>Children</h2>
+  <p>The app is a developer utility and is not directed at children under 13.</p>
+
+  <h2>Your rights and control</h2>
+  <p>Because nothing leaves your device, you are in full control: you can erase every stored value by clearing the app data or uninstalling the app. Diagnostic reports and screenshots can be deleted from wherever you saved them.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>Any future change will be published in the public source repository, and the date above will be updated.</p>
+
+  <h2>Contact</h2>
+  <p>Questions: <a href="mailto:eatenlamp@proton.me">eatenlamp@proton.me</a>. Source code: <a href="https://github.com/eatenlamp/adbcaptain">github.com/eatenlamp/adbcaptain</a>.</p>
+</section>
+
+<hr>
+
+<section class="lang" id="ru" lang="ru">
+  <p><span class="tag">Русский</span></p>
+  <h1>ADB Captain - Политика конфиденциальности</h1>
+  <p class="sub">Обновлено: 27 сентября 2026</p>
+
+  <p>ADB Captain - офлайн-утилита для управления Android-устройствами через ADB (Android Debug Bridge). У приложения нет серверов, нет аккаунтов и нет рекламы. Ниже описано, что именно приложение использует на вашем устройстве.</p>
+
+  <h2>Чего приложение не делает</h2>
+  <ul>
+    <li>Нет аналитики, телеметрии, отчётов о сбоях и отслеживания использования</li>
+    <li>Нет рекламы и рекламных SDK</li>
+    <li>Нет сторонних аналитических и рекламных SDK вообще</li>
+    <li>Данные никуда не отправляются, у приложения нет собственного бэкенда</li>
+  </ul>
+
+  <h2>Что хранится на устройстве</h2>
+  <table>
+    <tr><th>Данные</th><th>Где хранятся</th><th>Зачем</th></tr>
+    <tr><td>Параметры подключения (хост, порт, код или пароль ADB-привязки)</td><td>Приватное хранилище приложения</td><td>Для подключения к выбранным вами устройствам. Никуда не передаются.</td></tr>
+    <tr><td>История терминала и состояние словаря команд</td><td>Приватное хранилище приложения</td><td>История команд и автодополнение.</td></tr>
+    <tr><td>Созданные вами отчёты диагностики</td><td>Приватное хранилище или выбранный вами путь (например <code>/sdcard/Download</code>) при экспорте</td><td>Только после нажатия экспорта. Файлы остаются там, куда вы их сохранили.</td></tr>
+    <tr><td>Сделанные вами скриншоты</td><td>Выбранный вами путь на устройстве</td><td>Только после создания скриншота.</td></tr>
+    <tr><td>Состояние авторизации Shizuku</td><td>Приватное хранилище приложения</td><td>Только чтобы показать, доступен ли дополнительный помощник Shizuku.</td></tr>
+  </table>
+
+  <h2>Разрешения и зачем они нужны</h2>
+  <table>
+    <tr><th>Разрешение</th><th>Зачем</th></tr>
+    <tr><td><code>INTERNET</code> (для сетевого ADB)</td><td>Подключение к устройству по Wi-Fi или TCP/IP. Весь трафик идёт на указанный вами адрес устройства, а не к нам.</td></tr>
+    <tr><td><code>QUERY_ALL_PACKAGES</code></td><td>Чтение списка установленных приложений, чтобы показать его локально, управлять разрешениями App Ops и запускать приложения. Список виден только в приложении и не передаётся.</td></tr>
+    <tr><td><code>SYSTEM_ALERT_WINDOW</code></td><td>Необязательное плавающее окно с элементами управления ADB-сессией. Никогда не используется без вашего действия.</td></tr>
+    <tr><td><code>POST_NOTIFICATIONS</code></td><td>Необязательные уведомления, например об активной ADB-сессии или о выполняемой операции.</td></tr>
+    <tr><td><code>FOREGROUND_SERVICE</code>, <code>FOREGROUND_SERVICE_SPECIAL_USE</code></td><td>Поддерживают ADB-сессию при работе в фоне и показывают постоянное уведомление, пока она активна.</td></tr>
+    <tr><td>Доступ к файлам через системный выбор файлов</td><td>Используется только когда вы выбираете, куда сохранить экспортированный отчёт или скриншот.</td></tr>
+  </table>
+
+  <h2>Необязательные компоненты</h2>
+  <p>Приложение работает и без Shizuku. Если вы установите Shizuku (отдельное приложение с открытым исходным кодом) и авторизуете его, ADB Captain общается с ним локально через системный binder, чтобы часть действий выполнялась с повышенными правами. У Shizuku своя политика конфиденциальности, и кроме состояния авторизации ADB Captain ничего от него не получает.</p>
+
+  <h2>Дети</h2>
+  <p>Приложение - инструмент для разработчиков, оно не предназначено детям младше 13 лет.</p>
+
+  <h2>Ваши права и контроль</h2>
+  <p>Так как ничего не покидает устройство, полный контроль у вас: удалить все сохранённые значения можно очисткой данных приложения или его удалением. Отчёты диагностики и скриншоты удаляются оттуда, куда вы их сохранили.</p>
+
+  <h2>Изменения политики</h2>
+  <p>Все будущие изменения публикуются в открытом репозитории, дата выше будет обновлена.</p>
+
+  <h2>Контакты</h2>
+  <p>Вопросы: <a href="mailto:eatenlamp@proton.me">eatenlamp@proton.me</a>. Исходный код: <a href="https://github.com/eatenlamp/adbcaptain">github.com/eatenlamp/adbcaptain</a>.</p>
+</section>
+
+<footer>
+  <p>ADB Captain is an independent project, not affiliated with Google or the Android Open Source Project.</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,16 @@
+Version 1.4
+
+Battery:
+- New battery card with a circular charge gauge colored by charge level
+- Charge status, health and power source shown as badges
+- Capacity and charge counter in the details row
+
+Also in this release:
+- Fixed ADB command normalization for `adb shell` commands
+- NFC and mobile data toggles, night mode and brightness quick actions
+- Display density and size controls
+- App Ops permission manager
+- Extended diagnostics report (CPU, thermal, sensors, network stats)
+- Command dictionary with autocompletion in the terminal
+- State-aware ANSI color parser
+- Shizuku binder state tracking without polling
