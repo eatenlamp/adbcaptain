@@ -102,3 +102,16 @@ jobs:
             echo "byte-identity gate FAILED" >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
+
+      # Keep both APKs when the gate fails: without them a byte difference
+      # cannot be located, and the run's artifacts are the only copy.
+      - name: Upload APKs for diagnosis
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: repro-apks-${{ env.TARGET_TAG }}
+          retention-days: 30
+          path: |
+            published.apk
+            app/build/outputs/apk/fdroid/release/app-fdroid-release.apk
+          if-no-files-found: error
