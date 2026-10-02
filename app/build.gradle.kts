@@ -64,7 +64,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = if (keystoreProps != null) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
+            // No signingConfig here on purpose: a build-type-level signingConfig
+            // overrides the product flavor's one in AGP, which silently signed the
+            // RuStore build with the F-Droid key and broke signer isolation.
+            // Each store flavor below owns its own identity instead.
             vcsInfo {
                 include = false
             }
@@ -75,6 +78,7 @@ android {
         create("fdroid") {
             dimension = "store"
             // Pure FOSS build for F-Droid and GitHub Releases. All features, no tracking.
+            signingConfig = if (keystoreProps != null) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
         }
         create("rustore") {
             dimension = "store"
@@ -87,8 +91,10 @@ android {
             // fdroid variant's output stays byte-identical.
             // RuStore build is signed with its own key (signingConfig "rustore"),
             // isolated from the F-Droid/GitHub key that release builds use.
-            if (rustoreKeystoreProps != null) {
-                signingConfig = signingConfigs.getByName("rustore")
+            signingConfig = if (rustoreKeystoreProps != null) {
+                signingConfigs.getByName("rustore")
+            } else {
+                signingConfigs.getByName("debug")
             }
         }
     }
