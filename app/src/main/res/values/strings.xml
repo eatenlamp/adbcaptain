@@ -39,6 +39,10 @@
     <string name="term_history_empty">No commands yet</string>
     <string name="term_history_clear">Clear history</string>
     <string name="term_history_hint">Tap a command to fill it</string>
+    <string name="term_favorites_title">Pinned</string>
+    <string name="term_favorite_add">Pin command</string>
+    <string name="term_favorite_remove">Unpin command</string>
+    <string name="term_favorite_toggle">Pin or unpin command</string>
     <string name="term_help_title">= ADB Captain Help =</string>
     <string name="term_help_intro">This terminal runs real ADB commands through Shizuku — no root needed. Just type a command and press send.\n\n</string>
     <string name="term_help_commands">Common commands:\n  pm list packages -3             user apps\n  pm path &lt;pkg&gt;                   APK path\n  pm clear &lt;pkg&gt;                  wipe app data\n  am force-stop &lt;pkg&gt;             stop an app\n  getprop ro.product.model        device model\n  wm size                         screen size\n  dumpsys battery                 battery info\n  settings get global adb_enabled check ADB\n  screencap -p /sdcard/s.png      screenshot\n  input keyevent KEYCODE_HOME     press Home\n  logcat -d -t 100                last 100 log lines\n\n</string>
@@ -49,6 +53,11 @@
     <string name="apps_search_placeholder">Search package...</string>
     <string name="apps_filter_all">All</string>
     <string name="apps_filter_user">User</string>
+    <string name="apps_filter_system">System</string>
+    <string name="apps_filter_enabled_all">Any state</string>
+    <string name="apps_filter_enabled">Enabled</string>
+    <string name="apps_filter_disabled">Disabled</string>
+    <string name="apps_select_all">Select all</string>
     <string name="apps_version">Version: %s</string>
     <string name="apps_delete">Delete</string>
     <string name="apps_more">More options</string>
@@ -268,6 +277,7 @@
     <string name="settings_open_help">How ADB Captain works</string>
     <string name="settings_appearance">Appearance</string>
     <string name="settings_dark_theme">Dark Theme</string>
+    <string name="settings_theme">Color theme</string>
     <string name="settings_features">Features</string>
     <string name="settings_auto_complete">Auto-complete</string>
     <string name="settings_shizuku">Shizuku</string>
@@ -298,4 +308,30 @@
     <string name="help_sideload_body">Install APK files from storage, record the screen, control Wi-Fi/Bluetooth/airplane mode and volume, type text, and open links. The floating overlay button gives one-tap screenshots and screen recording from any app.</string>
     <string name="help_safety_title">Safety</string>
     <string name="help_safety_body">These are real system commands. Reboot, uninstall, disable and clear-data are powerful actions - use them carefully. You are responsible for the changes you make.</string>
+
+    <!-- Wireless ADB -->
+    <string name="wireless_title">Wireless ADB</string>
+    <string name="wireless_back">Back</string>
+    <string name="wireless_status_title">Connection</string>
+    <string name="wireless_status_disconnected">Not connected</string>
+    <string name="wireless_status_connecting">Connecting…</string>
+    <string name="wireless_status_connected">Connected to %s</string>
+    <string name="wireless_add_title">Connect to a device</string>
+    <string name="wireless_add_desc">For already paired devices, or Android 10 and older, use port 5555 after enabling ADB over network.</string>
+    <string name="wireless_host">Host / IP</string>
+    <string name="wireless_port">Port</string>
+    <string name="wireless_auto_reconnect">Auto-reconnect</string>
+    <string name="wireless_connect">Connect</string>
+    <string name="wireless_disconnect">Disconnect</string>
+    <string name="wireless_save">Save</string>
+    <string name="wireless_pair_title">Pair device (Android 11+)</string>
+    <string name="wireless_pair_desc">Turn on Wireless debugging, choose \"Pair device with pairing code\", then enter the address and 6-digit code shown on the phone.</string>
+    <string name="wireless_pairing_code">Pairing code</string>
+    <string name="wireless_pair">Pair</string>
+    <string name="wireless_saved_title">Saved devices</string>
+    <string name="wireless_delete">Delete</string>
+    <string name="wireless_shell_title">Run shell command</string>
+    <string name="wireless_shell_command">Command</string>
+    <string name="wireless_shell_run">Run</string>
+    <string name="wireless_shell_output">Output</string>
 </resources>

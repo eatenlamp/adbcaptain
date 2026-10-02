@@ -37,6 +37,14 @@ class AppsViewModel @Inject constructor(
         _uiState.update { it.copy(searchQuery = query) }
     }
 
+    fun setEnabledFilter(enabled: Boolean?) {
+        _uiState.update { it.copy(enabledFilter = enabled) }
+    }
+
+    fun selectAll(packageNames: List<String>) {
+        _uiState.update { it.copy(selected = packageNames.toSet()) }
+    }
+
     fun forceStop(packageName: String) {
         viewModelScope.launch { useCase.forceStop(packageName) }
     }
@@ -221,6 +229,7 @@ data class AppsUiState(
     val isExporting: Boolean = false,
     val searchQuery: String = "",
     val systemFilter: Boolean? = null,
+    val enabledFilter: Boolean? = null,
     val exportMessage: String? = null,
     val details: AppDetails? = null,
     val isLoadingDetails: Boolean = false,

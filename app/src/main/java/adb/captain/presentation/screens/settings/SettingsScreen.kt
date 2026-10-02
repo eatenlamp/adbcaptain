@@ -1,7 +1,9 @@
 package adb.captain.presentation.screens.settings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Help
@@ -10,12 +12,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import adb.captain.R
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import adb.captain.ShizukuManager
+import adb.captain.ui.theme.AppTheme
+import adb.captain.ui.theme.accentColor
 
 @Composable
 fun SettingsScreen(
@@ -25,6 +30,7 @@ fun SettingsScreen(
     val isDarkTheme by viewModel.isDarkTheme.collectAsState()
     val isAutoComplete by viewModel.isAutoCompleteEnabled.collectAsState()
     val currentLanguage by viewModel.language.collectAsState()
+    val currentAppTheme by viewModel.appTheme.collectAsState()
     
     var shizukuStatus by remember { mutableStateOf(ShizukuManager.isShizukuRunning()) }
     LaunchedEffect(Unit) {
@@ -56,6 +62,28 @@ fun SettingsScreen(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.settings_dark_theme), modifier = Modifier.weight(1f))
             Switch(checked = isDarkTheme, onCheckedChange = { viewModel.setDarkTheme(it) })
+        }
+
+        Text(stringResource(R.string.settings_theme), style = MaterialTheme.typography.bodyMedium)
+
+        AppTheme.entries.forEach { theme ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clip(CircleShape)
+                        .background(theme.accentColor())
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(theme.displayName, modifier = Modifier.weight(1f))
+                RadioButton(
+                    selected = currentAppTheme == theme.name,
+                    onClick = { viewModel.setAppTheme(theme.name) }
+                )
+            }
         }
 
         HorizontalDivider()

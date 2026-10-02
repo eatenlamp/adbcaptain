@@ -44,6 +44,7 @@ class LogcatViewModel @Inject constructor(
     private fun startStreaming() {
         _uiState.update { it.copy(isPaused = false) }
         logcatJob = viewModelScope.launch {
+            runCatching { useCase.clearLogcat() }
             useCase.streamLogcat().collect { entry ->
                 val withId = entry.copy(id = nextEntryId++)
                 _uiState.update { state ->
@@ -59,7 +60,10 @@ class LogcatViewModel @Inject constructor(
     }
 
     fun clearLogs() {
-        _uiState.update { it.copy(logs = emptyList()) }
+        viewModelScope.launch {
+            runCatching { useCase.clearLogcat() }
+            _uiState.update { it.copy(logs = emptyList()) }
+        }
     }
 }
 

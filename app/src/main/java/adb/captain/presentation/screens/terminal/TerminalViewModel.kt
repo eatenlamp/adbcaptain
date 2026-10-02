@@ -26,6 +26,9 @@ class TerminalViewModel @Inject constructor(
     val isAutoCompleteEnabled: StateFlow<Boolean> = useCase.isAutoCompleteEnabled()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
+    val favorites: StateFlow<List<String>> = useCase.getFavoriteCommands()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     init {
         loadHistory()
     }
@@ -65,6 +68,12 @@ class TerminalViewModel @Inject constructor(
 
     fun clearOutput() {
         _uiState.update { it.copy(output = emptyList()) }
+    }
+
+    fun toggleFavorite(command: String) {
+        viewModelScope.launch {
+            useCase.toggleFavorite(command)
+        }
     }
 
     fun clearHistory() {

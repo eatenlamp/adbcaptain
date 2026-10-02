@@ -18,6 +18,9 @@ class SettingsViewModel @Inject constructor(
     val isDarkTheme: StateFlow<Boolean> = useCase.isDarkTheme()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
+    val appTheme: StateFlow<String> = useCase.getAppTheme()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "TealNavy")
+
     val isAutoCompleteEnabled: StateFlow<Boolean> = useCase.isAutoCompleteEnabled()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
@@ -26,6 +29,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setDarkTheme(enabled: Boolean) {
         viewModelScope.launch { useCase.setDarkTheme(enabled) }
+    }
+
+    fun setAppTheme(name: String) {
+        viewModelScope.launch { useCase.setAppTheme(name) }
     }
 
     fun setAutoCompleteEnabled(enabled: Boolean) {

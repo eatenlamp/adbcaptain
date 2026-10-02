@@ -27,8 +27,8 @@ android {
         applicationId = "adb.captain"
         minSdk = 24
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.4"
+        versionCode = 6
+        versionName = "1.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -144,6 +144,11 @@ dependencies {
 
     // DataStore
     implementation(libs.datastore.preferences)
+
+    // Wireless ADB client (connect/pair to remote or local ADB daemons)
+    implementation(libs.libadb.android)
+    implementation(libs.conscrypt.android)
+    implementation(libs.sun.security.android)
 
     // Shizuku API
     implementation("dev.rikka.shizuku:api:13.1.5")

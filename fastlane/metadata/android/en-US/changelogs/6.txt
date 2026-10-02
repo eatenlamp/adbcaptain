@@ -1,0 +1,16 @@
+Version 1.5
+
+Wireless ADB:
+- Full ADB client: pair and connect to any device over Wi-Fi
+- Run shell commands on the connected device without a computer
+- Saved devices with one-tap reconnect and optional auto-reconnect
+- Client ADB key is stored once, so pairing survives app updates
+
+Color themes:
+- 5 accent palettes (Teal Navy, Sapphire, Emerald, Copper, Slate) next to Material You dynamic color
+- Theme choice is saved and applied instantly
+
+Also in this release:
+- Fixed Logcat: the log stream stayed empty because of a broken level check in the parser
+- Terminal: pin favorite commands and reuse them as chips
+- Apps: filter by system/user and enabled/disabled state, plus a select-all button

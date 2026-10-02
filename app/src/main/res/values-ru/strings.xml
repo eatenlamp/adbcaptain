@@ -38,6 +38,10 @@
     <string name="term_history_empty">Команд пока нет</string>
     <string name="term_history_clear">Очистить историю</string>
     <string name="term_history_hint">Нажмите на команду, чтобы подставить её</string>
+    <string name="term_favorites_title">Закреплённые</string>
+    <string name="term_favorite_add">Закрепить команду</string>
+    <string name="term_favorite_remove">Открепить команду</string>
+    <string name="term_favorite_toggle">Закрепить или открепить команду</string>
     <string name="term_help_title">= Помощь ADB Captain =</string>
     <string name="term_help_intro">Этот терминал выполняет реальные команды ADB через Shizuku — root не нужен. Просто введите команду и нажмите отправить.\n\n</string>
     <string name="term_help_commands">Частые команды:\n  pm list packages -3             пользовательские приложения\n  pm path &lt;pkg&gt;                   путь к APK\n  pm clear &lt;pkg&gt;                  очистить данные приложения\n  am force-stop &lt;pkg&gt;             остановить приложение\n  getprop ro.product.model        модель устройства\n  wm size                         размер экрана\n  dumpsys battery                 состояние батареи\n  settings get global adb_enabled проверка ADB\n  screencap -p /sdcard/s.png      скриншот\n  input keyevent KEYCODE_HOME     нажать Home\n  logcat -d -t 100                последние 100 строк лога\n\n</string>
@@ -48,6 +52,11 @@
     <string name="apps_search_placeholder">Поиск пакета...</string>
     <string name="apps_filter_all">Все</string>
     <string name="apps_filter_user">Пользовательские</string>
+    <string name="apps_filter_system">Системные</string>
+    <string name="apps_filter_enabled_all">Любое состояние</string>
+    <string name="apps_filter_enabled">Включены</string>
+    <string name="apps_filter_disabled">Отключены</string>
+    <string name="apps_select_all">Выбрать все</string>
     <string name="apps_version">Версия: %s</string>
     <string name="apps_delete">Удалить</string>
     <string name="apps_more">Дополнительно</string>
@@ -267,6 +276,7 @@
     <string name="settings_open_help">Как работает ADB Captain</string>
     <string name="settings_appearance">Внешний вид</string>
     <string name="settings_dark_theme">Темная тема</string>
+    <string name="settings_theme">Цветовая тема</string>
     <string name="settings_features">Функции</string>
     <string name="settings_auto_complete">Автодополнение</string>
     <string name="settings_shizuku">Shizuku</string>
@@ -297,4 +307,30 @@
     <string name="help_sideload_body">Установка APK из памяти, запись экрана, управление Wi-Fi/Bluetooth/авиарежимом и громкостью, ввод текста и открытие ссылок. Плавающая кнопка даёт скриншоты и запись экрана в один тап из любого приложения.</string>
     <string name="help_safety_title">Безопасность</string>
     <string name="help_safety_body">Это реальные системные команды. Перезагрузка, удаление, отключение и очистка данных — мощные действия, используйте их аккуратно. Вы отвечаете за изменения, которые делаете.</string>
+
+    <!-- Wireless ADB -->
+    <string name="wireless_title">ADB по Wi-Fi</string>
+    <string name="wireless_back">Назад</string>
+    <string name="wireless_status_title">Соединение</string>
+    <string name="wireless_status_disconnected">Не подключено</string>
+    <string name="wireless_status_connecting">Подключение…</string>
+    <string name="wireless_status_connected">Подключено к %s</string>
+    <string name="wireless_add_title">Подключение к устройству</string>
+    <string name="wireless_add_desc">Для уже сопряжённых устройств или Android 10 и старее используйте порт 5555, включив «ADB по сети».</string>
+    <string name="wireless_host">Хост / IP</string>
+    <string name="wireless_port">Порт</string>
+    <string name="wireless_auto_reconnect">Автопереподключение</string>
+    <string name="wireless_connect">Подключить</string>
+    <string name="wireless_disconnect">Отключить</string>
+    <string name="wireless_save">Сохранить</string>
+    <string name="wireless_pair_title">Сопряжение (Android 11+)</string>
+    <string name="wireless_pair_desc">Включите «Отладка по Wi-Fi», выберите «Сопряжение с кодом», затем введите адрес и 6-значный код, показанные на телефоне.</string>
+    <string name="wireless_pairing_code">Код сопряжения</string>
+    <string name="wireless_pair">Сопрячь</string>
+    <string name="wireless_saved_title">Сохранённые устройства</string>
+    <string name="wireless_delete">Удалить</string>
+    <string name="wireless_shell_title">Выполнить shell-команду</string>
+    <string name="wireless_shell_command">Команда</string>
+    <string name="wireless_shell_run">Выполнить</string>
+    <string name="wireless_shell_output">Вывод</string>
 </resources>

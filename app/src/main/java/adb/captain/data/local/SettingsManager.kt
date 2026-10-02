@@ -12,10 +12,13 @@ class SettingsManager(private val context: Context) {
 
     companion object {
         val DARK_THEME = booleanPreferencesKey("dark_theme")
+        val APP_THEME = stringPreferencesKey("app_theme")
         val AUTO_COMPLETE = booleanPreferencesKey("auto_complete")
         val SAVE_HISTORY = booleanPreferencesKey("save_history")
         val LANGUAGE = stringPreferencesKey("language")
         val TUTORIAL_SEEN = booleanPreferencesKey("tutorial_seen")
+        val SAVED_ADB_DEVICES = stringPreferencesKey("saved_adb_devices")
+        val FAVORITE_COMMANDS = stringPreferencesKey("favorite_commands")
     }
 
     val tutorialSeen: Flow<Boolean> = context.dataStore.data.map { it[TUTORIAL_SEEN] ?: false }
@@ -26,6 +29,11 @@ class SettingsManager(private val context: Context) {
     val darkTheme: Flow<Boolean> = context.dataStore.data.map { it[DARK_THEME] ?: true }
     suspend fun setDarkTheme(enabled: Boolean) {
         context.dataStore.edit { it[DARK_THEME] = enabled }
+    }
+
+    val appTheme: Flow<String> = context.dataStore.data.map { it[APP_THEME] ?: "TealNavy" }
+    suspend fun setAppTheme(name: String) {
+        context.dataStore.edit { it[APP_THEME] = name }
     }
 
     val autoComplete: Flow<Boolean> = context.dataStore.data.map { it[AUTO_COMPLETE] ?: true }
@@ -41,5 +49,15 @@ class SettingsManager(private val context: Context) {
     val language: Flow<String> = context.dataStore.data.map { it[LANGUAGE] ?: "en" }
     suspend fun setLanguage(lang: String) {
         context.dataStore.edit { it[LANGUAGE] = lang }
+    }
+
+    val savedAdbDevicesRaw: Flow<String> = context.dataStore.data.map { it[SAVED_ADB_DEVICES] ?: "" }
+    suspend fun setSavedAdbDevicesRaw(value: String) {
+        context.dataStore.edit { it[SAVED_ADB_DEVICES] = value }
+    }
+
+    val favoriteCommandsRaw: Flow<String> = context.dataStore.data.map { it[FAVORITE_COMMANDS] ?: "" }
+    suspend fun setFavoriteCommandsRaw(value: String) {
+        context.dataStore.edit { it[FAVORITE_COMMANDS] = value }
     }
 }

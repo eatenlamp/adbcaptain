@@ -14,6 +14,9 @@ room = "2.8.4"
 navigation = "2.8.8"
 datastore = "1.1.3"
 ksp = "2.2.10-2.0.2"
+libadb = "3.1.1"
+conscrypt = "2.5.3"
+sunSecurityAndroid = "1.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -49,6 +52,11 @@ navigation-compose = { group = "androidx.navigation", name = "navigation-compose
 
 # DataStore
 datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+
+# Wireless ADB client (LibADB Android) + TLS/certificate support
+libadb-android = { group = "com.github.MuntashirAkon", name = "libadb-android", version.ref = "libadb" }
+conscrypt-android = { group = "org.conscrypt", name = "conscrypt-android", version.ref = "conscrypt" }
+sun-security-android = { group = "com.github.MuntashirAkon", name = "sun-security-android", version.ref = "sunSecurityAndroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

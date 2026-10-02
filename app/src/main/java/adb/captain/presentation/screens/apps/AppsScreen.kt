@@ -9,7 +9,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*import androidx.compose.runtime.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,10 +37,12 @@ fun AppsScreen(
     val exportSaved = stringResource(R.string.apps_export_saved)
     val exportFailed = stringResource(R.string.apps_export_failed)
     val appOpsApplied = stringResource(R.string.appop_applied)
-    val filteredApps = remember(uiState.apps, uiState.searchQuery) {
-        uiState.apps.filter {
-            it.packageName.contains(uiState.searchQuery, ignoreCase = true) ||
-                it.label.contains(uiState.searchQuery, ignoreCase = true)
+    val filteredApps = remember(uiState.apps, uiState.searchQuery, uiState.enabledFilter) {
+        uiState.apps.filter { app ->
+            val matchesQuery = app.packageName.contains(uiState.searchQuery, ignoreCase = true) ||
+                app.label.contains(uiState.searchQuery, ignoreCase = true)
+            val matchesEnabled = uiState.enabledFilter?.let { it == app.enabled } ?: true
+            matchesQuery && matchesEnabled
         }
     }
 
@@ -115,6 +118,9 @@ fun AppsScreen(
                     singleLine = true,
                     shape = MaterialTheme.shapes.medium
                 )
+                IconButton(onClick = { viewModel.selectAll(filteredApps.map { it.packageName }) }) {
+                    Icon(Icons.Default.SelectAll, contentDescription = stringResource(R.string.apps_select_all))
+                }
                 Box {
                     var exportMenu by remember { mutableStateOf(false) }
                     IconButton(onClick = { exportMenu = true }) {
@@ -148,6 +154,36 @@ fun AppsScreen(
                     selected = uiState.systemFilter == false,
                     onClick = { viewModel.loadApps(false) },
                     label = { Text(stringResource(R.string.apps_filter_user)) }
+                )
+                Spacer(Modifier.width(8.dp))
+                FilterChip(
+                    selected = uiState.systemFilter == true,
+                    onClick = { viewModel.loadApps(true) },
+                    label = { Text(stringResource(R.string.apps_filter_system)) }
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+            ) {
+                FilterChip(
+                    selected = uiState.enabledFilter == null,
+                    onClick = { viewModel.setEnabledFilter(null) },
+                    label = { Text(stringResource(R.string.apps_filter_enabled_all)) }
+                )
+                Spacer(Modifier.width(8.dp))
+                FilterChip(
+                    selected = uiState.enabledFilter == true,
+                    onClick = { viewModel.setEnabledFilter(true) },
+                    label = { Text(stringResource(R.string.apps_filter_enabled)) }
+                )
+                Spacer(Modifier.width(8.dp))
+                FilterChip(
+                    selected = uiState.enabledFilter == false,
+                    onClick = { viewModel.setEnabledFilter(false) },
+                    label = { Text(stringResource(R.string.apps_filter_disabled)) }
                 )
             }
 

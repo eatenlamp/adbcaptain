@@ -14,6 +14,9 @@ class SettingsUseCase @Inject constructor(
     fun isDarkTheme(): Flow<Boolean> = repository.isDarkTheme()
     suspend fun setDarkTheme(enabled: Boolean) = repository.setDarkTheme(enabled)
 
+    fun getAppTheme(): Flow<String> = repository.getAppTheme()
+    suspend fun setAppTheme(name: String) = repository.setAppTheme(name)
+
     fun isAutoCompleteEnabled(): Flow<Boolean> = repository.isAutoCompleteEnabled()
     suspend fun setAutoCompleteEnabled(enabled: Boolean) = repository.setAutoCompleteEnabled(enabled)
 

@@ -18,6 +18,16 @@ class TerminalUseCase @Inject constructor(
 ) {
     fun getHistory(): Flow<List<Command>> = historyRepository.getHistory()
 
+    fun getFavoriteCommands(): Flow<List<String>> = settingsRepository.getFavoriteCommands()
+
+    suspend fun toggleFavorite(command: String) {
+        val trimmed = command.trim()
+        if (trimmed.isEmpty()) return
+        val current = settingsRepository.getFavoriteCommands().first()
+        val updated = if (current.contains(trimmed)) current - trimmed else current + trimmed
+        settingsRepository.setFavoriteCommands(updated)
+    }
+
     fun isAutoCompleteEnabled(): Flow<Boolean> = settingsRepository.isAutoCompleteEnabled()
 
     suspend fun executeCommand(commandText: String): Command {

@@ -20,6 +20,7 @@ interface AdbRepository {
     suspend fun getAppDetails(packageName: String): AppDetails?
 
     fun streamLogcat(level: String? = null, filter: String? = null): Flow<LogEntry>
+    suspend fun clearLogcat()
 
     suspend fun forceStopApp(packageName: String)
     suspend fun clearAppData(packageName: String)

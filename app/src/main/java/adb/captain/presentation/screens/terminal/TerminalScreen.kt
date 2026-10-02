@@ -1,6 +1,7 @@
 package adb.captain.presentation.screens.terminal
 
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +11,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import adb.captain.ui.theme.JetBrainsMono
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
@@ -32,6 +37,7 @@ fun TerminalScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val autoCompleteEnabled by viewModel.isAutoCompleteEnabled.collectAsState()
+    val favorites by viewModel.favorites.collectAsState()
     var command by remember { mutableStateOf("") }
     var showHistory by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
@@ -175,20 +181,35 @@ fun TerminalScreen(
                         }
                         LazyColumn(modifier = Modifier.heightIn(max = 260.dp)) {
                             items(historyItems) { item ->
-                                Surface(
-                                    onClick = {
-                                        command = item
-                                        showHistory = false
-                                    },
-                                    color = Color.Transparent,
-                                    modifier = Modifier.fillMaxWidth()
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
-                                        text = item,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontFamily = JetBrainsMono,
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                                    )
+                                    Surface(
+                                        onClick = {
+                                            command = item
+                                            showHistory = false
+                                        },
+                                        color = Color.Transparent,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(
+                                            text = item,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontFamily = JetBrainsMono,
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                                        )
+                                    }
+                                    val isFavorite = favorites.contains(item)
+                                    IconButton(onClick = { viewModel.toggleFavorite(item) }) {
+                                        Icon(
+                                            imageVector = if (isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
+                                            contentDescription = stringResource(
+                                                if (isFavorite) R.string.term_favorite_remove else R.string.term_favorite_add
+                                            ),
+                                            tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -202,6 +223,58 @@ fun TerminalScreen(
                 }
             }
             Spacer(Modifier.height(4.dp))
+        }
+
+        // Pinned (favorite) commands
+        if (favorites.isNotEmpty()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    stringResource(R.string.term_favorites_title),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                favorites.forEach { favorite ->
+                    InputChip(
+                        selected = false,
+                        onClick = {
+                            command = favorite
+                            showHistory = false
+                        },
+                        label = {
+                            Text(
+                                favorite,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Star,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(InputChipDefaults.IconSize)
+                            )
+                        },
+                        trailingIcon = {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = stringResource(R.string.term_favorite_remove),
+                                modifier = Modifier
+                                    .size(InputChipDefaults.IconSize)
+                                    .clickable { viewModel.toggleFavorite(favorite) }
+                            )
+                        },
+                        modifier = Modifier.padding(end = 6.dp)
+                    )
+                }
+            }
         }
 
         // Quick Commands
@@ -275,7 +348,21 @@ fun TerminalScreen(
             )
             
             Spacer(Modifier.width(8.dp))
-            
+
+            val commandIsFavorite = command.isNotBlank() && favorites.contains(command.trim())
+            IconButton(
+                onClick = { viewModel.toggleFavorite(command) },
+                enabled = command.isNotBlank()
+            ) {
+                Icon(
+                    imageVector = if (commandIsFavorite) Icons.Default.Star else Icons.Default.StarBorder,
+                    contentDescription = stringResource(R.string.term_favorite_toggle),
+                    tint = if (commandIsFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                )
+            }
+
+            Spacer(Modifier.width(8.dp))
+
             IconButton(
                 onClick = { submit(command) },
                 enabled = command.isNotBlank() && !uiState.isLoading

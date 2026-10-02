@@ -12,6 +12,7 @@ import adb.captain.domain.repository.BatteryStatus
 import adb.captain.domain.repository.CpuInfo
 import adb.captain.domain.repository.MemoryInfo
 import adb.captain.domain.repository.ProcessInfo
+import adb.captain.util.LogcatParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -173,17 +174,21 @@ class AdbRepositoryImpl @Inject constructor(
 
     override fun streamLogcat(level: String?, filter: String?): Flow<LogEntry> = flow {
         val cmd = buildString {
-            append("logcat -v time")
+            append("logcat -v threadtime")
             if (level != null) append(" *:$level")
             if (filter != null) append(" | grep \"$filter\"")
         }
         val process = startShizukuProcess(cmd)
         process.inputStream.bufferedReader().useLines { lines ->
             lines.forEach { line ->
-                parseLogcatLine(line)?.let { emit(it) }
+                LogcatParser.parse(line)?.let { emit(it) }
             }
         }
     }.flowOn(Dispatchers.IO)
+
+    override suspend fun clearLogcat() {
+        executeCommand("logcat -c")
+    }
 
     override suspend fun forceStopApp(packageName: String) { executeCommand("am force-stop $packageName") }
     override suspend fun clearAppData(packageName: String) { executeCommand("pm clear $packageName") }
@@ -825,23 +830,6 @@ class AdbRepositoryImpl @Inject constructor(
         return entries.sortedWith(
             compareByDescending<FileEntry> { it.isDirectory }.thenBy { it.name.lowercase() }
         )
-    }
-
-    private fun parseLogcatLine(line: String): LogEntry? {
-        // 07-31 11:48:34.530 D/Tag(PID): Message
-        return try {
-            val parts = line.split(SPACE_REGEX)
-            if (parts.size < 5) return null
-            val timestamp = "${parts[0]} ${parts[1]}"
-            val levelTag = parts[2]
-            val levelChar = levelTag.firstOrNull() ?: 'I'
-            val tag = levelTag.substringAfter('/').substringBefore('(')
-            val pid = levelTag.substringAfter('(').substringBefore(')').toIntOrNull() ?: 0
-            val message = parts.drop(3).joinToString(" ")
-            LogEntry(timestamp, LogLevel.fromChar(levelChar), tag, message, pid)
-        } catch (e: Exception) {
-            null
-        }
     }
 
     override suspend fun isNfcEnabled(): Boolean {

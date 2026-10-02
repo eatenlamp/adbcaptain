@@ -26,7 +26,9 @@ import adb.captain.presentation.screens.help.HelpScreen
 import adb.captain.presentation.screens.settings.SettingsScreen
 import adb.captain.presentation.screens.files.FilesScreen
 import adb.captain.presentation.screens.monitor.MonitorScreen
+import adb.captain.presentation.screens.wireless.WirelessAdbScreen
 import adb.captain.ui.theme.ADBCaptainTheme
+import adb.captain.ui.theme.AppTheme
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import rikka.shizuku.Shizuku
@@ -47,6 +49,10 @@ class MainActivity : AppCompatActivity(), Shizuku.OnRequestPermissionResultListe
             val settingsViewModel: SettingsViewModel = hiltViewModel()
             val language by settingsViewModel.language.collectAsState()
             val isDarkTheme by settingsViewModel.isDarkTheme.collectAsState()
+            val appThemeName by settingsViewModel.appTheme.collectAsState()
+            val appTheme = remember(appThemeName) {
+                runCatching { AppTheme.valueOf(appThemeName) }.getOrDefault(AppTheme.TealNavy)
+            }
 
             // Apply language change
             LaunchedEffect(language) {
@@ -54,7 +60,7 @@ class MainActivity : AppCompatActivity(), Shizuku.OnRequestPermissionResultListe
                 AppCompatDelegate.setApplicationLocales(appLocales)
             }
 
-            ADBCaptainTheme(darkTheme = isDarkTheme) {
+            ADBCaptainTheme(darkTheme = isDarkTheme, appTheme = appTheme, dynamicColor = true) {
                 // Follows Shizuku binder events (no polling), so the UI unlocks instantly.
                 val isShizukuActive by ShizukuManager.isRunning.collectAsState()
 
@@ -128,7 +134,7 @@ class MainActivity : AppCompatActivity(), Shizuku.OnRequestPermissionResultListe
                             modifier = Modifier.padding(innerPadding)
                         ) {
                             composable(Screen.Terminal.route) { TerminalScreen() }
-                            composable(Screen.Devices.route) { DevicesScreen() }
+                            composable(Screen.Devices.route) { DevicesScreen(onOpenWireless = { navController.navigate("wireless") }) }
                             composable(Screen.Apps.route) { AppsScreen() }
                             composable(Screen.Logcat.route) { LogcatScreen() }
                             composable(Screen.Sideload.route) { SideloadScreen() }
@@ -136,6 +142,7 @@ class MainActivity : AppCompatActivity(), Shizuku.OnRequestPermissionResultListe
                             composable(Screen.Monitor.route) { MonitorScreen() }
                             composable(Screen.Settings.route) { SettingsScreen(onOpenHelp = { navController.navigate("help") }) }
                             composable("help") { HelpScreen(onBack = { navController.popBackStack() }) }
+                            composable("wireless") { WirelessAdbScreen(onBack = { navController.popBackStack() }) }
                         }
                     }
                 }

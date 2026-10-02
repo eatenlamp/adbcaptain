@@ -30,6 +30,7 @@ import adb.captain.domain.repository.BatteryStatus
 
 @Composable
 fun DevicesScreen(
+    onOpenWireless: () -> Unit = {},
     viewModel: DevicesViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -120,6 +121,10 @@ fun DevicesScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                item {
+                    WirelessAdbEntryCard(onClick = onOpenWireless)
+                }
+
                 items(uiState.devices) { device ->
                     DeviceCard(
                         device = device,
@@ -849,6 +854,38 @@ fun DiagnosticCard(onGenerate: () -> Unit) {
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.diagnostic_generate))
             }
+        }
+    }
+}
+
+@Composable
+fun WirelessAdbEntryCard(onClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        onClick = onClick
+    ) {
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.WifiTethering,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(stringResource(R.string.wireless_title), style = MaterialTheme.typography.titleLarge)
+                Text(
+                    stringResource(R.string.wireless_add_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+            }
+            Icon(Icons.Default.ChevronRight, contentDescription = null)
         }
     }
 }

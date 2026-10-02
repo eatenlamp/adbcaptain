@@ -14,4 +14,6 @@ class LogcatUseCase @Inject constructor(
     fun streamLogcat(level: String? = null, filter: String? = null): Flow<LogEntry> {
         return repository.streamLogcat(level, filter)
     }
+
+    suspend fun clearLogcat() = repository.clearLogcat()
 }
