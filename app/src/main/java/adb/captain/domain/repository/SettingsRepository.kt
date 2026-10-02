@@ -26,4 +26,16 @@ interface SettingsRepository {
 
     fun getFavoriteCommands(): Flow<List<String>>
     suspend fun setFavoriteCommands(commands: List<String>)
+
+    fun getLastScreenshotUri(): Flow<String>
+    suspend fun setLastScreenshotUri(uri: String)
+
+    fun getRecordQuality(): Flow<String>
+    suspend fun setRecordQuality(quality: String)
+
+    fun getRecordMaxFps(): Flow<Boolean>
+    suspend fun setRecordMaxFps(enabled: Boolean)
+
+    fun getHideOverlayInCapture(): Flow<Boolean>
+    suspend fun setHideOverlayInCapture(enabled: Boolean)
 }

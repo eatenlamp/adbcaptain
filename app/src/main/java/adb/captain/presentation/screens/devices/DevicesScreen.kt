@@ -38,10 +38,17 @@ fun DevicesScreen(
     var showReportDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val screenshotMessage = stringResource(R.string.screenshot_saved)
+    val screenshotFailed = stringResource(R.string.capture_failed)
 
     LaunchedEffect(uiState.screenshotPath) {
         uiState.screenshotPath?.let { path ->
             snackbarHostState.showSnackbar(screenshotMessage.format(path))
+            viewModel.clearScreenshotPath()
+        }
+    }
+    LaunchedEffect(uiState.screenshotError) {
+        if (uiState.screenshotError) {
+            snackbarHostState.showSnackbar(screenshotFailed)
             viewModel.clearScreenshotPath()
         }
     }

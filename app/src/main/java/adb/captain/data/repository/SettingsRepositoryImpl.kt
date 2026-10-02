@@ -34,4 +34,17 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override suspend fun setFavoriteCommands(commands: List<String>) =
         settingsManager.setFavoriteCommandsRaw(commands.joinToString("\n"))
+
+    override fun getLastScreenshotUri(): Flow<String> = settingsManager.lastScreenshotUri
+    override suspend fun setLastScreenshotUri(uri: String) = settingsManager.setLastScreenshotUri(uri)
+
+    override fun getRecordQuality(): Flow<String> = settingsManager.recordQuality
+    override suspend fun setRecordQuality(quality: String) = settingsManager.setRecordQuality(quality)
+
+    override fun getRecordMaxFps(): Flow<Boolean> = settingsManager.recordMaxFps
+    override suspend fun setRecordMaxFps(enabled: Boolean) = settingsManager.setRecordMaxFps(enabled)
+
+    override fun getHideOverlayInCapture(): Flow<Boolean> = settingsManager.hideOverlayInCapture
+    override suspend fun setHideOverlayInCapture(enabled: Boolean) =
+        settingsManager.setHideOverlayInCapture(enabled)
 }

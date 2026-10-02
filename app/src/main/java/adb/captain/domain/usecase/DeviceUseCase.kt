@@ -19,6 +19,7 @@ class DeviceUseCase @Inject constructor(
     suspend fun rebootToRecovery(serial: String) = repository.rebootToRecovery(serial)
     suspend fun rebootToBootloader(serial: String) = repository.rebootToBootloader(serial)
     suspend fun takeScreenshot(serial: String) = repository.takeScreenshot(serial)
+    fun needsStoragePermission() = repository.needsStoragePermission()
 
     suspend fun getShowTouches(): Boolean = repository.getShowTouches()
     suspend fun setShowTouches(enabled: Boolean) = repository.setShowTouches(enabled)

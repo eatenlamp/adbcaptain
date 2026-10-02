@@ -5,6 +5,8 @@ import adb.captain.domain.model.AppInfo
 import adb.captain.domain.model.Device
 import adb.captain.domain.model.FileEntry
 import adb.captain.domain.model.LogEntry
+import adb.captain.domain.model.RecordOptions
+import adb.captain.domain.model.SavedMedia
 import kotlinx.coroutines.flow.Flow
 import java.io.File
 
@@ -49,8 +51,19 @@ interface AdbRepository {
 
     suspend fun sideloadApk(apkFile: File): String
     suspend fun installApkAtPath(remotePath: String): String
-    suspend fun startScreenRecording(): String
-    suspend fun stopScreenRecording()
+
+    /** Снимок экрана, сохранённый в галерею. */
+    suspend fun captureScreenshot(): SavedMedia?
+
+    /** Требуется ли запрос WRITE_EXTERNAL_STORAGE (Android 7-9). */
+    fun needsStoragePermission(): Boolean
+    fun hasStoragePermission(): Boolean
+
+    /** Запускает запись экрана, возвращает временный путь на устройстве. */
+    suspend fun startScreenRecording(options: RecordOptions = RecordOptions.NATIVE_MAX): String
+
+    /** Останавливает запись и кладёт готовый файл в галерею. */
+    suspend fun stopScreenRecording(remotePath: String? = null): SavedMedia?
     suspend fun wakeDevice()
     suspend fun dismissKeyguard()
     suspend fun setStayAwake(enabled: Boolean)

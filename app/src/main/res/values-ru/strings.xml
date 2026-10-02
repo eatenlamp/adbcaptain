@@ -218,6 +218,24 @@
     <string name="input_url">Открыть URL</string>
     <string name="input_url_placeholder">https://example.com</string>
     <string name="screenshot_saved">Скриншот сохранён: %s</string>
+    <string name="capture_failed">Не удалось сохранить в галерею. На Android 9 и старше сначала разрешите доступ к хранилищу.</string>
+    <string name="recording_saved">Запись сохранена: %s</string>
+    <string name="recording_save_failed">Не удалось сохранить запись в галерею</string>
+
+    <!-- Оверлей -->
+    <string name="overlay_share">Поделиться</string>
+    <string name="overlay_share_none">Скриншота пока нет</string>
+    <string name="overlay_quality">Качество</string>
+    <string name="overlay_quality_native">Макс</string>
+    <string name="overlay_quality_balanced">Среднее</string>
+    <string name="overlay_quality_compact">Компакт</string>
+    <string name="overlay_quality_low">Низкое</string>
+    <string name="overlay_max_fps">Макс. кадры</string>
+    <string name="overlay_hide_self">Скрывать оверлей</string>
+    <string name="on_short">Вкл</string>
+    <string name="off_short">Выкл</string>
+    <string name="overlay_record_done">Запись сохранена: %s</string>
+    <string name="overlay_record_failed">Не удалось сохранить запись</string>
 
     <!-- Files Screen -->
     <string name="files_up">Наверх</string>

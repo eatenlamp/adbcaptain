@@ -1,5 +1,7 @@
 package adb.captain.domain.usecase
 
+import adb.captain.domain.model.RecordOptions
+import adb.captain.domain.model.SavedMedia
 import adb.captain.domain.repository.AdbRepository
 import java.io.File
 import javax.inject.Inject
@@ -12,9 +14,14 @@ class SideloadUseCase @Inject constructor(
 ) {
     suspend fun sideloadApk(apkFile: File): String = repository.sideloadApk(apkFile)
     suspend fun installApkAtPath(remotePath: String): String = repository.installApkAtPath(remotePath)
-    suspend fun startScreenRecording(): String = repository.startScreenRecording()
-    suspend fun stopScreenRecording() = repository.stopScreenRecording()
+    suspend fun startScreenRecording(options: RecordOptions = RecordOptions.NATIVE_MAX): String =
+        repository.startScreenRecording(options)
+    suspend fun stopScreenRecording(remotePath: String? = null): SavedMedia? =
+        repository.stopScreenRecording(remotePath)
     suspend fun takeScreenshot(): String = repository.takeScreenshot("")
+    suspend fun captureScreenshot(): SavedMedia? = repository.captureScreenshot()
+    fun needsStoragePermission(): Boolean = repository.needsStoragePermission()
+    fun hasStoragePermission(): Boolean = repository.hasStoragePermission()
     suspend fun wakeDevice() = repository.wakeDevice()
     suspend fun dismissKeyguard() = repository.dismissKeyguard()
     suspend fun setStayAwake(enabled: Boolean) = repository.setStayAwake(enabled)

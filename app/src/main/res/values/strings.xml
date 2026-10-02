@@ -219,6 +219,24 @@
     <string name="input_url">Open URL</string>
     <string name="input_url_placeholder">https://example.com</string>
     <string name="screenshot_saved">Screenshot saved to %s</string>
+    <string name="capture_failed">Could not save to gallery. On Android 9 and older, allow storage access first.</string>
+    <string name="recording_saved">Recording saved to %s</string>
+    <string name="recording_save_failed">Could not save the recording to the gallery</string>
+
+    <!-- Overlay -->
+    <string name="overlay_share">Share</string>
+    <string name="overlay_share_none">No screenshot yet</string>
+    <string name="overlay_quality">Quality</string>
+    <string name="overlay_quality_native">Native</string>
+    <string name="overlay_quality_balanced">Balanced</string>
+    <string name="overlay_quality_compact">Compact</string>
+    <string name="overlay_quality_low">Low</string>
+    <string name="overlay_max_fps">Max frames</string>
+    <string name="overlay_hide_self">Hide overlay</string>
+    <string name="on_short">On</string>
+    <string name="off_short">Off</string>
+    <string name="overlay_record_done">Recording saved to %s</string>
+    <string name="overlay_record_failed">Could not save the recording</string>
 
     <!-- Files Screen -->
     <string name="files_up">Up</string>

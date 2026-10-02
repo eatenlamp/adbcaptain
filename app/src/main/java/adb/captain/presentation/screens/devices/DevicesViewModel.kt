@@ -239,14 +239,21 @@ class DevicesViewModel @Inject constructor(
 
     fun takeScreenshot(serial: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoading = true, screenshotPath = null, screenshotError = false) }
             val path = useCase.takeScreenshot(serial)
-            _uiState.update { it.copy(screenshotPath = path, isLoading = false) }
+            val ok = !(path.startsWith("Error:") || path.startsWith("Exception:"))
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    screenshotPath = if (ok) path else null,
+                    screenshotError = if (ok) false else true
+                )
+            }
         }
     }
 
     fun clearScreenshotPath() {
-        _uiState.update { it.copy(screenshotPath = null) }
+        _uiState.update { it.copy(screenshotPath = null, screenshotError = false) }
     }
 
     fun createDiagnosticReport() {
@@ -267,6 +274,7 @@ data class DevicesUiState(
     val isLoading: Boolean = false,
     val isMonitoring: Boolean = false,
     val screenshotPath: String? = null,
+    val screenshotError: Boolean = false,
     val reportPath: String? = null,
     val showTouches: Boolean = false,
     val animationScale: Float = 1.0f,

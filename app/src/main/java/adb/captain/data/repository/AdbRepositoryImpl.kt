@@ -12,8 +12,10 @@ import adb.captain.domain.repository.BatteryStatus
 import adb.captain.domain.repository.CpuInfo
 import adb.captain.domain.repository.MemoryInfo
 import adb.captain.domain.repository.ProcessInfo
+import adb.captain.data.media.MediaStoreWriter
 import adb.captain.util.LogcatParser
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -31,8 +33,11 @@ import javax.inject.Inject
  * Реализация репозитория ADB с использованием Shizuku.
  */
 class AdbRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val mediaStoreWriter: MediaStoreWriter
 ) : AdbRepository {
+
+    private var activeRecordingPath: String? = null
 
     override suspend fun executeCommand(command: String): String = executeCommand(command, timeoutSeconds = 15)
 
@@ -284,13 +289,18 @@ class AdbRepositoryImpl @Inject constructor(
     override suspend fun getWifiAdbEnabled(): Boolean =
         executeCommand("settings get global adb_wifi_enabled").trim() == "1"
 
-    override suspend fun takeScreenshot(deviceSerial: String): String = withContext(Dispatchers.IO) {
-        val dir = "/sdcard/DCIM/ADBCaptain"
-        executeCommand("mkdir -p $dir")
-        val path = "$dir/screenshot_${System.currentTimeMillis()}.png"
-        executeCommand("screencap -p $path")
-        path
+    override suspend fun takeScreenshot(deviceSerial: String): String =
+        captureScreenshot()?.displayPath ?: "Error: screenshot failed"
+
+    override suspend fun captureScreenshot(): SavedMedia? = withContext(Dispatchers.IO) {
+        if (!hasStoragePermission()) return@withContext null
+        val png = readProcessBytes("screencap -p", timeoutSeconds = 30) ?: return@withContext null
+        mediaStoreWriter.saveScreenshot(png)
     }
+
+    override fun needsStoragePermission(): Boolean = mediaStoreWriter.needsLegacyStoragePermission()
+
+    override fun hasStoragePermission(): Boolean = mediaStoreWriter.hasLegacyStoragePermission()
 
     override suspend fun rebootDevice(deviceSerial: String) { executeCommand("reboot") }
 
@@ -327,17 +337,76 @@ class AdbRepositoryImpl @Inject constructor(
     override suspend fun installApkAtPath(remotePath: String): String =
         executeCommand("pm install -r -t \"${remotePath.replace("\"", "")}\"", timeoutSeconds = 120)
 
-    override suspend fun startScreenRecording(): String = withContext(Dispatchers.IO) {
-        val dir = "/sdcard/Movies/ADBCaptain"
-        executeCommand("mkdir -p $dir")
-        val path = "$dir/rec_${System.currentTimeMillis()}.mp4"
-        executeCommand("nohup screenrecord --time-limit 180 $path >/dev/null 2>&1 &")
+    override suspend fun startScreenRecording(options: RecordOptions): String = withContext(Dispatchers.IO) {
+        val path = "$RECORD_TMP_DIR/rec_${System.currentTimeMillis()}.mp4"
+        val sizeArg = options.sizeArg
+        val command = buildString {
+            append("nohup screenrecord")
+            if (sizeArg != null) append(" --size ").append(sizeArg)
+            append(" --bit-rate ").append(options.bitRateMbps * 1_000_000)
+            append(" \"$path\"")
+            append(" >/dev/null 2>&1 &")
+        }
+        executeCommand("mkdir -p $RECORD_TMP_DIR")
+        executeCommand("rm -f \"$path\"")
+        executeCommand(command)
+        activeRecordingPath = path
         path
     }
 
-    override suspend fun stopScreenRecording() {
-        executeCommand("pkill -INT -f screenrecord")
+    override suspend fun stopScreenRecording(remotePath: String?): SavedMedia? = withContext(Dispatchers.IO) {
+        if (!hasStoragePermission()) return@withContext null
+        val path = remotePath ?: activeRecordingPath ?: return@withContext null
+        activeRecordingPath = null
+
+        executeCommand("pkill -INT -f \"$path\"")
+        awaitRecordingFinalized(path)
+
+        val bytes = readProcessBytes("cat \"$path\"", timeoutSeconds = 120)
+        executeCommand("rm -f \"$path\"")
+        if (bytes == null || bytes.isEmpty()) return@withContext null
+        mediaStoreWriter.saveRecording(bytes)
     }
+
+    /**
+     * screenrecord дописывает mp4 (moov-атом) только после выхода, поэтому
+     * ждём, пока процесс действительно исчезнет, иначе файл будет битым.
+     */
+    private suspend fun awaitRecordingFinalized(path: String) {
+        repeat(60) {
+            val alive = executeCommand("pgrep -f \"$path\"", timeoutSeconds = 5).trim()
+            if (alive.isEmpty() || alive.startsWith("Error")) return
+            delay(250)
+        }
+    }
+
+    /**
+     * Читает бинарный stdout процесса (PNG/MP4), а не текст:
+     * bufferedReader сломает PNG из-за кодировки.
+     */
+    private suspend fun readProcessBytes(command: String, timeoutSeconds: Long): ByteArray? =
+        withContext(Dispatchers.IO) {
+            try {
+                val process = startShizukuProcess(command)
+                coroutineScope {
+                    val out = async { process.inputStream.readBytes() }
+                    val err = async { process.errorStream.bufferedReader().use { it.readText() } }
+
+                    val finished = withTimeoutOrNull(timeoutSeconds * 1000) {
+                        withContext(Dispatchers.IO) { process.waitFor() }
+                    }
+                    if (finished == null) {
+                        process.destroy()
+                        return@coroutineScope null
+                    }
+                    val errorText = err.await()
+                    val bytes = out.await()
+                    if (errorText.isNotBlank() || bytes.isEmpty()) null else bytes
+                }
+            } catch (e: Exception) {
+                null
+            }
+        }
 
     override suspend fun wakeDevice() { executeCommand("input keyevent KEYCODE_WAKEUP") }
 
@@ -781,6 +850,7 @@ class AdbRepositoryImpl @Inject constructor(
     }
 
     private companion object {
+        const val RECORD_TMP_DIR = "/data/local/tmp"
         val SPACE_REGEX = Regex("\\s+")
         val NEW_PROCESS_METHOD: java.lang.reflect.Method by lazy {
             Shizuku::class.java.getDeclaredMethod(

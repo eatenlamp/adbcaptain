@@ -19,6 +19,10 @@ class SettingsManager(private val context: Context) {
         val TUTORIAL_SEEN = booleanPreferencesKey("tutorial_seen")
         val SAVED_ADB_DEVICES = stringPreferencesKey("saved_adb_devices")
         val FAVORITE_COMMANDS = stringPreferencesKey("favorite_commands")
+        val LAST_SCREENSHOT_URI = stringPreferencesKey("last_screenshot_uri")
+        val RECORD_QUALITY = stringPreferencesKey("record_quality")
+        val RECORD_MAX_FPS = booleanPreferencesKey("record_max_fps")
+        val HIDE_OVERLAY_IN_CAPTURE = booleanPreferencesKey("hide_overlay_in_capture")
     }
 
     val tutorialSeen: Flow<Boolean> = context.dataStore.data.map { it[TUTORIAL_SEEN] ?: false }
@@ -59,5 +63,25 @@ class SettingsManager(private val context: Context) {
     val favoriteCommandsRaw: Flow<String> = context.dataStore.data.map { it[FAVORITE_COMMANDS] ?: "" }
     suspend fun setFavoriteCommandsRaw(value: String) {
         context.dataStore.edit { it[FAVORITE_COMMANDS] = value }
+    }
+
+    val lastScreenshotUri: Flow<String> = context.dataStore.data.map { it[LAST_SCREENSHOT_URI] ?: "" }
+    suspend fun setLastScreenshotUri(value: String) {
+        context.dataStore.edit { it[LAST_SCREENSHOT_URI] = value }
+    }
+
+    val recordQuality: Flow<String> = context.dataStore.data.map { it[RECORD_QUALITY] ?: "native" }
+    suspend fun setRecordQuality(value: String) {
+        context.dataStore.edit { it[RECORD_QUALITY] = value }
+    }
+
+    val recordMaxFps: Flow<Boolean> = context.dataStore.data.map { it[RECORD_MAX_FPS] ?: true }
+    suspend fun setRecordMaxFps(value: Boolean) {
+        context.dataStore.edit { it[RECORD_MAX_FPS] = value }
+    }
+
+    val hideOverlayInCapture: Flow<Boolean> = context.dataStore.data.map { it[HIDE_OVERLAY_IN_CAPTURE] ?: true }
+    suspend fun setHideOverlayInCapture(value: Boolean) {
+        context.dataStore.edit { it[HIDE_OVERLAY_IN_CAPTURE] = value }
     }
 }

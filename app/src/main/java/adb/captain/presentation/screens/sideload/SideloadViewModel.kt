@@ -27,6 +27,7 @@ class SideloadViewModel @Inject constructor(
     val uiState: StateFlow<SideloadUiState> = _uiState.asStateFlow()
 
     private var recordingJob: Job? = null
+    private var recordingPath: String? = null
 
     fun installApk(uri: Uri) {
         viewModelScope.launch {
@@ -66,14 +67,26 @@ class SideloadViewModel @Inject constructor(
                 _uiState.update { it.copy(recordingSeconds = it.recordingSeconds + 1) }
             }
         }
-        viewModelScope.launch { useCase.startScreenRecording() }
+        viewModelScope.launch {
+            val path = withContextIO { useCase.startScreenRecording() }
+            recordingPath = path
+        }
     }
 
     private fun stopRecording() {
         recordingJob?.cancel()
         recordingJob = null
-        viewModelScope.launch { useCase.stopScreenRecording() }
+        val path = recordingPath
+        recordingPath = null
         _uiState.update { it.copy(isRecording = false, recordingSeconds = 0) }
+        viewModelScope.launch {
+            val saved = withContextIO { useCase.stopScreenRecording(path) }
+            _uiState.update { it.copy(recordingSavedPath = saved?.displayPath) }
+        }
+    }
+
+    fun clearRecordingSavedPath() {
+        _uiState.update { it.copy(recordingSavedPath = null) }
     }
 
     fun takeScreenshot() {
@@ -160,6 +173,7 @@ data class SideloadUiState(
     val installResult: String? = null,
     val isRecording: Boolean = false,
     val recordingSeconds: Int = 0,
+    val recordingSavedPath: String? = null,
     val screenshotPath: String? = null,
     val stayAwake: Boolean = false,
     val wifiEnabled: Boolean = false,
