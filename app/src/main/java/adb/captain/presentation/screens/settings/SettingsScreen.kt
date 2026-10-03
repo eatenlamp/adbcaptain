@@ -1,3 +1,11 @@
+/*
+ * SPDX-FileCopyrightText: 2026 eatenlamp <https://github.com/eatenlamp>
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * ADB Captain. This ownership notice is part of the source and may not be
+ * removed, hidden or replaced without written permission from eatenlamp.
+ */
+
 package adb.captain.presentation.screens.settings
 
 import androidx.compose.foundation.background
@@ -20,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import adb.captain.R
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import adb.captain.Authorship
 import adb.captain.ShizukuManager
 import adb.captain.ui.theme.AppTheme
 import adb.captain.ui.theme.accentColor
@@ -181,6 +190,38 @@ fun SettingsScreen(
             Icon(Icons.Default.Forum, contentDescription = null)
             Spacer(Modifier.width(8.dp))
             Text(stringResource(R.string.settings_discord_open))
+        }
+
+        HorizontalDivider()
+
+        Text(stringResource(R.string.settings_about), style = MaterialTheme.typography.titleMedium)
+
+        Surface(
+            shape = MaterialTheme.shapes.medium,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text(Authorship.PROJECT, style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.settings_version), style = MaterialTheme.typography.bodySmall)
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.settings_author, Authorship.author),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = stringResource(R.string.settings_license, Authorship.LICENSE),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+
+        OutlinedButton(
+            onClick = { uriHandler.openUri(Authorship.GITHUB) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.Info, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.settings_source_code))
         }
     }
 }

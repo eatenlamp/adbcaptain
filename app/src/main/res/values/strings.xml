@@ -356,4 +356,10 @@
     <string name="wireless_shell_command">Command</string>
     <string name="wireless_shell_run">Run</string>
     <string name="wireless_shell_output">Output</string>
+
+    <!-- About / ownership -->
+    <string name="settings_about">About</string>
+    <string name="settings_author">Author: %1$s</string>
+    <string name="settings_license">License: %1$s</string>
+    <string name="settings_source_code">Source code</string>
 </resources>

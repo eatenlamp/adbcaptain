@@ -355,4 +355,10 @@
     <string name="wireless_shell_command">Команда</string>
     <string name="wireless_shell_run">Выполнить</string>
     <string name="wireless_shell_output">Вывод</string>
+
+    <!-- About / ownership -->
+    <string name="settings_about">О приложении</string>
+    <string name="settings_author">Автор: %1$s</string>
+    <string name="settings_license">Лицензия: %1$s</string>
+    <string name="settings_source_code">Исходный код</string>
 </resources>

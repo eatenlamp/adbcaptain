@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 eatenlamp <https://github.com/eatenlamp>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
+// ADB Captain. Ownership notice - do not remove.
 pluginManagement {
     repositories {
         google {

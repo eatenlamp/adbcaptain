@@ -48,6 +48,19 @@ All translations except English are AI-generated and may be inaccurate. Report i
 
 ---
 
+## Author
+
+ADB Captain is created and maintained by **eatenlamp**.
+
+- GitHub: <https://github.com/eatenlamp>
+- Project: <https://github.com/eatenlamp/ADBCaptain>
+- Contact: eatenlamp@proton.me
+
+Every source file carries an ownership notice. Removing, hiding or replacing
+that notice is a violation of the license terms.
+
+---
+
 ## License
 
-AGPL-3.0-or-later. Copyright © eatenlamp.
+AGPL-3.0-or-later. Copyright © 2026 eatenlamp. See [LICENSE](LICENSE).
