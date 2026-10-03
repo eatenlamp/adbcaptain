@@ -44,6 +44,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 /**
@@ -76,7 +77,7 @@ class OverlayService : Service() {
     private var hideOverlayInCapture = true
     private var recordQuality = "native"
     private var recordMaxFps = true
-    private var tickJob: Job? = null
+    private var recordJob: Job? = null
 
     private var startTouchX = 0
     private var startTouchY = 0
@@ -131,9 +132,21 @@ class OverlayService : Service() {
     }
 
     override fun onDestroy() {
-        serviceScope.cancel()
-        overlayParams?.let { params ->
+        val wasRecording = recording
+        val path = recordingPath
+        recording = false
+        recordingPath = null
+        overlayParams?.let {
             runCatching { windowManager.removeView(rootView) }
+        }
+        attachedToWindow = false
+        serviceScope.cancel()
+        if (wasRecording) {
+            // Сервис умирает посреди записи: останавливаем screenrecord и убираем
+            // tmp-файл, иначе процесс и /data/local/tmp/rec_*.mp4 остаются навсегда.
+            CoroutineScope(Dispatchers.IO).launch {
+                runCatching { useCase.stopScreenRecording(path) }
+            }
         }
         super.onDestroy()
     }
@@ -179,8 +192,8 @@ class OverlayService : Service() {
             servicePendingIntent(ACTION_SHOT, 1)
         )
         builder.addAction(
-            R.drawable.ic_videocam,
-            getString(R.string.overlay_record),
+            if (recording) R.drawable.ic_stop else R.drawable.ic_videocam,
+            getString(if (recording) R.string.overlay_stop else R.string.overlay_record),
             servicePendingIntent(if (recording) ACTION_STOP_RECORD else ACTION_RECORD, 2)
         )
         builder.addAction(
@@ -387,20 +400,25 @@ class OverlayService : Service() {
         return value
     }
 
-    private fun attachOverlay() {
-        if (attachedToWindow) return
-        runCatching {
-            windowManager.addView(rootView, overlayParams)
-            attachedToWindow = true
-        }.onFailure {
-            mainHandler.post { toast(getString(R.string.overlay_start_failed)) }
+    /** rootView создан на main-потоке, поэтому add/removeView тоже только оттуда. */
+    private suspend fun attachOverlay() {
+        withContext(Dispatchers.Main) {
+            if (attachedToWindow) return@withContext
+            runCatching {
+                windowManager.addView(rootView, overlayParams)
+                attachedToWindow = true
+            }.onFailure {
+                toast(getString(R.string.overlay_start_failed))
+            }
         }
     }
 
-    private fun detachOverlay() {
-        if (!attachedToWindow) return
-        runCatching { windowManager.removeView(rootView) }
-        attachedToWindow = false
+    private suspend fun detachOverlay() {
+        withContext(Dispatchers.Main) {
+            if (!attachedToWindow) return@withContext
+            runCatching { windowManager.removeView(rootView) }
+            attachedToWindow = false
+        }
     }
 
     /**
@@ -575,31 +593,37 @@ class OverlayService : Service() {
     }
 
     private fun startRecording() {
+        if (recording) return
         recording = true
         setRecordingUi(true)
-        detachOverlay()
-        tickJob = serviceScope.launch {
-            val path = withoutOverlay { useCase.startScreenRecording(recordOptions()) }
-            recordingPath = path
+        recordJob = serviceScope.launch {
+            // Скрываем оверлей на всё время записи, иначе пузырь попадёт в видео.
+            if (hideOverlayInCapture) {
+                detachOverlay()
+                delay(CAPTURE_SETTLE_MS)
+            }
+            recordingPath = useCase.startScreenRecording(recordOptions())
         }
     }
 
     private fun stopRecording() {
-        tickJob?.cancel()
-        tickJob = null
+        if (!recording) return
         recording = false
         setRecordingUi(false)
-        val path = recordingPath
-        recordingPath = null
-        attachOverlay()
+        val startJob = recordJob
+        recordJob = null
         serviceScope.launch {
-            val saved = withoutOverlay { useCase.stopScreenRecording(path) }
-            mainHandler.post {
-                toast(
-                    if (saved != null) getString(R.string.overlay_record_done, saved.displayPath)
-                    else getString(R.string.overlay_record_failed)
-                )
-            }
+            // Если стоп нажали раньше, чем старт успел вернуть путь — дождаться.
+            startJob?.join()
+            val path = recordingPath
+            recordingPath = null
+            val saved = useCase.stopScreenRecording(path)
+            // screenrecord уже завершён, так что оверлей можно вернуть сразу.
+            if (hideOverlayInCapture) attachOverlay()
+            toast(
+                if (saved != null) getString(R.string.overlay_record_done, saved.displayPath)
+                else getString(R.string.overlay_record_failed)
+            )
         }
     }
 

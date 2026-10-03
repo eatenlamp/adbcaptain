@@ -146,10 +146,24 @@ class SideloadViewModel @Inject constructor(
     fun startOverlay() {
         val intent = android.content.Intent(context, adb.captain.service.OverlayService::class.java)
         androidx.core.content.ContextCompat.startForegroundService(context, intent)
+        _uiState.update { it.copy(overlayRunning = true) }
     }
 
     fun stopOverlay() {
         context.stopService(android.content.Intent(context, adb.captain.service.OverlayService::class.java))
+        _uiState.update { it.copy(overlayRunning = false) }
+    }
+
+    /** Сверяет переключатель оверлея с реально запущенным сервисом. */
+    fun refreshOverlayState() {
+        _uiState.update { it.copy(overlayRunning = isOverlayServiceRunning()) }
+    }
+
+    private fun isOverlayServiceRunning(): Boolean {
+        val am = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+        @Suppress("DEPRECATION")
+        return am.getRunningServices(Int.MAX_VALUE)
+            .any { it.service.className == adb.captain.service.OverlayService::class.java.name }
     }
 
     fun runMacro(script: String) {
@@ -180,6 +194,7 @@ data class SideloadUiState(
     val bluetoothEnabled: Boolean = false,
     val airplaneMode: Boolean = false,
     val volumeLevel: Int = 70,
+    val overlayRunning: Boolean = false,
     val isMacroRunning: Boolean = false,
     val macroResult: String? = null
 )

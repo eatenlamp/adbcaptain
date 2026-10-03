@@ -347,37 +347,44 @@ class AdbRepositoryImpl @Inject constructor(
             append(" \"$path\"")
             append(" >/dev/null 2>&1 &")
         }
+        executeCommand("pkill -INT -f \"$RECORD_TMP_DIR/rec_\"")
         executeCommand("mkdir -p $RECORD_TMP_DIR")
-        executeCommand("rm -f \"$path\"")
+        executeCommand("rm -f $RECORD_TMP_DIR/*.mp4")
         executeCommand(command)
         activeRecordingPath = path
         path
     }
 
     override suspend fun stopScreenRecording(remotePath: String?): SavedMedia? = withContext(Dispatchers.IO) {
-        if (!hasStoragePermission()) return@withContext null
         val path = remotePath ?: activeRecordingPath ?: return@withContext null
         activeRecordingPath = null
 
         executeCommand("pkill -INT -f \"$path\"")
-        awaitRecordingFinalized(path)
+        if (!awaitRecordingFinalized(path)) {
+            // screenrecord не ответил на SIGINT — забираем принудительно,
+            // иначе временный файл и процесс останутся висеть.
+            executeCommand("pkill -KILL -f \"$path\"")
+            awaitRecordingFinalized(path)
+        }
 
         val bytes = readProcessBytes("cat \"$path\"", timeoutSeconds = 120)
         executeCommand("rm -f \"$path\"")
-        if (bytes == null || bytes.isEmpty()) return@withContext null
+        if (!hasStoragePermission() || bytes == null || bytes.isEmpty()) return@withContext null
         mediaStoreWriter.saveRecording(bytes)
     }
 
     /**
      * screenrecord дописывает mp4 (moov-атом) только после выхода, поэтому
      * ждём, пока процесс действительно исчезнет, иначе файл будет битым.
+     * @return true, если процесс завершился.
      */
-    private suspend fun awaitRecordingFinalized(path: String) {
+    private suspend fun awaitRecordingFinalized(path: String): Boolean {
         repeat(60) {
             val alive = executeCommand("pgrep -f \"$path\"", timeoutSeconds = 5).trim()
-            if (alive.isEmpty() || alive.startsWith("Error")) return
+            if (alive.isEmpty() || alive.startsWith("Error")) return true
             delay(250)
         }
+        return false
     }
 
     /**

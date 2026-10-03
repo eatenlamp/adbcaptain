@@ -39,6 +39,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import adb.captain.R
+import kotlinx.coroutines.delay
 
 @Composable
 fun SideloadScreen(
@@ -51,22 +52,32 @@ fun SideloadScreen(
     val screenshotMessagePrefix = stringResource(R.string.screenshot_saved)
     var textInput by remember { mutableStateOf("") }
     var urlInput by remember { mutableStateOf("") }
-    var overlayEnabled by remember { mutableStateOf(false) }
+    val overlayEnabled = uiState.overlayRunning
     val context = androidx.compose.ui.platform.LocalContext.current
+
+    // Переключатель оверлея должен отражать реальное состояние сервиса,
+    // а не локальную переменную (сервис может умереть сам).
+    LaunchedEffect(Unit) {
+        while (true) {
+            viewModel.refreshOverlayState()
+            delay(1000)
+        }
+    }
 
     val overlayLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) {
         if (Settings.canDrawOverlays(context)) {
             viewModel.startOverlay()
-            overlayEnabled = true
         }
+        viewModel.refreshOverlayState()
     }
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) {
-        overlayEnabled = checkOverlayPermissionAndStart(context, viewModel, overlayLauncher)
+        checkOverlayPermissionAndStart(context, viewModel, overlayLauncher)
+        viewModel.refreshOverlayState()
     }
 
     val apkLauncher = rememberLauncherForActivityResult(
@@ -195,12 +206,12 @@ fun SideloadScreen(
                             ) {
                                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                             } else {
-                                overlayEnabled = checkOverlayPermissionAndStart(context, viewModel, overlayLauncher)
+                                checkOverlayPermissionAndStart(context, viewModel, overlayLauncher)
                             }
                         } else {
                             viewModel.stopOverlay()
-                            overlayEnabled = false
                         }
+                        viewModel.refreshOverlayState()
                     }
                 )
                 Spacer(Modifier.height(8.dp))
