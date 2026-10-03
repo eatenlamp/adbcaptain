@@ -29,6 +29,7 @@ import adb.captain.R
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import adb.captain.Authorship
+import adb.captain.BuildConfig
 import adb.captain.ShizukuManager
 import adb.captain.ui.theme.AppTheme
 import adb.captain.ui.theme.accentColor
@@ -46,6 +47,7 @@ fun SettingsScreen(
     val currentAppTheme by viewModel.appTheme.collectAsState()
     
     val uriHandler = LocalUriHandler.current
+    val versionLabel = "${Authorship.PROJECT} v${BuildConfig.VERSION_NAME}"
 
     var shizukuStatus by remember { mutableStateOf(ShizukuManager.isShizukuRunning()) }
     LaunchedEffect(Unit) {
@@ -159,7 +161,7 @@ fun SettingsScreen(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Info, contentDescription = null)
             Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.settings_version), style = MaterialTheme.typography.bodySmall)
+            Text(versionLabel, style = MaterialTheme.typography.bodySmall)
         }
 
         HorizontalDivider()
@@ -202,7 +204,7 @@ fun SettingsScreen(
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(Authorship.PROJECT, style = MaterialTheme.typography.bodyLarge)
-                Text(stringResource(R.string.settings_version), style = MaterialTheme.typography.bodySmall)
+                Text(versionLabel, style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.height(8.dp))
                 Text(
                     text = stringResource(R.string.settings_author, Authorship.author),

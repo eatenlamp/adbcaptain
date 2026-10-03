@@ -179,7 +179,6 @@
     <string name="settings_shizuku">Shizuku</string>
     <string name="settings_shizuku_status_running">État : Shizuku fonctionne</string>
     <string name="settings_shizuku_status_not_running">État : Shizuku ne fonctionne PAS</string>
-    <string name="settings_version">ADB Captain v1.0</string>
     <string name="settings_language">Langue</string>
     <string name="help_title">Comment ça marche</string>
     <string name="help_back">Retour</string>
