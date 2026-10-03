@@ -191,9 +191,76 @@
         linear-gradient(90deg, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
       background-size: 48px 48px;
     }
+
+    /* Language picker shown on first visit */
+    body.lang-picking { overflow: hidden; }
+
+    #lang-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(3, 7, 18, 0.72);
+      backdrop-filter: blur(16px) saturate(120%);
+      -webkit-backdrop-filter: blur(16px) saturate(120%);
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+
+    #lang-overlay.visible { opacity: 1; }
+
+    .lang-card {
+      width: 100%;
+      max-width: 420px;
+      transform: translateY(16px) scale(0.98);
+      opacity: 0;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+    }
+
+    #lang-overlay.visible .lang-card {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+
+    .lang-option {
+      transition: all 0.2s ease;
+    }
+
+    .lang-option:hover {
+      transform: translateY(-3px);
+      border-color: rgba(20, 184, 166, 0.45);
+      background: rgba(20, 184, 166, 0.08);
+      box-shadow: 0 20px 45px -20px rgba(20, 184, 166, 0.3);
+    }
+
+    .lang-option:active { transform: translateY(-1px); }
   </style>
 </head>
 <body class="antialiased overflow-x-hidden">
+
+  <!-- Language picker: first visit only, remembers the choice -->
+  <div id="lang-overlay" role="dialog" aria-modal="true" aria-labelledby="lang-picker-title">
+    <div class="lang-card glass rounded-2xl border border-slate-700/40 p-8 text-center shadow-2xl">
+      <div class="w-12 h-12 rounded-xl gradient-copper flex items-center justify-center text-white font-mono font-bold text-lg mx-auto mb-5 shadow-glow-copper">A</div>
+
+      <h2 id="lang-picker-title" class="text-2xl font-bold text-slate-100 mb-2" data-i18n="picker.title">Choose your language</h2>
+      <p class="text-slate-400 text-sm mb-7" data-i18n="picker.subtitle">You can change this later.</p>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button type="button" class="lang-option flex-1 flex items-center justify-center gap-3 px-5 py-4 rounded-xl bg-ocean-800 border border-slate-700 text-slate-200 font-semibold" data-set-lang="ru">
+          <span class="font-mono text-copper-400 text-sm">RU</span>
+          <span data-i18n="picker.russian">Русский</span>
+        </button>
+        <button type="button" class="lang-option flex-1 flex items-center justify-center gap-3 px-5 py-4 rounded-xl bg-ocean-800 border border-slate-700 text-slate-200 font-semibold" data-set-lang="en">
+          <span class="font-mono text-teal-400 text-sm">EN</span>
+          <span data-i18n="picker.english">English</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Navigation -->
   <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-4">
@@ -203,19 +270,23 @@
         <span class="font-bold text-lg tracking-tight text-slate-100">ADB Captain</span>
       </a>
 
-      <div class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
-        <a href="#features" class="hover:text-teal-400 transition-colors">Features</a>
-        <a href="#how-it-works" class="hover:text-teal-400 transition-colors">How it works</a>
-        <a href="#screenshots" class="hover:text-teal-400 transition-colors">Screenshots</a>
-        <a href="#faq" class="hover:text-teal-400 transition-colors">FAQ</a>
-        <a href="https://github.com" target="_blank" class="text-copper-400 hover:text-copper-300 transition-colors">GitHub</a>
+      <div class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-300">
+        <a href="#features" class="hover:text-teal-400 transition-colors" data-i18n="nav.features">Features</a>
+        <a href="#how-it-works" class="hover:text-teal-400 transition-colors" data-i18n="nav.how">How it works</a>
+        <a href="#screenshots" class="hover:text-teal-400 transition-colors" data-i18n="nav.screenshots">Screenshots</a>
+        <a href="#faq" class="hover:text-teal-400 transition-colors" data-i18n="nav.faq">FAQ</a>
+        <a href="https://github.com/eatenlamp/adbcaptain" target="_blank" rel="noopener" class="text-copper-400 hover:text-copper-300 transition-colors">GitHub</a>
+        <a href="https://discord.gg/rHXWd42un" target="_blank" rel="noopener" class="text-indigo-400 hover:text-indigo-300 transition-colors">Discord</a>
+        <button id="lang-toggle" type="button" class="px-2.5 py-1 rounded-md bg-ocean-800 border border-slate-700 text-slate-300 hover:text-teal-400 hover:border-teal-500/40 transition-colors font-mono text-xs" data-i18n-title="lang.button">
+          <span id="lang-toggle-label">EN</span>
+        </button>
       </div>
 
       <a href="#download" class="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-ocean-800 border border-copper-500/30 text-copper-400 text-sm font-medium hover:bg-copper-500/10 transition-colors">
         Download
       </a>
 
-      <button id="mobile-menu-btn" class="md:hidden text-slate-300 hover:text-white p-2" aria-label="Open menu">
+      <button id="mobile-menu-btn" class="md:hidden text-slate-300 hover:text-white p-2" aria-label="Open menu" data-i18n-title="nav.menu">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
@@ -225,11 +296,13 @@
     <!-- Mobile menu -->
     <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 right-0 glass border-t border-slate-700/30">
       <div class="px-6 py-4 flex flex-col gap-4 text-sm font-medium">
-        <a href="#features" class="text-slate-300 hover:text-teal-400 transition-colors py-2">Features</a>
-        <a href="#how-it-works" class="text-slate-300 hover:text-teal-400 transition-colors py-2">How it works</a>
-        <a href="#screenshots" class="text-slate-300 hover:text-teal-400 transition-colors py-2">Screenshots</a>
-        <a href="#faq" class="text-slate-300 hover:text-teal-400 transition-colors py-2">FAQ</a>
-        <a href="#download" class="text-copper-400 hover:text-copper-300 transition-colors py-2">Download</a>
+        <a href="#features" class="text-slate-300 hover:text-teal-400 transition-colors py-2" data-i18n="nav.features">Features</a>
+        <a href="#how-it-works" class="text-slate-300 hover:text-teal-400 transition-colors py-2" data-i18n="nav.how">How it works</a>
+        <a href="#screenshots" class="text-slate-300 hover:text-teal-400 transition-colors py-2" data-i18n="nav.screenshots">Screenshots</a>
+        <a href="#faq" class="text-slate-300 hover:text-teal-400 transition-colors py-2" data-i18n="nav.faq">FAQ</a>
+        <a href="https://github.com/eatenlamp/adbcaptain" target="_blank" rel="noopener" class="text-copper-400 hover:text-copper-300 transition-colors py-2">GitHub</a>
+        <a href="https://discord.gg/rHXWd42un" target="_blank" rel="noopener" class="text-indigo-400 hover:text-indigo-300 transition-colors py-2">Discord</a>
+        <a href="#download" class="text-teal-400 hover:text-teal-300 transition-colors py-2" data-i18n="nav.download">Download</a>
       </div>
     </div>
   </nav>
@@ -245,39 +318,44 @@
       <div class="reveal">
         <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ocean-800 border border-teal-500/20 text-teal-400 text-xs font-mono font-medium mb-6">
           <span class="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span>
-          FOSS • No root • No PC
+          <span data-i18n="hero.badge">FOSS • No root • No PC</span>
         </div>
-        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6">
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6" data-i18n="hero.title">
           A command deck <br class="hidden sm:block" />
           for your <span class="gradient-text">Android</span>.
         </h1>
-        <p class="text-lg sm:text-xl text-slate-400 leading-relaxed mb-8 max-w-xl">
+        <p class="text-lg sm:text-xl text-slate-400 leading-relaxed mb-8 max-w-xl" data-i18n="hero.text">
           ADB Captain is a powerful, rootless ADB toolkit for Android, powered by Shizuku. Run real ADB commands, manage apps, read logs, sideload APKs — all from the phone itself.
         </p>
 
         <div class="flex flex-col sm:flex-row gap-4 mb-8" id="download">
           <a href="#" class="btn-primary inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl gradient-copper text-white font-semibold shadow-glow-copper">
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-            Get it on F-Droid
+            <span data-i18n="hero.fdroid">Get it on F-Droid</span>
           </a>
           <a href="#" class="btn-secondary inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-ocean-800 border border-slate-700 text-slate-200 font-semibold hover:text-teal-400">
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg>
-            GitHub Releases
+            <span data-i18n="hero.github">GitHub Releases</span>
           </a>
           <a href="#" class="btn-secondary inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-ocean-800 border border-slate-700 text-slate-200 font-semibold hover:text-teal-400">
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2h8v2H8V8zm0 4h8v2H8v-2z"/></svg>
-            RuStore
+            <span data-i18n="hero.rustore">RuStore</span>
+          </a>
+          <a href="https://discord.gg/rHXWd42un" target="_blank" rel="noopener" class="btn-secondary inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-ocean-800 border border-indigo-500/40 text-indigo-300 font-semibold hover:bg-indigo-500/10">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg>
+            <span data-i18n="hero.discord">Discord</span>
           </a>
         </div>
 
         <div class="flex items-center gap-4 text-xs text-slate-500 font-mono">
-          <span class="flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            AGPL-3.0-or-later
-          </span>
-          <span>Android 7.0+</span>
-          <span>API 24+</span>
-        </div>
+        <span class="flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <span data-i18n="stats.opensource">Open source</span>
+        </span>
+        <span data-i18n="stats.noRoot">No root</span>
+        <span data-i18n="stats.noPc">No PC</span>
+        <span data-i18n="stats.shizuku">Powered by Shizuku</span>
+      </div>
       </div>
 
       <!-- Phone mockup -->
@@ -747,6 +825,144 @@
         }
       });
     });
+
+    // ---------------------------------------------------------------------
+    // Translations
+    // Russian is a full translation; English is the source text, so the
+    // dictionary only lists the Russian strings and English falls back to
+    // whatever is already in the markup.
+    // ---------------------------------------------------------------------
+    const I18N = {
+      ru: {
+        'picker.title': 'Выберите язык',
+        'picker.subtitle': 'Это можно изменить позже.',
+        'picker.russian': 'Русский',
+        'picker.english': 'English',
+
+        'nav.features': 'Возможности',
+        'nav.how': 'Как это работает',
+        'nav.screenshots': 'Скриншоты',
+        'nav.faq': 'Вопросы',
+        'nav.download': 'Скачать',
+        'nav.menu': 'Открыть меню',
+
+        'hero.badge': 'FOSS • Без root • Без ПК',
+        'hero.title': 'Пульт управления<br class="sm:block" />для вашего <span class="gradient-text">Android</span>.',
+        'hero.text': 'ADB Captain — мощный набор инструментов ADB для Android без root, на базе Shizuku. Выполняйте настоящие команды ADB, управляйте приложениями, читайте логи и ставьте APK — прямо с телефона.',
+        'hero.fdroid': 'Скачать из F-Droid',
+        'hero.github': 'Релизы на GitHub',
+        'hero.rustore': 'RuStore',
+        'hero.discord': 'Discord',
+
+        'stats.noRoot': 'Без root',
+        'stats.noPc': 'Без ПК',
+        'stats.opensource': 'Открытый код',
+        'stats.shizuku': 'на базе Shizuku',
+
+        'features.eyebrow': 'Возможности',
+        'features.title': 'Всё, что нужно для ADB',
+        'features.subtitle': 'Полный набор инструментов в одном приложении, а не набор разрозненных утилит.',
+
+        'how.eyebrow': 'Как это работает',
+        'how.title': 'Три шага до полного контроля',
+        'how.subtitle': 'Никаких кабелей, никакой перезагрузки в специальный режим.',
+
+        'shots.eyebrow': 'Скриншоты',
+        'shots.title': 'Всё под рукой',
+
+        'faq.eyebrow': 'Вопросы',
+        'faq.title': 'Частые вопросы',
+        'faq.subtitle': 'Если не нашли ответ — приходите в Discord.',
+
+        'oss.badge': '100% FOSS',
+        'oss.title': 'Открытый код, <span class="text-copper-400">всегда</span>',
+        'oss.text': 'Никаких проприетарных вставок и скрытого поведения. Код открыт: его можно проверить, улучшить или использовать как учебный материал. Лицензия AGPL-3.0-or-later.',
+        'oss.github': 'Открыть на GitHub',
+        'oss.license': 'AGPL-3.0-or-later',
+
+        'footer.copyright': '© <span id="year"></span> Участники ADB Captain.',
+        'lang.button': 'Сменить язык',
+        'lang.label': 'Язык'
+      }
+    };
+
+    const LANG_KEY = 'adbc-lang';
+
+    function storedLang() {
+      try { return localStorage.getItem(LANG_KEY); } catch (e) { return null; }
+    }
+
+    function rememberLang(lang) {
+      try { localStorage.setItem(LANG_KEY, lang); } catch (e) { /* private mode */ }
+    }
+
+    function currentLang() { return document.documentElement.lang === 'ru' ? 'ru' : 'en'; }
+
+    function applyLang(lang) {
+      const dict = I18N[lang] || {};
+      document.documentElement.lang = lang;
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const value = dict[el.dataset.i18n];
+        // Keep the original English markup when a key is missing, so a
+        // partial dictionary can never blank out the page.
+        if (value !== undefined) el.innerHTML = value;
+      });
+
+      document.querySelectorAll('[data-lang-hidden]').forEach(el => {
+        const showFor = el.dataset.langHidden.split(' ');
+        el.classList.toggle('hidden', !showFor.includes(lang));
+      });
+
+      const label = document.getElementById('lang-toggle-label');
+      if (label) label.textContent = lang.toUpperCase();
+    }
+
+    function showLangPicker() {
+      const overlay = document.getElementById('lang-overlay');
+      document.body.classList.add('lang-picking');
+      overlay.classList.add('visible');
+      const first = overlay.querySelector('.lang-option');
+      if (first) first.focus();
+    }
+
+    function hideLangPicker() {
+      const overlay = document.getElementById('lang-overlay');
+      overlay.classList.remove('visible');
+      document.body.classList.remove('lang-picking');
+      setTimeout(() => overlay.setAttribute('hidden', ''), 400);
+    }
+
+    document.querySelectorAll('[data-set-lang]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lang = btn.dataset.setLang;
+        rememberLang(lang);
+        applyLang(lang);
+        hideLangPicker();
+      });
+    });
+
+    const langToggle = document.getElementById('lang-toggle');
+    if (langToggle) {
+      langToggle.addEventListener('click', () => {
+        // Toggle between the two known languages, then offer the picker
+        // for anything else.
+        applyLang(currentLang() === 'ru' ? 'en' : 'ru');
+      });
+    }
+
+    const saved = storedLang();
+    if (saved) {
+      applyLang(saved);
+    } else {
+      // Show the picker immediately so the page never flashes one language
+      document.body.style.visibility = 'hidden';
+      showLangPicker();
+      requestAnimationFrame(() => {
+        document.body.style.visibility = '';
+        document.getElementById('lang-overlay').removeAttribute('hidden');
+      });
+    }
   </script>
 </body>
 </html>
