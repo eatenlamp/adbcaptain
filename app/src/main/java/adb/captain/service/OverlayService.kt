@@ -215,7 +215,9 @@ class OverlayService : Service() {
             true
         }
 
-        menuPanel = LinearLayout(this).apply {
+        val panel = LinearLayout(this)
+        menuPanel = panel
+        panel.apply {
             orientation = LinearLayout.VERTICAL
             visibility = View.GONE
             setPadding(dp(4), dp(6), dp(4), dp(6))
@@ -390,7 +392,9 @@ class OverlayService : Service() {
         runCatching {
             windowManager.addView(rootView, overlayParams)
             attachedToWindow = true
-        }.onFailure { toast(getString(R.string.overlay_start_failed)) }
+        }.onFailure {
+            mainHandler.post { toast(getString(R.string.overlay_start_failed)) }
+        }
     }
 
     private fun detachOverlay() {
@@ -616,7 +620,11 @@ class OverlayService : Service() {
     }
 
     private fun toast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        } else {
+            mainHandler.post { Toast.makeText(this@OverlayService, message, Toast.LENGTH_LONG).show() }
+        }
     }
 
     private companion object {
