@@ -8,12 +8,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import adb.captain.R
 import androidx.compose.ui.unit.dp
@@ -21,6 +23,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import adb.captain.ShizukuManager
 import adb.captain.ui.theme.AppTheme
 import adb.captain.ui.theme.accentColor
+
+private const val DISCORD_URL = "https://discord.gg/rHXWd42un"
 
 @Composable
 fun SettingsScreen(
@@ -32,6 +36,8 @@ fun SettingsScreen(
     val currentLanguage by viewModel.language.collectAsState()
     val currentAppTheme by viewModel.appTheme.collectAsState()
     
+    val uriHandler = LocalUriHandler.current
+
     var shizukuStatus by remember { mutableStateOf(ShizukuManager.isShizukuRunning()) }
     LaunchedEffect(Unit) {
         while(true) {
@@ -145,6 +151,36 @@ fun SettingsScreen(
             Icon(Icons.Default.Info, contentDescription = null)
             Spacer(Modifier.width(8.dp))
             Text(stringResource(R.string.settings_version), style = MaterialTheme.typography.bodySmall)
+        }
+
+        HorizontalDivider()
+
+        Text(stringResource(R.string.settings_community), style = MaterialTheme.typography.titleMedium)
+
+        Surface(
+            shape = MaterialTheme.shapes.medium,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.Forum, contentDescription = null, tint = Color(0xFF5865F2))
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(stringResource(R.string.settings_discord), style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.settings_discord_desc), style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+
+        OutlinedButton(
+            onClick = { uriHandler.openUri(DISCORD_URL) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.Forum, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.settings_discord_open))
         }
     }
 }

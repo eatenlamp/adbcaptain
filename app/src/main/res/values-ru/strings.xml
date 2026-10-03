@@ -302,6 +302,10 @@
     <string name="settings_shizuku_status_not_running">Статус: Shizuku НЕ запущен</string>
     <string name="settings_version">ADB Captain v1.0</string>
     <string name="settings_language">Язык</string>
+    <string name="settings_community">Сообщество</string>
+    <string name="settings_discord">Discord-сервер</string>
+    <string name="settings_discord_desc">Чат, обратная связь и новости сборок</string>
+    <string name="settings_discord_open">Открыть Discord</string>
 
 
     <!-- Help / Tutorial -->

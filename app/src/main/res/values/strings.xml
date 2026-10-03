@@ -303,6 +303,10 @@
     <string name="settings_shizuku_status_not_running">Status: Shizuku NOT running</string>
     <string name="settings_version">ADB Captain v1.0</string>
     <string name="settings_language">Language</string>
+    <string name="settings_community">Community</string>
+    <string name="settings_discord">Discord server</string>
+    <string name="settings_discord_desc">Chat, feedback and build announcements</string>
+    <string name="settings_discord_open">Open Discord</string>
 
 
     <!-- Help / Tutorial -->
