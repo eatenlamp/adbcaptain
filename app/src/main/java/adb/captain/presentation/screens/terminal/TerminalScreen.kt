@@ -8,6 +8,8 @@
 
 package adb.captain.presentation.screens.terminal
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.Terminal
@@ -34,11 +37,15 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import adb.captain.R
+import kotlinx.coroutines.launch
 
 /**
  * Экран терминала с цветовой подсветкой, историей и командой help.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TerminalScreen(
     viewModel: TerminalViewModel = hiltViewModel()
@@ -49,6 +56,17 @@ fun TerminalScreen(
     var command by remember { mutableStateOf("") }
     var showHistory by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val copiedMessage = stringResource(R.string.term_copied)
+
+    fun copyToClipboard(text: String) {
+        scope.launch {
+            clipboard.setClipEntry(ClipEntry(android.content.ClipData.newPlainText("terminal", text)))
+            snackbarHostState.showSnackbar(copiedMessage)
+        }
+    }
 
     LaunchedEffect(uiState.output.size) {
         if (uiState.output.isNotEmpty()) {
@@ -80,6 +98,7 @@ fun TerminalScreen(
         showHistory = false
     }
 
+    Box(modifier = Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -121,7 +140,13 @@ fun TerminalScreen(
                     Text(
                         text = annotatedString,
                         style = MaterialTheme.typography.bodySmall,
-                        fontFamily = JetBrainsMono
+                        fontFamily = JetBrainsMono,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .combinedClickable(
+                                onClick = {},
+                                onLongClick = { copyToClipboard(annotatedString.text) }
+                            )
                     )
                 }
             }
@@ -142,6 +167,12 @@ fun TerminalScreen(
         ) {
             IconButton(onClick = { showHistory = !showHistory }) {
                 Icon(Icons.Default.History, contentDescription = stringResource(R.string.term_history_title))
+            }
+            IconButton(
+                onClick = { copyToClipboard(uiState.output.joinToString("\n") { it.text }) },
+                enabled = uiState.output.isNotEmpty()
+            ) {
+                Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.term_copy_all))
             }
             IconButton(onClick = { viewModel.clearOutput() }) {
                 Icon(Icons.Default.Delete, contentDescription = "Clear Output")
@@ -378,5 +409,14 @@ fun TerminalScreen(
                 Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send")
             }
         }
+    }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .imePadding()
+                .padding(bottom = 72.dp)
+        )
     }
 }

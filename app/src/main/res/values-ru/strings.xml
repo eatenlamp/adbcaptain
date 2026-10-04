@@ -47,6 +47,8 @@
     <string name="term_help_commands">Частые команды:\n  pm list packages -3             пользовательские приложения\n  pm path &lt;pkg&gt;                   путь к APK\n  pm clear &lt;pkg&gt;                  очистить данные приложения\n  am force-stop &lt;pkg&gt;             остановить приложение\n  getprop ro.product.model        модель устройства\n  wm size                         размер экрана\n  dumpsys battery                 состояние батареи\n  settings get global adb_enabled проверка ADB\n  screencap -p /sdcard/s.png      скриншот\n  input keyevent KEYCODE_HOME     нажать Home\n  logcat -d -t 100                последние 100 строк лога\n\n</string>
     <string name="term_help_features">Другие экраны:\n  Apps     управление и экспорт приложений, батч-действия\n  Devices  переключатели, батарея, перезагрузка, диагностика\n  Monitor  живой CPU / RAM / процессы\n  Logcat   живые системные логи\n  Sideload установка APK, запись экрана, макросы\n  Files    файловый менеджер\n\n</string>
     <string name="term_help_tips">Советы:\n  введите help в любой момент, чтобы увидеть этот текст\n  нажмите на иконку часов, чтобы выбрать прошлую команду\n  история сохраняется локально (см. Настройки)\n  префикс \&quot;adb shell\&quot; удаляется автоматически</string>
+    <string name="term_copy_all">Копировать вывод</string>
+    <string name="term_copied">Скопировано в буфер обмена</string>
 
     <!-- Apps Screen -->
     <string name="apps_search_placeholder">Поиск пакета...</string>
