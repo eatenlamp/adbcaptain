@@ -17,6 +17,16 @@
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
 
+    <!--
+      IPC surface for the paid ADB Orchestra companion. The permission is
+      declared here; CallerVerifier additionally pins the caller package and
+      signing certificate, because any app can request a normal permission.
+    -->
+    <permission
+        android:name="adb.captain.permission.EXECUTE_COMMANDS"
+        android:protectionLevel="normal" />
+
+
     <application
         android:name=".CommanderApp"
         android:allowBackup="true"
@@ -65,6 +75,16 @@
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="floating overlay for screenshots and screen recording" />
+        </service>
+
+        <!-- Command bridge for the paid ADB Orchestra companion. -->
+        <service
+            android:name=".ipc.ExecutionService"
+            android:exported="true"
+            android:permission="adb.captain.permission.EXECUTE_COMMANDS">
+            <intent-filter>
+                <action android:name="adb.captain.action.EXECUTE" />
+            </intent-filter>
         </service>
 
         <!-- Ownership metadata, kept in the built APK. -->
