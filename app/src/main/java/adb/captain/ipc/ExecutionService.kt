@@ -17,6 +17,7 @@ import android.os.Looper
 import android.os.Message
 import android.os.Messenger
 import android.os.RemoteException
+import android.util.Log
 import adb.captain.ShizukuManager
 import adb.captain.domain.repository.AdbRepository
 import dagger.hilt.android.AndroidEntryPoint
@@ -50,6 +51,7 @@ class ExecutionService : Service() {
         super.onCreate()
         val handler = object : Handler(Looper.getMainLooper()) {
             override fun handleMessage(msg: Message) {
+                Log.d(TAG, "handleMessage what=${msg.what} uid=${msg.sendingUid}")
                 when (msg.what) {
                     IpcContract.MSG_PING -> handlePing(msg)
                     IpcContract.MSG_EXECUTE -> handleExecute(msg)
@@ -69,34 +71,44 @@ class ExecutionService : Service() {
 
     private fun handlePing(msg: Message) {
         val allowed = CallerVerifier.isAllowed(this, msg.sendingUid)
-        reply(msg, Bundle().apply {
+        reply(msg.replyTo, requestIdOf(msg), Bundle().apply {
             putInt(IpcContract.KEY_API_VERSION, IpcContract.API_VERSION)
             putBoolean(IpcContract.KEY_READY, allowed && shizukuReady())
         })
     }
 
     private fun handleExecute(msg: Message) {
-        if (!CallerVerifier.isAllowed(this, msg.sendingUid)) {
-            reply(msg, Bundle().apply { putString(IpcContract.KEY_ERROR, "caller not allowed") })
+        // Capture the reply target now: the framework recycles the incoming
+        // Message once handleMessage returns, and command execution is async.
+        val replyTo = msg.replyTo
+        val requestId = requestIdOf(msg)
+        val allowed = CallerVerifier.isAllowed(this, msg.sendingUid)
+        Log.d(TAG, "handleExecute allowed=$allowed data=${msg.data != null} replyTo=${replyTo != null}")
+        if (!allowed) {
+            reply(replyTo, requestId, Bundle().apply { putString(IpcContract.KEY_ERROR, "caller not allowed") })
             return
         }
         val command = msg.data?.getString(IpcContract.KEY_COMMAND).orEmpty()
+        Log.d(TAG, "handleExecute command='$command'")
         when {
             command.isBlank() ->
-                reply(msg, Bundle().apply { putString(IpcContract.KEY_RESULT, "") })
+                reply(replyTo, requestId, Bundle().apply { putString(IpcContract.KEY_RESULT, "") })
             command.length > MAX_COMMAND_LENGTH ->
-                reply(msg, Bundle().apply { putString(IpcContract.KEY_ERROR, "command too long") })
+                reply(replyTo, requestId, Bundle().apply { putString(IpcContract.KEY_ERROR, "command too long") })
             else -> scope.launch {
                 val result = runCatching { repository.executeCommand(command) }
                     .getOrElse { "Error: ${it.message}" }
-                reply(msg, Bundle().apply { putString(IpcContract.KEY_RESULT, result) })
+                Log.d(TAG, "handleExecute result='${result.take(80)}'")
+                reply(replyTo, requestId, Bundle().apply { putString(IpcContract.KEY_RESULT, result) })
             }
         }
     }
 
-    private fun reply(request: Message, payload: Bundle) {
-        val replyTo = request.replyTo ?: return
-        val requestId = request.data?.getInt(IpcContract.KEY_REQUEST_ID, -1) ?: -1
+    private fun requestIdOf(msg: Message): Int =
+        msg.data?.getInt(IpcContract.KEY_REQUEST_ID, -1) ?: -1
+
+    private fun reply(replyTo: Messenger?, requestId: Int, payload: Bundle) {
+        if (replyTo == null) return
         val response = Message.obtain(null, IpcContract.MSG_REPLY).apply {
             data = Bundle(payload).apply { putInt(IpcContract.KEY_REQUEST_ID, requestId) }
         }
@@ -117,6 +129,7 @@ class ExecutionService : Service() {
         /** Permission the client must hold. */
         const val PERMISSION = "adb.captain.permission.EXECUTE_COMMANDS"
 
+        private const val TAG = "CoreIPC"
         private const val MAX_COMMAND_LENGTH = 4096
     }
 }

@@ -29,10 +29,12 @@ object CallerVerifier {
     /**
      * SHA-256 (lowercase hex) of the ADB Orchestra signing certificates.
      * Empty until the companion is signed: debug builds are then allowed so
-     * development is not blocked. Add the release and debug certs before
-     * shipping, otherwise release builds refuse every caller.
+     * development is not blocked. The release certificate is pinned below;
+     * release builds refuse every caller when this set is empty.
      */
-    private val ALLOWED_CERT_SHA256 = setOf<String>()
+    private val ALLOWED_CERT_SHA256 = setOf(
+        "211cb6717d789957b80ca507b11e114a94bb61a8cd0625b84253af645f242fcb"
+    )
 
     fun isAllowed(context: Context, callerUid: Int): Boolean {
         val pm = context.packageManager
