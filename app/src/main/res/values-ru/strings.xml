@@ -28,6 +28,7 @@
     <string name="cmd_device_model">Модель устройства</string>
     <string name="cmd_free_space">Свободное место</string>
     <string name="cmd_top_processes">Топ процессов</string>
+    <string name="cmd_log_tail">Хвост лога</string>
     <string name="cmd_event_log">Лог событий</string>
     <string name="cmd_thermal">Термодатчики</string>
     <string name="cmd_network">Сетевая статистика</string>
@@ -193,6 +194,12 @@
     <string name="logcat_toggle">Воспроизведение / Пауза</string>
     <string name="logcat_jump_to_bottom">Вниз</string>
     <string name="logcat_copied">Запись лога скопирована в буфер обмена</string>
+    <string name="logcat_save">Сохранить логи</string>
+    <string name="logcat_saved">Логи сохранены</string>
+    <string name="logcat_save_failed">Не удалось сохранить логи</string>
+    <string name="logcat_save_empty">С текущими фильтрами нечего сохранять</string>
+    <string name="logcat_app_filter">PID приложения: %1$d</string>
+    <string name="logcat_app_filter_clear">Сбросить фильтр приложения</string>
     <string name="logcat_empty">Логов нет. Нажмите «Пуск», чтобы начать поток.</string>
 
     <!-- Sideload & Tools Screen -->

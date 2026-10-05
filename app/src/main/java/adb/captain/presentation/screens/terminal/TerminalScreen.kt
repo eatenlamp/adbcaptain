@@ -330,7 +330,8 @@ fun TerminalScreen(
                 R.string.cmd_device_model to "getprop ro.product.model",
                 R.string.cmd_free_space to "df -h",
                 R.string.cmd_top_processes to "top -n 1",
-                R.string.cmd_event_log to "logcat -d -t 50",
+                R.string.cmd_log_tail to "logcat -d -t 50",
+                R.string.cmd_event_log to "logcat -b events -d -t 50",
                 R.string.cmd_thermal to "dumpsys thermalservice",
                 R.string.cmd_network to "dumpsys netstats",
                 R.string.cmd_night_on to "cmd uimode night yes"

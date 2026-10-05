@@ -29,6 +29,7 @@
     <string name="cmd_device_model">Device Model</string>
     <string name="cmd_free_space">Free Space</string>
     <string name="cmd_top_processes">Top Processes</string>
+    <string name="cmd_log_tail">Log Tail</string>
     <string name="cmd_event_log">Event Log</string>
     <string name="cmd_thermal">Thermal Status</string>
     <string name="cmd_network">Network Stats</string>
@@ -194,6 +195,12 @@
     <string name="logcat_toggle">Play / Pause</string>
     <string name="logcat_jump_to_bottom">Jump to bottom</string>
     <string name="logcat_copied">Log entry copied to clipboard</string>
+    <string name="logcat_save">Save logs</string>
+    <string name="logcat_saved">Logs saved</string>
+    <string name="logcat_save_failed">Could not save logs</string>
+    <string name="logcat_save_empty">Nothing to save with the current filters</string>
+    <string name="logcat_app_filter">App PID: %1$d</string>
+    <string name="logcat_app_filter_clear">Clear app filter</string>
     <string name="logcat_empty">No logs. Press play to start streaming.</string>
 
     <!-- Sideload &amp; Tools Screen -->

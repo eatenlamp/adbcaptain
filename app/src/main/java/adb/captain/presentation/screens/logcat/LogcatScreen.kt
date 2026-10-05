@@ -8,7 +8,10 @@
 
 package adb.captain.presentation.screens.logcat
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -17,10 +20,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import adb.captain.ui.theme.JetBrainsMono
 import androidx.compose.ui.text.font.FontWeight
@@ -38,6 +44,9 @@ import adb.captain.R
 import adb.captain.domain.model.LogEntry
 import adb.captain.domain.model.LogLevel
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -45,20 +54,45 @@ fun LogcatScreen(
     viewModel: LogcatViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val visibleLogs by viewModel.visibleLogs.collectAsState()
     val listState = rememberLazyListState()
     val clipboard = LocalClipboard.current
+    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val copiedMessage = stringResource(R.string.logcat_copied)
+    val saveLabel = stringResource(R.string.logcat_save)
+    val savedMessage = stringResource(R.string.logcat_saved)
+    val saveFailedMessage = stringResource(R.string.logcat_save_failed)
+    val nothingToSaveMessage = stringResource(R.string.logcat_save_empty)
 
-    // In-memory filtering by level and text/tag query
-    val visibleLogs = remember(uiState.logs, uiState.query, uiState.selectedLevel) {
-        uiState.logs.filter { entry ->
-            (uiState.selectedLevel == null || entry.level == uiState.selectedLevel) &&
-                (uiState.query.isBlank() ||
-                    entry.message.contains(uiState.query, ignoreCase = true) ||
-                    entry.tag.contains(uiState.query, ignoreCase = true))
+    // Saving writes exactly what the active filters show, nothing else.
+    val saveLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("text/plain")
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        if (visibleLogs.isEmpty()) {
+            scope.launch { snackbarHostState.showSnackbar(nothingToSaveMessage) }
+            return@rememberLauncherForActivityResult
         }
+        val text = viewModel.exportText()
+        scope.launch {
+            val saved = runCatching {
+                context.contentResolver.openOutputStream(uri)?.use { out ->
+                    out.write(text.toByteArray())
+                } ?: error("output stream unavailable")
+            }.isSuccess
+            snackbarHostState.showSnackbar(if (saved) savedMessage else saveFailedMessage)
+        }
+    }
+
+    fun requestSave() {
+        if (visibleLogs.isEmpty()) {
+            scope.launch { snackbarHostState.showSnackbar(nothingToSaveMessage) }
+            return
+        }
+        val stamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+        saveLauncher.launch("logcat_$stamp.txt")
     }
 
     // Smart auto-scroll: only follow the stream while the user is at the bottom
@@ -77,6 +111,13 @@ fun LogcatScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             Column(horizontalAlignment = Alignment.End) {
+                SmallFloatingActionButton(
+                    onClick = { requestSave() },
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                ) {
+                    Icon(Icons.Default.Save, contentDescription = saveLabel)
+                }
+                Spacer(Modifier.height(12.dp))
                 if (!isAtBottom) {
                     SmallFloatingActionButton(
                         onClick = {
@@ -131,6 +172,22 @@ fun LogcatScreen(
                     .horizontalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 4.dp)
             ) {
+                if (uiState.pidFilter != null) {
+                    AssistChip(
+                        onClick = { viewModel.setPidFilter(null) },
+                        label = {
+                            Text(stringResource(R.string.logcat_app_filter, uiState.pidFilter!!))
+                        },
+                        trailingIcon = {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = stringResource(R.string.logcat_app_filter_clear),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    )
+                    Spacer(Modifier.width(4.dp))
+                }
                 LevelChip(
                     label = stringResource(R.string.logcat_level_all),
                     selected = uiState.selectedLevel == null,
@@ -172,7 +229,8 @@ fun LogcatScreen(
                                     )
                                     snackbarHostState.showSnackbar(copiedMessage)
                                 }
-                            }
+                            },
+                            onFilterPid = { pid -> viewModel.setPidFilter(pid) }
                         )
                     }
                 }
@@ -204,7 +262,7 @@ fun LevelChip(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun LogItem(entry: LogEntry, onClick: () -> Unit) {
+fun LogItem(entry: LogEntry, onClick: () -> Unit, onFilterPid: (Int) -> Unit) {
     val color = logLevelColor(entry.level)
 
     Column(
@@ -247,7 +305,8 @@ fun LogItem(entry: LogEntry, onClick: () -> Unit) {
                     text = "PID:${entry.pid}",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontFamily = JetBrainsMono
+                    fontFamily = JetBrainsMono,
+                    modifier = Modifier.clickable { onFilterPid(entry.pid) }
                 )
             }
         }
