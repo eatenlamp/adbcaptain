@@ -20,6 +20,7 @@ import adb.captain.domain.repository.BatteryStatus
 import adb.captain.domain.repository.CpuInfo
 import adb.captain.domain.repository.MemoryInfo
 import adb.captain.domain.repository.ProcessInfo
+import adb.captain.domain.repository.ForegroundApp
 import adb.captain.data.media.MediaStoreWriter
 import adb.captain.util.LogcatParser
 import kotlinx.coroutines.Dispatchers
@@ -641,6 +642,26 @@ class AdbRepositoryImpl @Inject constructor(
                 .take(limit)
         } catch (e: Exception) {
             emptyList()
+        }
+    }
+
+
+    override suspend fun getForegroundApp(): ForegroundApp? = withContext(Dispatchers.IO) {
+        try {
+            val out = executeCommand("dumpsys activity activities | grep -E 'topResumedActivity|mCurrentFocus|mFocusedApp'")
+            if (out.startsWith("Error") || out.startsWith("Exception") || out.isBlank()) return@withContext null
+            val line = out.lines().firstOrNull { it.contains('/') } ?: return@withContext null
+            val idx = line.indexOf('/')
+            val pkgPart = line.substring(0, idx).trim()
+            val pkg = pkgPart.substringAfterLast(' ').trim()
+            val actPart = line.substring(idx + 1)
+            val act = actPart.substringBefore(' ').substringBefore('}').trim()
+            if (pkg.isBlank() || !pkg.contains('.')) return@withContext null
+            // dumpsys output has no pid=; resolve it with pidof
+            val pid = executeCommand("pidof $pkg").trim().lines().firstOrNull()?.trim()?.toIntOrNull() ?: 0
+            ForegroundApp(packageName = pkg, activityName = act, pid = pid)
+        } catch (e: Exception) {
+            null
         }
     }
 

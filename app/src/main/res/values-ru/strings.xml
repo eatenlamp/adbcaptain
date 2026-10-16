@@ -200,6 +200,7 @@
     <string name="logcat_save_empty">С текущими фильтрами нечего сохранять</string>
     <string name="logcat_app_filter">PID приложения: %1$d</string>
     <string name="logcat_app_filter_clear">Сбросить фильтр приложения</string>
+    <string name="logcat_follow">Следить за приложением</string>
     <string name="logcat_empty">Логов нет. Нажмите «Пуск», чтобы начать поток.</string>
 
     <!-- Sideload & Tools Screen -->

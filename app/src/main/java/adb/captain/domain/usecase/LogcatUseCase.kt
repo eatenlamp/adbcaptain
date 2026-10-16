@@ -24,4 +24,6 @@ class LogcatUseCase @Inject constructor(
     }
 
     suspend fun clearLogcat() = repository.clearLogcat()
+
+    suspend fun getForegroundApp() = repository.getForegroundApp()
 }

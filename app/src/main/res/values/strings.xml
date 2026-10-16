@@ -201,6 +201,7 @@
     <string name="logcat_save_empty">Nothing to save with the current filters</string>
     <string name="logcat_app_filter">App PID: %1$d</string>
     <string name="logcat_app_filter_clear">Clear app filter</string>
+    <string name="logcat_follow">Follow foreground app</string>
     <string name="logcat_empty">No logs. Press play to start streaming.</string>
 
     <!-- Sideload &amp; Tools Screen -->

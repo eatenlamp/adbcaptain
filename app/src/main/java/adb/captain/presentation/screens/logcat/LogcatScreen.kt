@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -62,6 +63,7 @@ fun LogcatScreen(
     val scope = rememberCoroutineScope()
     val copiedMessage = stringResource(R.string.logcat_copied)
     val saveLabel = stringResource(R.string.logcat_save)
+    val followLabel = stringResource(R.string.logcat_follow)
     val savedMessage = stringResource(R.string.logcat_saved)
     val saveFailedMessage = stringResource(R.string.logcat_save_failed)
     val nothingToSaveMessage = stringResource(R.string.logcat_save_empty)
@@ -111,6 +113,13 @@ fun LogcatScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             Column(horizontalAlignment = Alignment.End) {
+                SmallFloatingActionButton(
+                    onClick = { viewModel.toggleFollowForeground() },
+                    containerColor = if (uiState.followForeground) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer
+                ) {
+                    Icon(Icons.Default.MyLocation, contentDescription = followLabel)
+                }
+                Spacer(Modifier.height(8.dp))
                 SmallFloatingActionButton(
                     onClick = { requestSave() },
                     containerColor = MaterialTheme.colorScheme.tertiaryContainer

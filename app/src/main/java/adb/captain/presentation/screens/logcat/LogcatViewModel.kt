@@ -23,6 +23,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -73,12 +75,46 @@ class LogcatViewModel @Inject constructor(
 
     /** Tap the same PID again to drop the filter. */
     fun setPidFilter(pid: Int?) {
+        val next = if (_uiState.value.pidFilter == pid) null else pid
         _uiState.update { state ->
-            state.copy(pidFilter = if (state.pidFilter == pid) null else pid)
+            state.copy(pidFilter = next, followForeground = if (next == null) state.followForeground else false)
+        }
+        if (next != null && _uiState.value.followForeground) {
+            // stop follow when user manually selects different pid
+            stopFollow()
         }
     }
 
     /** Plain text of the filtered view, ready to be written to a file. */
+
+    private var followJob: Job? = null
+
+    fun toggleFollowForeground() {
+        val next = !_uiState.value.followForeground
+        _uiState.update { it.copy(followForeground = next) }
+        if (next) startFollow() else stopFollow()
+    }
+
+    private fun startFollow() {
+        followJob?.cancel()
+        followJob = viewModelScope.launch {
+            while (isActive) {
+                val fg = runCatching { useCase.getForegroundApp() }.getOrNull()
+                fg?.let { fg ->
+                    if (fg.pid != 0) {
+                        _uiState.update { it.copy(pidFilter = fg.pid) }
+                    }
+                }
+                delay(1500)
+            }
+        }
+    }
+
+    private fun stopFollow() {
+        followJob?.cancel()
+        followJob = null
+    }
+
     fun exportText(): String = buildExport(visibleLogs.value, _uiState.value)
 
     private fun startStreaming() {
@@ -113,7 +149,8 @@ data class LogcatUiState(
     val query: String = "",
     val selectedLevel: LogLevel? = null,
     /** When set, only entries from this PID (one app) are shown and exported. */
-    val pidFilter: Int? = null
+    val pidFilter: Int? = null,
+    val followForeground: Boolean = false
 )
 
 internal fun buildExport(entries: List<LogEntry>, state: LogcatUiState): String {

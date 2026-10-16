@@ -88,6 +88,7 @@ interface AdbRepository {
     suspend fun getCpuInfo(): CpuInfo?
     suspend fun getMemoryInfo(): MemoryInfo?
     suspend fun getTopProcesses(limit: Int): List<ProcessInfo>
+    suspend fun getForegroundApp(): ForegroundApp?
     suspend fun setDemoMode(enabled: Boolean)
     suspend fun getDemoMode(): Boolean
 
@@ -165,3 +166,10 @@ data class ProcessInfo(
     val memoryUsage: Long,
     val state: String
 )
+
+data class ForegroundApp(
+    val packageName: String,
+    val activityName: String = "",
+    val pid: Int = 0
+)
+
