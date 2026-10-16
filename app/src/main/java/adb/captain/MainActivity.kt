@@ -100,6 +100,7 @@ class MainActivity : AppCompatActivity(), Shizuku.OnRequestPermissionResultListe
                         Screen.Sideload,
                         Screen.Files,
                         Screen.Monitor,
+                        Screen.Debug,
                         Screen.Settings
                     )
 
