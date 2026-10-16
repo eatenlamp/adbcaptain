@@ -370,4 +370,21 @@
     <string name="settings_author">Автор: %1$s</string>
     <string name="settings_license">Лицензия: %1$s</string>
     <string name="settings_source_code">Исходный код</string>
+    <string name="tab_debug">Отладка</string>
+    <string name="debug_title">Bug Pack</string>
+    <string name="debug_collect">Собрать bug pack</string>
+    <string name="debug_collecting">Сбор данных…</string>
+    <string name="debug_done">Bug pack сохранён</string>
+    <string name="debug_failed">Не удалось собрать bug pack</string>
+    <string name="debug_package_hint">Имя пакета (напр. com.example.app)</string>
+    <string name="debug_system_info">Системная информация (getprop)</string>
+    <string name="debug_package_info">Информация о пакете (dumpsys package)</string>
+    <string name="debug_activity_info">Активности (dumpsys activity)</string>
+    <string name="debug_logcat_main">Logcat — main буфер</string>
+    <string name="debug_logcat_events">Logcat — events буфер</string>
+    <string name="debug_processes">Процессы (ps -A)</string>
+    <string name="debug_packages_list">Установленные пакеты</string>
+    <string name="debug_battery">Батарея (dumpsys battery)</string>
+    <string name="debug_memory">Память (/proc/meminfo)</string>
+    <string name="debug_cpu">CPU (/proc/stat)</string>
 </resources>

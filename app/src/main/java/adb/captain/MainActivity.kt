@@ -34,6 +34,7 @@ import adb.captain.presentation.screens.help.HelpScreen
 import adb.captain.presentation.screens.settings.SettingsScreen
 import adb.captain.presentation.screens.files.FilesScreen
 import adb.captain.presentation.screens.monitor.MonitorScreen
+import adb.captain.presentation.screens.debug.DebugScreen
 import adb.captain.presentation.screens.wireless.WirelessAdbScreen
 import adb.captain.ui.theme.ADBCaptainTheme
 import adb.captain.ui.theme.AppTheme
@@ -148,6 +149,7 @@ class MainActivity : AppCompatActivity(), Shizuku.OnRequestPermissionResultListe
                             composable(Screen.Sideload.route) { SideloadScreen() }
                             composable(Screen.Files.route) { FilesScreen() }
                             composable(Screen.Monitor.route) { MonitorScreen() }
+                composable(Screen.Debug.route) { DebugScreen() }
                             composable(Screen.Settings.route) { SettingsScreen(onOpenHelp = { navController.navigate("help") }) }
                             composable("help") { HelpScreen(onBack = { navController.popBackStack() }) }
                             composable("wireless") { WirelessAdbScreen(onBack = { navController.popBackStack() }) }

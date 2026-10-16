@@ -22,5 +22,6 @@ sealed class Screen(val route: String, val titleRes: Int, val icon: ImageVector)
     object Sideload : Screen("sideload", R.string.tab_sideload, Icons.Default.SystemUpdate)
     object Files : Screen("files", R.string.tab_files, Icons.Default.Folder)
     object Monitor : Screen("monitor", R.string.tab_monitor, Icons.Default.ShowChart)
+    object Debug : Screen("debug", R.string.tab_debug, Icons.Default.BugReport)
     object Settings : Screen("settings", R.string.tab_settings, Icons.Default.Settings)
 }

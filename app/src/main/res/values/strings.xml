@@ -371,4 +371,21 @@
     <string name="settings_author">Author: %1$s</string>
     <string name="settings_license">License: %1$s</string>
     <string name="settings_source_code">Source code</string>
+    <string name="tab_debug">Debug</string>
+    <string name="debug_title">Bug Pack</string>
+    <string name="debug_collect">Collect bug pack</string>
+    <string name="debug_collecting">Collecting…</string>
+    <string name="debug_done">Bug pack saved</string>
+    <string name="debug_failed">Failed to collect bug pack</string>
+    <string name="debug_package_hint">Package name (e.g. com.example.app)</string>
+    <string name="debug_system_info">System info (getprop)</string>
+    <string name="debug_package_info">Package info (dumpsys package)</string>
+    <string name="debug_activity_info">Activities (dumpsys activity)</string>
+    <string name="debug_logcat_main">Logcat — main buffer</string>
+    <string name="debug_logcat_events">Logcat — events buffer</string>
+    <string name="debug_processes">Processes (ps -A)</string>
+    <string name="debug_packages_list">Installed packages</string>
+    <string name="debug_battery">Battery (dumpsys battery)</string>
+    <string name="debug_memory">Memory (/proc/meminfo)</string>
+    <string name="debug_cpu">CPU (/proc/stat)</string>
 </resources>
