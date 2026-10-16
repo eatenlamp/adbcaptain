@@ -10,12 +10,17 @@ package adb.captain.presentation.screens.debug
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import adb.captain.domain.model.DebugSession
+import adb.captain.domain.repository.AdbRepository
 import adb.captain.domain.usecase.BugPackUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.util.zip.ZipEntry
@@ -24,11 +29,16 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DebugViewModel @Inject constructor(
-    private val useCase: BugPackUseCase
+    private val useCase: BugPackUseCase,
+    private val repository: AdbRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DebugUiState())
     val uiState: StateFlow<DebugUiState> = _uiState.asStateFlow()
+
+    private var sessionJob: Job? = null
+    private val capturedLog = mutableListOf<String>()
+    private val capturedPackages = linkedSetOf<String>()
 
     fun toggleOption(option: BugPackUseCase.Options.() -> BugPackUseCase.Options) {
         _uiState.update { state ->
@@ -40,17 +50,59 @@ class DebugViewModel @Inject constructor(
         _uiState.update { it.copy(packageName = name) }
     }
 
+    fun setNotes(notes: String) {
+        _uiState.update { it.copy(notes = notes) }
+    }
+
+    /** Starts watching the foreground app and buffering logcat for the report. */
+    fun startSession() {
+        if (_uiState.value.sessionActive) return
+        capturedLog.clear()
+        capturedPackages.clear()
+        _uiState.update {
+            it.copy(
+                sessionActive = true,
+                sessionStartedAt = System.currentTimeMillis(),
+                sessionPackages = emptyList()
+            )
+        }
+        sessionJob = viewModelScope.launch {
+            while (isActive) {
+                runCatching { repository.getForegroundApp() }.getOrNull()?.let { fg ->
+                    if (fg.packageName.isNotBlank()) capturedPackages.add(fg.packageName)
+                    _uiState.update { it.copy(sessionPackages = capturedPackages.toList()) }
+                }
+                runCatching { repository.executeCommand("logcat -d -t 150") }.getOrNull()
+                    ?.lineSequence()
+                    ?.forEach { capturedLog.add(it) }
+                // Keep the buffer bounded so a long session cannot eat memory.
+                while (capturedLog.size > MAX_LOG_LINES) capturedLog.removeAt(0)
+                delay(3000)
+            }
+        }
+    }
+
+    fun stopSession() {
+        sessionJob?.cancel()
+        sessionJob = null
+        _uiState.update { it.copy(sessionActive = false) }
+    }
+
+    /** Builds a bug pack; a finished session adds its own report entry. */
     fun collect(onReady: (ByteArray) -> Unit) {
         if (_uiState.value.isCollecting) return
         _uiState.update { it.copy(isCollecting = true, error = null) }
         viewModelScope.launch {
             try {
-                val options = _uiState.value.options.copy(
-                    packageName = _uiState.value.packageName
-                )
-                val entries = useCase.collect(options)
+                val state = _uiState.value
+                val options = state.options.copy(packageName = state.packageName)
+                val entries = useCase.collect(options).toMutableMap()
+                val session = state.currentSessionOrNull(capturedLog.toList())
+                if (session != null) entries["debug_session.txt"] = session.toReport()
                 val zip = buildZip(entries)
-                _uiState.update { it.copy(isCollecting = false, entryCount = entries.size) }
+                _uiState.update {
+                    it.copy(isCollecting = false, entryCount = entries.size)
+                }
                 onReady(zip)
             } catch (e: Exception) {
                 _uiState.update { it.copy(isCollecting = false, error = e.message) }
@@ -69,6 +121,10 @@ class DebugViewModel @Inject constructor(
         }
         return bos.toByteArray()
     }
+
+    private companion object {
+        const val MAX_LOG_LINES = 4000
+    }
 }
 
 data class DebugUiState(
@@ -76,5 +132,18 @@ data class DebugUiState(
     val packageName: String = "",
     val isCollecting: Boolean = false,
     val entryCount: Int = 0,
-    val error: String? = null
-)
+    val error: String? = null,
+    val sessionActive: Boolean = false,
+    val sessionStartedAt: Long = 0L,
+    val sessionPackages: List<String> = emptyList(),
+    val notes: String = ""
+) {
+    /** Available once a session has been started at least once. */
+    fun currentSessionOrNull(logTail: List<String> = emptyList()): DebugSession? =
+        if (sessionStartedAt == 0L) null else DebugSession(
+            startedAt = sessionStartedAt,
+            packageName = sessionPackages.lastOrNull() ?: "",
+            logTail = logTail,
+            notes = notes
+        )
+}

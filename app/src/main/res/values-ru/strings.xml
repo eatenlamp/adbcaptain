@@ -387,4 +387,11 @@
     <string name="debug_battery">Батарея (dumpsys battery)</string>
     <string name="debug_memory">Память (/proc/meminfo)</string>
     <string name="debug_cpu">CPU (/proc/stat)</string>
+    <string name="debug_session_title">Отладочная сессия</string>
+    <string name="debug_session_start">Начать сессию</string>
+    <string name="debug_session_stop">Остановить сессию</string>
+    <string name="debug_session_running">Идёт запись — %1$s</string>
+    <string name="debug_session_idle">Сессия ещё не начата</string>
+    <string name="debug_session_apps">Приложения: %1$s</string>
+    <string name="debug_notes">Заметки</string>
 </resources>

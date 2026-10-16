@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import adb.captain.R
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,6 +40,15 @@ fun DebugScreen(
     val scope = rememberCoroutineScope()
     val savedMessage = stringResource(R.string.debug_done)
     val failedMessage = stringResource(R.string.debug_failed)
+
+    // Ticks once a second so the elapsed label stays live while recording.
+    var now by remember { mutableStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(uiState.sessionActive) {
+        while (uiState.sessionActive) {
+            now = System.currentTimeMillis()
+            delay(1000)
+        }
+    }
 
     // Bytes collected before the user picked a destination.
     var pendingZip by remember { mutableStateOf<ByteArray?>(null) }
@@ -97,6 +108,24 @@ fun DebugScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
+            SessionCard(
+                active = uiState.sessionActive,
+                elapsed = uiState.sessionStartedAt
+                    .takeIf { it > 0L }
+                    ?.let { formatElapsed(now - it) }
+                    .orEmpty(),
+                apps = uiState.sessionPackages,
+                onStart = viewModel::startSession,
+                onStop = viewModel::stopSession
+            )
+            OutlinedTextField(
+                value = uiState.notes,
+                onValueChange = viewModel::setNotes,
+                label = { Text(stringResource(R.string.debug_notes)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+            )
             OptionCheckbox(
                 label = stringResource(R.string.debug_system_info),
                 checked = uiState.options.systemInfo,
@@ -204,4 +233,68 @@ private fun OptionCheckbox(
             style = MaterialTheme.typography.bodyMedium
         )
     }
+}
+
+@Composable
+private fun SessionCard(
+    active: Boolean,
+    elapsed: String,
+    apps: List<String>,
+    onStart: () -> Unit,
+    onStop: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = stringResource(R.string.debug_session_title),
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(Modifier.height(4.dp))
+            if (active) {
+                Text(
+                    text = stringResource(R.string.debug_session_running, elapsed),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            } else {
+                Text(
+                    text = stringResource(R.string.debug_session_idle),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (apps.isNotEmpty()) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.debug_session_apps, apps.takeLast(3).joinToString(", ")),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            if (active) {
+                OutlinedButton(onClick = onStop) {
+                    Text(stringResource(R.string.debug_session_stop))
+                }
+            } else {
+                Button(onClick = onStart) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null)
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.debug_session_start))
+                }
+            }
+        }
+    }
+}
+
+private fun formatElapsed(millis: Long): String {
+    val totalSeconds = millis / 1000
+    val hours = totalSeconds / 3600
+    val minutes = (totalSeconds % 3600) / 60
+    val seconds = totalSeconds % 60
+    return String.format(java.util.Locale.US, "%02d:%02d:%02d", hours, minutes, seconds)
 }

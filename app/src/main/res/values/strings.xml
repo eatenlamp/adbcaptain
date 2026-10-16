@@ -388,4 +388,11 @@
     <string name="debug_battery">Battery (dumpsys battery)</string>
     <string name="debug_memory">Memory (/proc/meminfo)</string>
     <string name="debug_cpu">CPU (/proc/stat)</string>
+    <string name="debug_session_title">Debug session</string>
+    <string name="debug_session_start">Start session</string>
+    <string name="debug_session_stop">Stop session</string>
+    <string name="debug_session_running">Recording — %1$s</string>
+    <string name="debug_session_idle">No session started yet</string>
+    <string name="debug_session_apps">Apps seen: %1$s</string>
+    <string name="debug_notes">Notes</string>
 </resources>
