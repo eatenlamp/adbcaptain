@@ -16,13 +16,17 @@ App for debugging and managing Android devices: ADB commands, app management, lo
 
 ## Features
 
-**Terminal** - run ADB commands (`pm`, `am`, `dumpsys`, `settings`, `input`, etc.). Quick commands: app list, battery, screen size, model, free space, top processes, event log. Command history in Room, auto-complete, ANSI support.
+**Terminal** - run ADB commands (`pm`, `am`, `dumpsys`, `settings`, `input`, etc.). Quick commands: app list, battery, screen size, model, free space, top processes, event log (events buffer), log tail. Command history in Room, auto-complete, ANSI support.
 
-**Apps** - list of installed apps with icons and versions. Search by package, filter user/system. Bloatware safety rating: 🟢 safe, 🟠 if needed, 🔴 critical. Actions: force-stop, clear data, enable/disable, uninstall.
+**Apps** - list of installed apps with icons and versions. Search by package, filter user/system. Bloatware safety rating: 🟢 safe, 🟠 if needed, 🔴 critical. Actions: force-stop, clear data, enable/disable, uninstall. App Inspector shows activities, services, receivers and providers with the permission each requires, splits permissions into dangerous and normal, and reports the install source.
 
 **Devices** - serial, model, Android version, battery. Connection status. Reboot. Screenshots to `DCIM/ADBCaptain`.
 
-**Logcat** - live logs. Filter by level and tag. Auto-scroll. Copy entries. PID/TID.
+**Logcat** - live logs. Filter by level and tag. Auto-scroll. Copy entries. PID/TID. Save the filtered view to a file. Filter by app with a tap on the PID, or let Logcat follow whatever app is in the foreground.
+
+**Debug** - one place for diagnosing a problem. Bug Pack collects a shareable ZIP (system info, package and activity dumps, main and events logcat, processes, packages, battery, memory, CPU) with a checkbox per section. Debug Session records elapsed time, the apps that came to the foreground and buffers logcat while you reproduce the bug. Macros store a chain of commands under a name and run it in one tap. Crash logs are grouped per app with full stack traces.
+
+**Command Palette** - the search icon in the top bar reaches every screen, every macro and common shell commands, and runs them in the terminal right away.
 
 **Sideload & Tools** - install APK (`pm install -r`). Screenshots and screen recording. Wake, unlock, stay awake, Wi-Fi / Bluetooth / airplane mode, volume. Text input, open links.
 

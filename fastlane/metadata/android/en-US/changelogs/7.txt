@@ -1,0 +1,31 @@
+Version 1.6
+
+A debugging workspace, built around one idea: stop copying things by hand.
+
+Logcat:
+- Save the filtered view to a file: a Save button writes exactly what you see, with the applied filters listed in the file header
+- Filter by app: tap the PID label of any entry, combine it with search and level chips
+- Follow foreground app: keep Logcat locked to whatever app is currently in front
+
+Debug tab:
+- Bug Pack collects a shareable ZIP in one tap: system properties, package and activity dumps, main and events logcat, processes, installed packages, battery, memory and CPU, each with a checkbox
+- Debug Session records the elapsed time, every app that came to the foreground, and buffers logcat while you reproduce the bug; notes included, report attached to the Bug Pack
+- Macros: save a chain of commands under a name and run the whole thing with one tap
+- Crash logs: crashes from the crash buffer grouped per app with the full stack trace
+
+App Inspector:
+- Activities, services, receivers and providers with the permission each requires and its enabled state
+- Permissions split into dangerous and normal, with granted and denied state
+- Install source shows which package installed the app
+
+Command Palette:
+- Search icon in the top bar reaches every screen, every saved macro and a set of common shell commands
+- Running a command jumps to the terminal and executes it right away
+
+Terminal:
+- Event Log now reads the real events buffer instead of repeating the main log; added Log Tail for the old behaviour
+- Input fields no longer change the case of what you type
+
+Fixes:
+- Logcat stayed empty in some cases because of a broken level check
+- Rooms database migrations can no longer prevent the app from starting
