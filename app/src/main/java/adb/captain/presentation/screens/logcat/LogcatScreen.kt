@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -42,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import adb.captain.R
+import adb.captain.presentation.components.shareFile
 import adb.captain.domain.model.BUFFER_EVENTS
 import adb.captain.domain.model.BUFFER_MAIN
 import adb.captain.domain.model.LogEntry
@@ -69,6 +71,8 @@ fun LogcatScreen(
     val savedMessage = stringResource(R.string.logcat_saved)
     val saveFailedMessage = stringResource(R.string.logcat_save_failed)
     val nothingToSaveMessage = stringResource(R.string.logcat_save_empty)
+    val shareLabel = stringResource(R.string.logcat_share)
+    val sharedMessage = stringResource(R.string.logcat_shared)
 
     // Saving writes exactly what the active filters show, nothing else.
     val saveLauncher = rememberLauncherForActivityResult(
@@ -88,6 +92,16 @@ fun LogcatScreen(
             }.isSuccess
             snackbarHostState.showSnackbar(if (saved) savedMessage else saveFailedMessage)
         }
+    }
+
+    fun requestShare() {
+        if (visibleLogs.isEmpty()) {
+            scope.launch { snackbarHostState.showSnackbar(nothingToSaveMessage) }
+            return
+        }
+        val stamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+        shareFile(context, viewModel.exportMarkdown(), "logcat_$stamp.md", "text/markdown")
+        scope.launch { snackbarHostState.showSnackbar(sharedMessage) }
     }
 
     fun requestSave() {
@@ -120,6 +134,13 @@ fun LogcatScreen(
                     containerColor = if (uiState.followForeground) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer
                 ) {
                     Icon(Icons.Default.MyLocation, contentDescription = followLabel)
+                }
+                Spacer(Modifier.height(8.dp))
+                SmallFloatingActionButton(
+                    onClick = { requestShare() },
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                ) {
+                    Icon(Icons.Default.Share, contentDescription = shareLabel)
                 }
                 Spacer(Modifier.height(8.dp))
                 SmallFloatingActionButton(

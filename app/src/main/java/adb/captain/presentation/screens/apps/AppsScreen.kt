@@ -36,6 +36,7 @@ import adb.captain.ui.theme.JetBrainsMono
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import adb.captain.R
 import adb.captain.domain.model.AppComponent
+import adb.captain.presentation.components.shareFile
 import adb.captain.domain.model.AppDetails
 import adb.captain.domain.model.IntentSpec
 import adb.captain.domain.model.PermissionEntry
@@ -102,13 +103,13 @@ fun AppsScreen(
 
     LaunchedEffect(uiState.exportCsv) {
         uiState.exportCsv?.let { content ->
-            shareText(shareIntent, content, "apps.csv", "text/csv")
+            shareFile(shareIntent, content, "apps.csv", "text/csv")
             viewModel.clearExportContent()
         }
     }
     LaunchedEffect(uiState.exportJson) {
         uiState.exportJson?.let { content ->
-            shareText(shareIntent, content, "apps.json", "application/json")
+            shareFile(shareIntent, content, "apps.json", "application/json")
             viewModel.clearExportContent()
         }
     }
@@ -719,24 +720,6 @@ fun BloatwareBadge(status: BloatwareStatus) {
             fontWeight = FontWeight.Bold
         )
     }
-}
-
-fun shareText(context: android.content.Context, content: String, fileName: String, mimeType: String) {
-    val cachePath = java.io.File(context.cacheDir, "share")
-    cachePath.mkdirs()
-    val file = java.io.File(cachePath, fileName)
-    file.writeText(content)
-    val uri = androidx.core.content.FileProvider.getUriForFile(
-        context,
-        "${context.packageName}.fileprovider",
-        file
-    )
-    val intent = Intent(Intent.ACTION_SEND).apply {
-        type = mimeType
-        putExtra(Intent.EXTRA_STREAM, uri)
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-    }
-    context.startActivity(Intent.createChooser(intent, fileName))
 }
 
 @Composable

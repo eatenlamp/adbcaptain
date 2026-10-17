@@ -91,6 +91,35 @@ class LogcatViewModel @Inject constructor(
         }
     }
 
+    /** Markdown of the filtered view, ready to paste into an issue. */
+    fun exportMarkdown(): String {
+        val state = _uiState.value
+        val entries = visibleLogs.value
+        val filters = buildList {
+            if (state.query.isNotBlank()) add("query=\"${state.query}\"")
+            state.selectedLevel?.let { add("level=${it.name}") }
+            state.pidFilter?.let { add("pid=$it") }
+            state.bufferFilter?.let { add("buffer=$it") }
+        }
+        return buildString {
+            appendLine("# Logcat")
+            appendLine()
+            appendLine("- Exported: ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())}")
+            appendLine("- Entries: ${entries.size}")
+            if (filters.isNotEmpty()) appendLine("- Filters: ${filters.joinToString(", ")}")
+            appendLine()
+            appendLine("## Log")
+            appendLine()
+            appendLine("```text")
+            entries.forEach { entry ->
+                appendLine(
+                    "${entry.timestamp} ${entry.level.name.first()}/${entry.tag} (${entry.pid}) ${entry.message}"
+                )
+            }
+            appendLine("```")
+        }
+    }
+
     /** Plain text of the filtered view, ready to be written to a file. */
 
     private var followJob: Job? = null

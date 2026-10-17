@@ -447,4 +447,6 @@
     <string name="intent_send_text">Send text</string>
     <string name="intent_dial">Dial</string>
     <string name="intent_settings">Settings</string>
+    <string name="logcat_share">Share as Markdown</string>
+    <string name="logcat_shared">Markdown ready to share</string>
 </resources>
