@@ -10,6 +10,7 @@ package adb.captain.domain.usecase
 
 import adb.captain.domain.model.AppDetails
 import adb.captain.domain.model.AppInfo
+import adb.captain.domain.model.IntentSpec
 import adb.captain.domain.repository.AdbRepository
 import javax.inject.Inject
 
@@ -27,6 +28,8 @@ class AppUseCase @Inject constructor(
     suspend fun toggle(packageName: String, enable: Boolean) = repository.toggleApp(packageName, enable)
     suspend fun launch(packageName: String, activity: String? = null): String = repository.launchApp(packageName, activity)
     suspend fun exportApk(packageName: String): String = repository.exportApk(packageName)
+    suspend fun startIntent(spec: IntentSpec): String = repository.startIntent(spec)
+
     suspend fun getAppOps(packageName: String): String = repository.getAppOps(packageName)
     suspend fun setAppOp(packageName: String, opName: String, mode: String): String = repository.setAppOp(packageName, opName, mode)
     suspend fun resetAppOps(packageName: String): String = repository.resetAppOps(packageName)

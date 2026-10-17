@@ -76,6 +76,11 @@ class AdbRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun startIntent(spec: IntentSpec): String {
+        if (!spec.isRunnable) return "Error: nothing to start"
+        return executeCommand(spec.toCommand())
+    }
+
     override fun executeStreamingCommand(command: String): Flow<String> = flow {
         val process = startShizukuProcess(command)
         process.inputStream.bufferedReader().useLines { lines ->

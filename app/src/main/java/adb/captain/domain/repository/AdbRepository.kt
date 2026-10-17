@@ -24,6 +24,9 @@ import java.io.File
  */
 interface AdbRepository {
     suspend fun executeCommand(command: String): String
+
+    /** Starts a hand built intent via `am start`. */
+    suspend fun startIntent(spec: adb.captain.domain.model.IntentSpec): String
     fun executeStreamingCommand(command: String): Flow<String>
 
     suspend fun getDevices(): List<Device>

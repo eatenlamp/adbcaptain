@@ -14,8 +14,12 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,11 +29,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.saveable.rememberSaveable
+import adb.captain.ui.theme.JetBrainsMono
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import adb.captain.R
 import adb.captain.domain.model.AppComponent
 import adb.captain.domain.model.AppDetails
+import adb.captain.domain.model.IntentSpec
 import adb.captain.domain.model.PermissionEntry
 import adb.captain.domain.model.AppInfo
 import adb.captain.domain.model.BloatwareStatus
@@ -57,6 +65,17 @@ fun AppsScreen(
     }
 
     val shareIntent = androidx.compose.ui.platform.LocalContext.current
+
+    var showIntentLauncher by remember { mutableStateOf(false) }
+    if (showIntentLauncher) {
+        IntentLauncherDialog(
+            onDismiss = { showIntentLauncher = false },
+            onRun = { spec ->
+                viewModel.startIntent(spec)
+                showIntentLauncher = false
+            }
+        )
+    }
 
     LaunchedEffect(uiState.exportMessage) {
         uiState.exportMessage?.let { message ->
@@ -130,6 +149,9 @@ fun AppsScreen(
                 )
                 IconButton(onClick = { viewModel.selectAll(filteredApps.map { it.packageName }) }) {
                     Icon(Icons.Default.SelectAll, contentDescription = stringResource(R.string.apps_select_all))
+                }
+                IconButton(onClick = { showIntentLauncher = true }) {
+                    Icon(Icons.Default.Send, contentDescription = stringResource(R.string.intent_title))
                 }
                 Box {
                     var exportMenu by remember { mutableStateOf(false) }
@@ -715,4 +737,96 @@ fun shareText(context: android.content.Context, content: String, fileName: Strin
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
     context.startActivity(Intent.createChooser(intent, fileName))
+}
+
+@Composable
+private fun IntentLauncherDialog(
+    onDismiss: () -> Unit,
+    onRun: (IntentSpec) -> Unit
+) {
+    var action by rememberSaveable { mutableStateOf("android.intent.action.VIEW") }
+    var data by rememberSaveable { mutableStateOf("") }
+    var type by rememberSaveable { mutableStateOf("") }
+    var component by rememberSaveable { mutableStateOf("") }
+    var category by rememberSaveable { mutableStateOf("") }
+    var flags by rememberSaveable { mutableStateOf("") }
+    var extras by rememberSaveable { mutableStateOf("") }
+
+    val presets = listOf(
+        stringResource(R.string.intent_open_url) to IntentSpec(
+            action = "android.intent.action.VIEW",
+            data = "https://"
+        ),
+        stringResource(R.string.intent_send_text) to IntentSpec(
+            action = "android.intent.action.SEND",
+            type = "text/plain"
+        ),
+        stringResource(R.string.intent_dial) to IntentSpec(action = "android.intent.action.DIAL"),
+        stringResource(R.string.intent_settings) to IntentSpec(action = "android.settings.SETTINGS")
+    )
+
+    val spec = IntentSpec(
+        action = action.trim(),
+        data = data.trim(),
+        type = type.trim(),
+        component = component.trim(),
+        category = category.trim(),
+        flags = flags.trim(),
+        extras = extras.lines().map { it.trim() }.filter { it.isNotEmpty() }
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.intent_title)) },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Row {
+                    presets.forEach { (label, preset) ->
+                        SuggestionChip(
+                            onClick = {
+                                action = preset.action
+                                data = preset.data
+                                type = preset.type
+                            },
+                            label = { Text(label, style = MaterialTheme.typography.labelSmall) }
+                        )
+                        Spacer(Modifier.width(4.dp))
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                IntentField(stringResource(R.string.intent_action), action) { action = it }
+                IntentField(stringResource(R.string.intent_data), data) { data = it }
+                IntentField(stringResource(R.string.intent_type), type) { type = it }
+                IntentField(stringResource(R.string.intent_component), component) { component = it }
+                IntentField(stringResource(R.string.intent_category), category) { category = it }
+                IntentField(stringResource(R.string.intent_flags), flags) { flags = it }
+                IntentField(stringResource(R.string.intent_extras), extras) { extras = it }
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = spec.toCommand(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontFamily = JetBrainsMono
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onRun(spec) }, enabled = spec.isRunnable) {
+                Text(stringResource(R.string.intent_run))
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.apps_cancel)) } }
+    )
+}
+
+@Composable
+private fun IntentField(label: String, value: String, onChange: (String) -> Unit) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onChange,
+        label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)
+    )
 }

@@ -433,4 +433,17 @@
     <string name="pm_empty">Нет процессов</string>
     <string name="pm_load_error">Не удалось прочитать таблицу процессов</string>
     <string name="pm_close">Закрыть</string>
+    <string name="intent_title">Запуск интента</string>
+    <string name="intent_action">Action</string>
+    <string name="intent_data">Data (URI)</string>
+    <string name="intent_type">Type (mime)</string>
+    <string name="intent_component">Компонент</string>
+    <string name="intent_category">Категория</string>
+    <string name="intent_flags">Флаги</string>
+    <string name="intent_extras">Extras (key=value в строке)</string>
+    <string name="intent_run">Запустить</string>
+    <string name="intent_open_url">Открыть URL</string>
+    <string name="intent_send_text">Отправить текст</string>
+    <string name="intent_dial">Позвонить</string>
+    <string name="intent_settings">Настройки</string>
 </resources>

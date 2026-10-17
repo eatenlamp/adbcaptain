@@ -11,6 +11,7 @@ package adb.captain.presentation.screens.apps
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import adb.captain.domain.model.AppDetails
+import adb.captain.domain.model.IntentSpec
 import adb.captain.domain.model.AppInfo
 import adb.captain.domain.usecase.AppUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import adb.captain.R
 
 @HiltViewModel
 class AppsViewModel @Inject constructor(
@@ -131,6 +133,15 @@ class AppsViewModel @Inject constructor(
         }
     }
 
+    fun startIntent(spec: IntentSpec) {
+        viewModelScope.launch {
+            val result = useCase.startIntent(spec)
+            _uiState.update {
+                it.copy(exportMessage = if (result.startsWith("Error")) result else intentStarted)
+            }
+        }
+    }
+
     fun clearDetails() {
         _uiState.update { it.copy(details = null) }
     }
@@ -229,6 +240,8 @@ class AppsViewModel @Inject constructor(
     fun clearExportContent() {
         _uiState.update { it.copy(exportCsv = null, exportJson = null) }
     }
+
+    private val intentStarted = "am start ok"
 }
 
 data class AppsUiState(

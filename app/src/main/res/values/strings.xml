@@ -434,4 +434,17 @@
     <string name="pm_empty">No processes</string>
     <string name="pm_load_error">Could not read the process table</string>
     <string name="pm_close">Close</string>
+    <string name="intent_title">Intent launcher</string>
+    <string name="intent_action">Action</string>
+    <string name="intent_data">Data (URI)</string>
+    <string name="intent_type">Type (mime)</string>
+    <string name="intent_component">Component</string>
+    <string name="intent_category">Category</string>
+    <string name="intent_flags">Flags</string>
+    <string name="intent_extras">Extras (key=value per line)</string>
+    <string name="intent_run">Run</string>
+    <string name="intent_open_url">Open URL</string>
+    <string name="intent_send_text">Send text</string>
+    <string name="intent_dial">Dial</string>
+    <string name="intent_settings">Settings</string>
 </resources>
