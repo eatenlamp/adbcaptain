@@ -646,6 +646,12 @@ class AdbRepositoryImpl @Inject constructor(
     }
 
 
+    override suspend fun getCrashReports(limit: Int): List<CrashReport> = withContext(Dispatchers.IO) {
+        val out = runCatching { executeCommand("logcat -b crash -d -v threadtime") }.getOrDefault("")
+        if (out.startsWith("Error") || out.startsWith("Exception")) return@withContext emptyList()
+        LogcatParser.parseCrashes(out.lines()).takeLast(limit).reversed()
+    }
+
     override suspend fun getForegroundApp(): ForegroundApp? = withContext(Dispatchers.IO) {
         try {
             val out = executeCommand("dumpsys activity activities | grep -E 'topResumedActivity|mCurrentFocus|mFocusedApp'")

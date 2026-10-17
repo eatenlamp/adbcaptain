@@ -413,4 +413,10 @@
     <string name="inspector_dangerous">опасное</string>
     <string name="inspector_granted">выдано</string>
     <string name="inspector_denied">нет</string>
+    <string name="crash_title">Краши</string>
+    <string name="crash_load">Загрузить краши</string>
+    <string name="crash_empty">В crash-буфере нет крашей</string>
+    <string name="crash_loading">Читаем crash-буфер...</string>
+    <string name="crash_frames">%1$d строк</string>
+    <string name="crash_copy">Копировать отчёт</string>
 </resources>

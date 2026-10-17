@@ -48,7 +48,10 @@ object DatabaseModule {
             context,
             CommanderDatabase::class.java,
             "commander_db"
-        ).addMigrations(MIGRATION_1_2).build()
+        ).addMigrations(MIGRATION_1_2)
+            // Safety net: a wrong or missing migration must never brick the app.
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides

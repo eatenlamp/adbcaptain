@@ -9,6 +9,7 @@
 package adb.captain.domain.repository
 
 import adb.captain.domain.model.AppDetails
+import adb.captain.domain.model.CrashReport
 import adb.captain.domain.model.AppInfo
 import adb.captain.domain.model.Device
 import adb.captain.domain.model.FileEntry
@@ -30,6 +31,9 @@ interface AdbRepository {
     suspend fun getAppDetails(packageName: String): AppDetails?
 
     fun streamLogcat(level: String? = null, filter: String? = null): Flow<LogEntry>
+
+    /** Crashes grouped from the logcat crash buffer. */
+    suspend fun getCrashReports(limit: Int = 50): List<CrashReport>
     suspend fun clearLogcat()
 
     suspend fun forceStopApp(packageName: String)

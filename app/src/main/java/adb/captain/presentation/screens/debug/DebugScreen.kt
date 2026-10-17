@@ -11,6 +11,7 @@ package adb.captain.presentation.screens.debug
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -132,6 +133,11 @@ fun DebugScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+            CrashSection(
+                crashes = uiState.crashes,
+                isLoading = uiState.isLoadingCrashes,
+                onLoad = viewModel::loadCrashes
             )
             Row(
                 modifier = Modifier
@@ -445,4 +451,84 @@ private fun formatElapsed(millis: Long): String {
     val minutes = (totalSeconds % 3600) / 60
     val seconds = totalSeconds % 60
     return String.format(java.util.Locale.US, "%02d:%02d:%02d", hours, minutes, seconds)
+}
+
+@Composable
+private fun CrashSection(
+    crashes: List<adb.captain.domain.model.CrashReport>,
+    isLoading: Boolean,
+    onLoad: () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResource(R.string.crash_title),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.weight(1f)
+            )
+            TextButton(onClick = onLoad, enabled = !isLoading) {
+                Text(
+                    stringResource(
+                        if (isLoading) R.string.crash_loading else R.string.crash_load
+                    )
+                )
+            }
+        }
+        if (!isLoading && crashes.isEmpty()) {
+            Text(
+                text = stringResource(R.string.crash_empty),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        crashes.forEach { crash ->
+            CrashCard(crash)
+        }
+    }
+}
+
+@Composable
+private fun CrashCard(crash: adb.captain.domain.model.CrashReport) {
+    var expanded by remember { mutableStateOf(false) }
+    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp)) {
+        Column(
+            modifier = Modifier
+                .clickable { expanded = !expanded }
+                .padding(12.dp)
+        ) {
+            Text(
+                text = crash.packageName,
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                text = crash.timestamp + "  ·  pid " + crash.pid,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = crash.summary.lineSequence().last().trim(),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                maxLines = if (expanded) Int.MAX_VALUE else 2
+            )
+            if (expanded) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = stringResource(R.string.crash_frames, crash.stackTrace.size),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = crash.stackTrace.joinToString("\\n"),
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
+            }
+        }
+    }
 }

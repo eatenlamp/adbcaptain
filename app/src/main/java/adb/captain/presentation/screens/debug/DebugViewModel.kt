@@ -11,6 +11,7 @@ package adb.captain.presentation.screens.debug
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import adb.captain.domain.model.DebugSession
+import adb.captain.domain.model.CrashReport
 import adb.captain.domain.model.Macro
 import adb.captain.domain.repository.AdbRepository
 import adb.captain.domain.usecase.BugPackUseCase
@@ -64,6 +65,15 @@ class DebugViewModel @Inject constructor(
             val output = runCatching { macroUseCase.run(macro) }
                 .getOrElse { "Error: ${it.message}" }
             _uiState.update { it.copy(runningMacroId = null, macroOutput = output) }
+        }
+    }
+
+    fun loadCrashes() {
+        if (_uiState.value.isLoadingCrashes) return
+        _uiState.update { it.copy(isLoadingCrashes = true) }
+        viewModelScope.launch {
+            val crashes = runCatching { repository.getCrashReports() }.getOrDefault(emptyList())
+            _uiState.update { it.copy(isLoadingCrashes = false, crashes = crashes) }
         }
     }
 
@@ -170,7 +180,9 @@ data class DebugUiState(
     val notes: String = "",
     val runningMacroId: Long? = null,
     val macroOutput: String? = null,
-    val macroNotice: String? = null
+    val macroNotice: String? = null,
+    val isLoadingCrashes: Boolean = false,
+    val crashes: List<CrashReport> = emptyList()
 ) {
     /** Available once a session has been started at least once. */
     fun currentSessionOrNull(logTail: List<String> = emptyList()): DebugSession? =

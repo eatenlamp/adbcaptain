@@ -8,6 +8,7 @@
 
 package adb.captain.util
 
+import adb.captain.domain.model.CrashReport
 import adb.captain.domain.model.LogEntry
 import adb.captain.domain.model.LogLevel
 
@@ -92,4 +93,77 @@ object LogcatParser {
 
     private fun isLevelChar(token: String): Boolean =
         token.length == 1 && token[0] in "VDIWEF"
+    /**
+     * Groups `logcat -b crash` output into individual crashes. The buffer holds
+     * raw stack traces, which is the only crash data a shell user can reach:
+     * /data/tombstones and /data/anr are not readable without root.
+     */
+    fun parseCrashes(lines: List<String>): List<CrashReport> {
+        val reports = mutableListOf<CrashReport>()
+
+        var pid = 0
+        var timestamp = ""
+        var pkg = "unknown"
+        var summary = ""
+        val stack = mutableListOf<String>()
+        var open = false
+
+        fun flush() {
+            if (open && summary.isNotBlank()) {
+                reports.add(CrashReport(pid, pkg, timestamp, summary, stack.toList()))
+            }
+            stack.clear()
+            summary = ""
+            open = false
+        }
+
+        for (raw in lines) {
+            val entry = parse(raw) ?: continue
+            val message = entry.message.trim()
+            when {
+                message.startsWith("FATAL EXCEPTION") -> {
+                    flush()
+                    open = true
+                    pid = entry.pid
+                    timestamp = entry.timestamp
+                    pkg = "unknown"
+                    summary = message
+                }
+                open && message.startsWith("Process:") -> {
+                    pkg = message.removePrefix("Process:").substringBefore(",").trim()
+                    summary = "$summary\n$message"
+                }
+                open && (message.startsWith("Caused by:") || looksLikeException(message)) -> {
+                    summary = if (summary.contains("FATAL")) {
+                        message
+                    } else {
+                        "$summary\n$message"
+                    }
+                }
+                open && (message.startsWith("	at ") || message.startsWith("... ")) -> {
+                    stack.add(message)
+                }
+                open && message.isNotEmpty() && !message.startsWith("[") -> {
+                    stack.add(message)
+                }
+                !open && message.startsWith("signal ") -> {
+                    // Native crash: signal 11 (SIGSEGV) and friends.
+                    flush()
+                    open = true
+                    pid = entry.pid
+                    timestamp = entry.timestamp
+                    summary = message
+                }
+            }
+        }
+        flush()
+        return reports
+    }
+
+    private fun looksLikeException(message: String): Boolean =
+        EXCEPTION_REGEX.containsMatchIn(message)
+
+    private val EXCEPTION_REGEX = Regex(
+        "(^|\\s)([a-z][\\w.]*\\.)?(Exception|Error|Throwable|ANR|Abort|SIG[A-Z]+)\\b"
+    )
 }
