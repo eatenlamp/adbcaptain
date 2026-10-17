@@ -807,6 +807,20 @@ class AdbRepositoryImpl @Inject constructor(
                 // keep packageName
             }
 
+            val components = parseComponents(lines, packageName)
+            val dangerous = DANGEROUS_PERMISSIONS
+            val permissionsDetailed = (requestedPermissions + grantedPermissions)
+                .distinct()
+                .map { name ->
+                    PermissionEntry(
+                        name = name,
+                        dangerous = name in dangerous,
+                        granted = grantedPermissions.contains(name)
+                    )
+                }
+            val installer = firstMatching(Regex("installerPackageName=([^\\s]+)"))
+                ?.takeIf { it != "null" }
+
             AppDetails(
                 packageName = packageName,
                 label = label,
@@ -827,12 +841,92 @@ class AdbRepositoryImpl @Inject constructor(
                 isDebuggable = isDebuggable,
                 isExternal = isExternal,
                 requestedPermissions = requestedPermissions,
-                installPermissions = grantedPermissions
+                installPermissions = grantedPermissions,
+                components = components,
+                permissionsDetailed = permissionsDetailed,
+                installerPackageName = installer
             )
         } catch (e: Exception) {
             null
         }
     }
+
+    /** Reads Activities/Services/Receivers/Providers out of dumpsys package. */
+    private fun parseComponents(lines: List<String>, packageName: String): List<AppComponent> {
+        val out = mutableListOf<AppComponent>()
+        var type: String? = null
+        val entry = Regex("^\\s+[0-9a-f]+\\s+(\\S+)/(\\S+)\\s+filter\\s+[0-9a-f]+(?:\\s+permission\\s+(\\S+))?")
+        for (line in lines) {
+            val trimmed = line.trim()
+            when {
+                trimmed.endsWith("Resolver Table:") -> {
+                    type = when {
+                        trimmed.startsWith("Activity") -> "Activity"
+                        trimmed.startsWith("Service") -> "Service"
+                        trimmed.startsWith("Receiver") -> "Receiver"
+                        trimmed.startsWith("Provider") -> "Provider"
+                        else -> null
+                    }
+                }
+                type != null -> {
+                    val m = entry.find(line)
+                    if (m != null) {
+                        val raw = m.groupValues[1] + "/" + m.groupValues[2]
+                        val full = if (raw.startsWith("$packageName/")) {
+                            if (raw.substringAfter('/').startsWith(".")) {
+                                packageName + raw.substringAfter('/')
+                            } else {
+                                raw
+                            }
+                        } else {
+                            raw
+                        }
+                        val permission = m.groupValues.getOrNull(3)?.takeIf { it.isNotBlank() }
+                        val item = AppComponent(type!!, full, permission)
+                        if (out.none { it.name == full && it.type == item.type }) out.add(item)
+                    }
+                }
+            }
+        }
+
+        // Apply the per-component enable state reported by the package manager.
+        val states = mutableMapOf<String, Boolean>()
+        var inBlock = false
+        for (line in lines) {
+            val trimmed = line.trim()
+            when {
+                trimmed == "disabledComponents:" -> { inBlock = true }
+                trimmed == "enabledComponents:" -> { inBlock = true }
+                inBlock && trimmed.startsWith("com.") -> {
+                    states[trimmed] = (line.takeWhile { it == ' ' }.length > 6)
+                }
+                inBlock && trimmed.isEmpty() -> inBlock = false
+            }
+        }
+        return out.map { c -> c.copy(enabled = states[c.name] ?: c.enabled) }
+    }
+
+    private val DANGEROUS_PERMISSIONS = setOf(
+        "android.permission.READ_CALENDAR", "android.permission.WRITE_CALENDAR",
+        "android.permission.CAMERA", "android.permission.READ_CONTACTS",
+        "android.permission.WRITE_CONTACTS", "android.permission.GET_ACCOUNTS",
+        "android.permission.ACCESS_FINE_LOCATION", "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION", "android.permission.RECORD_AUDIO",
+        "android.permission.READ_PHONE_STATE", "android.permission.READ_PHONE_NUMBERS",
+        "android.permission.CALL_PHONE", "android.permission.ANSWER_PHONE_CALLS",
+        "android.permission.READ_CALL_LOG", "android.permission.WRITE_CALL_LOG",
+        "android.permission.ADD_VOICEMAIL", "android.permission.USE_SIP",
+        "android.permission.BODY_SENSORS", "android.permission.SEND_SMS",
+        "android.permission.RECEIVE_SMS", "android.permission.READ_SMS",
+        "android.permission.RECEIVE_WAP_PUSH", "android.permission.RECEIVE_MMS",
+        "android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_MEDIA_LOCATION", "android.permission.ACTIVITY_RECOGNITION",
+        "android.permission.READ_MEDIA_IMAGES", "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_AUDIO", "android.permission.POST_NOTIFICATIONS",
+        "android.permission.BLUETOOTH_SCAN", "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.BLUETOOTH_ADVERTISE", "android.permission.NEARBY_WIFI_DEVICES",
+        "android.permission.POST_SMS", "android.permission.READ_MEDIA_AURAL"
+    )
 
     private fun batteryStatus(status: Int?): BatteryStatus = when (status) {
         1 -> BatteryStatus.UNKNOWN

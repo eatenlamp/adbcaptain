@@ -28,7 +28,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import adb.captain.R
+import adb.captain.domain.model.AppComponent
 import adb.captain.domain.model.AppDetails
+import adb.captain.domain.model.PermissionEntry
 import adb.captain.domain.model.AppInfo
 import adb.captain.domain.model.BloatwareStatus
 import java.text.SimpleDateFormat
@@ -430,13 +432,38 @@ fun AppDetailsDialog(
                         }
                     }
                     item {
-                        DetailRow(stringResource(R.string.apps_details_permissions, details.permissions.size), "")
+                        DetailRow(
+                            stringResource(
+                                R.string.inspector_install_source,
+                                details.installerPackageName ?: stringResource(R.string.inspector_sideloaded)
+                            ),
+                            ""
+                        )
                     }
-                    if (details.permissions.isNotEmpty()) {
-                        details.permissions.take(20).forEach { perm ->
-                            item {
-                                Text(perm, style = MaterialTheme.typography.bodySmall)
-                            }
+                    if (details.components.isNotEmpty()) {
+                        item {
+                            Text(
+                                stringResource(R.string.inspector_components, details.components.size),
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                        }
+                        items(details.components) { comp ->
+                            ComponentRow(comp)
+                        }
+                    }
+                    if (details.permissionsDetailed.isNotEmpty()) {
+                        item {
+                            Text(
+                                stringResource(
+                                    R.string.inspector_permissions_count,
+                                    details.permissionsDetailed.size,
+                                    details.permissionsDetailed.count { it.dangerous }
+                                ),
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                        }
+                        items(details.permissionsDetailed) { perm ->
+                            PermissionRow(perm)
                         }
                     }
                     item {
@@ -471,6 +498,77 @@ fun AppDetailsDialog(
             }
         }
     )
+}
+
+@Composable
+private fun ComponentRow(component: AppComponent) {
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = component.type,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(end = 6.dp)
+            )
+            Text(
+                text = component.name,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.weight(1f)
+            )
+            if (!component.enabled) {
+                Text(
+                    text = stringResource(R.string.inspector_disabled),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+        if (!component.permission.isNullOrBlank()) {
+            Text(
+                text = stringResource(R.string.inspector_requires, component.permission!!),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun PermissionRow(permission: PermissionEntry) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 1.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = permission.name,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (permission.granted) {
+                MaterialTheme.colorScheme.onSurface
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            modifier = Modifier.weight(1f)
+        )
+        if (permission.dangerous) {
+            Text(
+                text = stringResource(R.string.inspector_dangerous),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(end = 6.dp)
+            )
+        }
+        Text(
+            text = stringResource(
+                if (permission.granted) R.string.inspector_granted else R.string.inspector_denied
+            ),
+            style = MaterialTheme.typography.labelSmall,
+            color = if (permission.granted) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+        )
+    }
 }
 
 @Composable

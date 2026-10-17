@@ -46,7 +46,28 @@ data class AppDetails(
     val isExternal: Boolean,
     val requestedPermissions: List<String>,
     val installPermissions: List<String>,
-    val sharedUserId: String? = null
+    val sharedUserId: String? = null,
+    /** Activities, services, receivers and providers declared by the app. */
+    val components: List<AppComponent> = emptyList(),
+    /** Requested permissions split into dangerous/normal and grant state. */
+    val permissionsDetailed: List<PermissionEntry> = emptyList(),
+    /** Package that installed this app, null for sideloaded or system apps. */
+    val installerPackageName: String? = null
+)
+
+/** One declared component as reported by `dumpsys package`. */
+data class AppComponent(
+    val type: String,
+    val name: String,
+    val permission: String? = null,
+    val enabled: Boolean = true
+)
+
+/** A requested permission with its risk level and grant state. */
+data class PermissionEntry(
+    val name: String,
+    val dangerous: Boolean,
+    val granted: Boolean
 )
 
 enum class BloatwareStatus {

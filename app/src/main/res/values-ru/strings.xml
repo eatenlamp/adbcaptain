@@ -404,4 +404,13 @@
     <string name="palette_open">Открыть палитру команд</string>
     <string name="palette_hint">Поиск по экранам, макросам и командам</string>
     <string name="palette_empty">Ничего не найдено</string>
+    <string name="inspector_components">Компоненты: %1$d</string>
+    <string name="inspector_permissions_count">Разрешения: %1$d (%2$d опасных)</string>
+    <string name="inspector_install_source">Источник установки: %1$s</string>
+    <string name="inspector_sideloaded">sideload / нет</string>
+    <string name="inspector_disabled">отключён</string>
+    <string name="inspector_requires">требует %1$s</string>
+    <string name="inspector_dangerous">опасное</string>
+    <string name="inspector_granted">выдано</string>
+    <string name="inspector_denied">нет</string>
 </resources>

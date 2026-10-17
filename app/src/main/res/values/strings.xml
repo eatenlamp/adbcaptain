@@ -405,4 +405,13 @@
     <string name="palette_open">Open command palette</string>
     <string name="palette_hint">Search screens, macros and commands</string>
     <string name="palette_empty">Nothing found</string>
+    <string name="inspector_components">Components: %1$d</string>
+    <string name="inspector_permissions_count">Permissions: %1$d (%2$d dangerous)</string>
+    <string name="inspector_install_source">Install source: %1$s</string>
+    <string name="inspector_sideloaded">sideloaded / none</string>
+    <string name="inspector_disabled">disabled</string>
+    <string name="inspector_requires">requires %1$s</string>
+    <string name="inspector_dangerous">dangerous</string>
+    <string name="inspector_granted">granted</string>
+    <string name="inspector_denied">denied</string>
 </resources>
