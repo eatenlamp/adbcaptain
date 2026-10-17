@@ -188,14 +188,22 @@ class AdbRepositoryImpl @Inject constructor(
 
     override fun streamLogcat(level: String?, filter: String?): Flow<LogEntry> = flow {
         val cmd = buildString {
-            append("logcat -v threadtime")
+            append("logcat -v threadtime -b main -b events")
             if (level != null) append(" *:$level")
             if (filter != null) append(" | grep \"$filter\"")
         }
         val process = startShizukuProcess(cmd)
         process.inputStream.bufferedReader().useLines { lines ->
+            // The "--------- beginning of <buffer>" headers tell us which
+            // buffer the following lines belong to.
+            var buffer = BUFFER_MAIN
             lines.forEach { line ->
-                LogcatParser.parse(line)?.let { emit(it) }
+                val header = LogcatParser.bufferFromHeader(line)
+                if (header != null) {
+                    buffer = header
+                    return@forEach
+                }
+                LogcatParser.parse(line)?.let { emit(it.copy(buffer = buffer)) }
             }
         }
     }.flowOn(Dispatchers.IO)

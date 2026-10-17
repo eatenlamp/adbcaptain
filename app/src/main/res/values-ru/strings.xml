@@ -419,4 +419,7 @@
     <string name="crash_loading">Читаем crash-буфер...</string>
     <string name="crash_frames">%1$d строк</string>
     <string name="crash_copy">Копировать отчёт</string>
+    <string name="logcat_buffer_all">Все буферы</string>
+    <string name="logcat_buffer_main">Main</string>
+    <string name="logcat_buffer_events">Events</string>
 </resources>

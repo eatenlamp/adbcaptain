@@ -42,6 +42,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import adb.captain.R
+import adb.captain.domain.model.BUFFER_EVENTS
+import adb.captain.domain.model.BUFFER_MAIN
 import adb.captain.domain.model.LogEntry
 import adb.captain.domain.model.LogLevel
 import kotlinx.coroutines.launch
@@ -197,6 +199,24 @@ fun LogcatScreen(
                     )
                     Spacer(Modifier.width(4.dp))
                 }
+                BufferChip(
+                    label = stringResource(R.string.logcat_buffer_all),
+                    selected = uiState.bufferFilter == null,
+                    onClick = { viewModel.setBufferFilter(null) }
+                )
+                Spacer(Modifier.width(4.dp))
+                BufferChip(
+                    label = stringResource(R.string.logcat_buffer_main),
+                    selected = uiState.bufferFilter == BUFFER_MAIN,
+                    onClick = { viewModel.setBufferFilter(BUFFER_MAIN) }
+                )
+                Spacer(Modifier.width(4.dp))
+                BufferChip(
+                    label = stringResource(R.string.logcat_buffer_events),
+                    selected = uiState.bufferFilter == BUFFER_EVENTS,
+                    onClick = { viewModel.setBufferFilter(BUFFER_EVENTS) }
+                )
+                Spacer(Modifier.width(4.dp))
                 LevelChip(
                     label = stringResource(R.string.logcat_level_all),
                     selected = uiState.selectedLevel == null,
@@ -270,6 +290,15 @@ fun LevelChip(
 }
 
 @OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun BufferChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = { Text(label, style = MaterialTheme.typography.labelSmall) }
+    )
+}
+
 @Composable
 fun LogItem(entry: LogEntry, onClick: () -> Unit, onFilterPid: (Int) -> Unit) {
     val color = logLevelColor(entry.level)

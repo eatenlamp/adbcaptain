@@ -19,8 +19,13 @@ data class LogEntry(
     val pid: Int = 0,
     val tid: Int = 0,
     /** Monotonic id assigned on arrival; guarantees unique LazyColumn keys. */
-    val id: Long = 0
+    val id: Long = 0,
+    /** Which logcat buffer this line came from: main, events, crash... */
+    val buffer: String = BUFFER_MAIN
 )
+
+const val BUFFER_MAIN = "main"
+const val BUFFER_EVENTS = "events"
 
 enum class LogLevel {
     VERBOSE, DEBUG, INFO, WARN, ERROR, FATAL;

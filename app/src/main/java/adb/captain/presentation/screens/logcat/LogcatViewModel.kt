@@ -47,6 +47,7 @@ class LogcatViewModel @Inject constructor(
             state.logs.filter { entry ->
                 (state.selectedLevel == null || entry.level == state.selectedLevel) &&
                     (state.pidFilter == null || entry.pid == state.pidFilter) &&
+                    (state.bufferFilter == null || entry.buffer == state.bufferFilter) &&
                     (state.query.isBlank() ||
                         entry.message.contains(state.query, ignoreCase = true) ||
                         entry.tag.contains(state.query, ignoreCase = true))
@@ -67,6 +68,11 @@ class LogcatViewModel @Inject constructor(
 
     fun setQuery(query: String) {
         _uiState.update { it.copy(query = query) }
+    }
+
+    /** Shows only one logcat buffer, or all of them when null. */
+    fun setBufferFilter(buffer: String?) {
+        _uiState.update { it.copy(bufferFilter = buffer) }
     }
 
     fun setLevel(level: LogLevel?) {
@@ -150,6 +156,8 @@ data class LogcatUiState(
     val selectedLevel: LogLevel? = null,
     /** When set, only entries from this PID (one app) are shown and exported. */
     val pidFilter: Int? = null,
+    /** When set, only this logcat buffer is shown; null shows every buffer. */
+    val bufferFilter: String? = null,
     val followForeground: Boolean = false
 )
 
@@ -159,6 +167,7 @@ internal fun buildExport(entries: List<LogEntry>, state: LogcatUiState): String 
         if (state.query.isNotBlank()) add("query=\"${state.query}\"")
         state.selectedLevel?.let { add("level=${it.name}") }
         state.pidFilter?.let { add("pid=$it") }
+        state.bufferFilter?.let { add("buffer=$it") }
     }
     return buildString {
         appendLine("# ADB Captain log export")

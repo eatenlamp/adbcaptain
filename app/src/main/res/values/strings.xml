@@ -420,4 +420,7 @@
     <string name="crash_loading">Reading crash buffer...</string>
     <string name="crash_frames">%1$d frames</string>
     <string name="crash_copy">Copy report</string>
+    <string name="logcat_buffer_all">All buffers</string>
+    <string name="logcat_buffer_main">Main</string>
+    <string name="logcat_buffer_events">Events</string>
 </resources>

@@ -22,6 +22,15 @@ import adb.captain.domain.model.LogLevel
  */
 object LogcatParser {
 
+    private const val HEADER_PREFIX = "--------- beginning of"
+
+    /** Returns the buffer name from a "--------- beginning of X" line, else null. */
+    fun bufferFromHeader(line: String): String? {
+        val t = line.trim()
+        if (!t.startsWith(HEADER_PREFIX)) return null
+        return t.removePrefix(HEADER_PREFIX).trim().ifBlank { null }
+    }
+
     private val SPACE_REGEX = Regex("\\s+")
     private val PID_REGEX = Regex("""PID:(\d+)""")
 
