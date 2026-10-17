@@ -401,4 +401,7 @@
     <string name="debug_macros_empty">Макросов пока нет</string>
     <string name="debug_macros_run">Запустить</string>
     <string name="debug_macros_saved">Макрос сохранён</string>
+    <string name="palette_open">Открыть палитру команд</string>
+    <string name="palette_hint">Поиск по экранам, макросам и командам</string>
+    <string name="palette_empty">Ничего не найдено</string>
 </resources>

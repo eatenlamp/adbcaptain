@@ -48,6 +48,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TerminalScreen(
+    initialCommand: String? = null,
     viewModel: TerminalViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -60,6 +61,12 @@ fun TerminalScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val copiedMessage = stringResource(R.string.term_copied)
+
+    LaunchedEffect(initialCommand) {
+        initialCommand?.takeIf { it.isNotBlank() }?.let { cmd ->
+            viewModel.executeCommand(cmd)
+        }
+    }
 
     fun copyToClipboard(text: String) {
         scope.launch {

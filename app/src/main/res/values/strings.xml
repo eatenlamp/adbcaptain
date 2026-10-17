@@ -402,4 +402,7 @@
     <string name="debug_macros_empty">No macros yet</string>
     <string name="debug_macros_run">Run</string>
     <string name="debug_macros_saved">Macro saved</string>
+    <string name="palette_open">Open command palette</string>
+    <string name="palette_hint">Search screens, macros and commands</string>
+    <string name="palette_empty">Nothing found</string>
 </resources>

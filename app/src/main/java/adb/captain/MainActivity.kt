@@ -22,6 +22,12 @@ import androidx.core.os.LocaleListCompat
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import adb.captain.presentation.components.CommandPaletteOverlay
+import adb.captain.presentation.components.PaletteItem
+import adb.captain.presentation.components.PaletteViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import adb.captain.presentation.navigation.Screen
 import adb.captain.presentation.screens.setup.SetupScreen
 import adb.captain.presentation.screens.terminal.TerminalScreen
@@ -92,6 +98,11 @@ class MainActivity : AppCompatActivity(), Shizuku.OnRequestPermissionResultListe
                         }
                     }
                     
+                    var showPalette by remember { mutableStateOf(false) }
+                    var pendingTerminalCommand by remember { mutableStateOf<String?>(null) }
+                    val paletteViewModel: PaletteViewModel = hiltViewModel()
+                    val paletteMacros by paletteViewModel.macros.collectAsStateWithLifecycle()
+
                     val screens = listOf(
                         Screen.Terminal,
                         Screen.Devices,
@@ -111,6 +122,14 @@ class MainActivity : AppCompatActivity(), Shizuku.OnRequestPermissionResultListe
                             if (currentScreen != null) {
                                 CenterAlignedTopAppBar(
                                     title = { Text(stringResource(currentScreen.titleRes)) },
+                                    navigationIcon = {
+                                        IconButton(onClick = { showPalette = true }) {
+                                            Icon(
+                                                Icons.Default.Search,
+                                                contentDescription = stringResource(R.string.palette_open)
+                                            )
+                                        }
+                                    },
                                     colors = TopAppBarDefaults.topAppBarColors(
                                         containerColor = MaterialTheme.colorScheme.surface
                                     )
@@ -143,18 +162,60 @@ class MainActivity : AppCompatActivity(), Shizuku.OnRequestPermissionResultListe
                             startDestination = Screen.Terminal.route,
                             modifier = Modifier.padding(innerPadding)
                         ) {
-                            composable(Screen.Terminal.route) { TerminalScreen() }
+                            composable(Screen.Terminal.route) {
+                                TerminalScreen(initialCommand = pendingTerminalCommand)
+                            }
                             composable(Screen.Devices.route) { DevicesScreen(onOpenWireless = { navController.navigate("wireless") }) }
                             composable(Screen.Apps.route) { AppsScreen() }
                             composable(Screen.Logcat.route) { LogcatScreen() }
                             composable(Screen.Sideload.route) { SideloadScreen() }
                             composable(Screen.Files.route) { FilesScreen() }
                             composable(Screen.Monitor.route) { MonitorScreen() }
-                composable(Screen.Debug.route) { DebugScreen() }
+                            composable(Screen.Debug.route) { DebugScreen() }
                             composable(Screen.Settings.route) { SettingsScreen(onOpenHelp = { navController.navigate("help") }) }
                             composable("help") { HelpScreen(onBack = { navController.popBackStack() }) }
                             composable("wireless") { WirelessAdbScreen(onBack = { navController.popBackStack() }) }
                         }
+                    if (showPalette) {
+                        CommandPaletteOverlay(
+                            screens = screens.map { screen ->
+                                PaletteItem(
+                                    title = stringResource(screen.titleRes),
+                                    subtitle = screen.route,
+                                    onRun = {
+                                        navController.navigate(screen.route) {
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    }
+                                )
+                            },
+                            macros = paletteMacros,
+                            onOpenMacros = {
+                                navController.navigate(Screen.Debug.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            onRunCommand = { cmd ->
+                                navController.navigate(Screen.Terminal.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                                pendingTerminalCommand = cmd
+                            },
+                            onDismiss = { showPalette = false }
+                        )
+                    }
                     }
                 }
             }
