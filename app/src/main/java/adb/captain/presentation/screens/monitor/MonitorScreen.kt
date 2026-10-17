@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,6 +36,18 @@ fun MonitorScreen(
     viewModel: MonitorViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    var showProcesses by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
+    if (showProcesses) {
+        ProcessListDialog(
+            processes = uiState.allProcesses,
+            isLoading = uiState.isLoadingProcesses,
+            failed = uiState.processesError,
+            onReload = viewModel::loadAllProcesses,
+            onStop = viewModel::stopProcess,
+            onDismiss = { showProcesses = false; viewModel.clearProcesses() }
+        )
+    }
 
     LaunchedEffect(Unit) {
         viewModel.startMonitoring()
@@ -69,10 +82,19 @@ fun MonitorScreen(
                 MemoryCard(uiState.memory)
             }
             item {
-                Text(
-                    stringResource(R.string.monitor_top_processes),
-                    style = MaterialTheme.typography.titleLarge
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        stringResource(R.string.monitor_top_processes),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.weight(1f)
+                    )
+                    TextButton(onClick = { showProcesses = true; viewModel.loadAllProcesses() }) {
+                        Text(stringResource(R.string.pm_open))
+                    }
+                }
             }
             if (uiState.topProcesses.isEmpty()) {
                 item {
@@ -273,4 +295,89 @@ private fun formatBytes(bytes: Long): String {
     if (mb < 1024) return "${decimalFormat.format(mb)} MB"
     val gb = mb / 1024.0
     return "${decimalFormat.format(gb)} GB"
+}
+
+@Composable
+private fun ProcessListDialog(
+    processes: List<ProcessInfo>,
+    isLoading: Boolean,
+    failed: Boolean,
+    onReload: () -> Unit,
+    onStop: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var query by rememberSaveable { mutableStateOf("") }
+    val filtered = remember(processes, query) {
+        if (query.isBlank()) processes else processes.filter {
+            it.name.contains(query, ignoreCase = true) ||
+                it.pid.toString().contains(query) ||
+                it.user.contains(query, ignoreCase = true)
+        }
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.pm_title)) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.pm_search)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(8.dp))
+                if (isLoading) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) { CircularProgressIndicator() }
+                } else if (failed) {
+                    Text(stringResource(R.string.pm_load_error))
+                } else {
+                    Text(
+                        stringResource(R.string.pm_count, filtered.size),
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                    LazyColumn(modifier = Modifier.height(360.dp)) {
+                        items(filtered) { p -> ProcessDetailRow(p, onStop) }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.pm_close)) } },
+        dismissButton = { TextButton(onClick = onReload) { Text(stringResource(R.string.pm_open)) } }
+    )
+}
+
+@Composable
+private fun ProcessDetailRow(process: ProcessInfo, onStop: (String) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(process.name.ifBlank { process.cmdline }, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = stringResource(R.string.pm_pid, process.pid, process.ppid) +
+                    "  " + process.user,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = stringResource(
+                    R.string.pm_memory,
+                    formatBytes(process.memoryUsage),
+                    formatBytes(process.virtualMemory)
+                ),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        process.stoppablePackage?.let { pkg ->
+            TextButton(onClick = { onStop(pkg) }) {
+                Text(stringResource(R.string.pm_stop), style = MaterialTheme.typography.labelSmall)
+            }
+        }
+    }
 }

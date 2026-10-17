@@ -36,6 +36,27 @@ class MonitorViewModel @Inject constructor(
 
     private var pollingJob: Job? = null
 
+    fun loadAllProcesses() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingProcesses = true, processesError = false) }
+            val list = runCatching { useCase.getProcesses() }.getOrDefault(emptyList())
+            _uiState.update {
+                it.copy(isLoadingProcesses = false, allProcesses = list, processesError = list.isEmpty())
+            }
+        }
+    }
+
+    fun clearProcesses() {
+        _uiState.update { it.copy(allProcesses = emptyList()) }
+    }
+
+    fun stopProcess(pkg: String) {
+        viewModelScope.launch {
+            runCatching { useCase.forceStop(pkg) }
+            loadAllProcesses()
+        }
+    }
+
     fun startMonitoring() {
         if (pollingJob?.isActive == true) return
         pollingJob = viewModelScope.launch {
@@ -76,5 +97,8 @@ data class MonitorUiState(
     val cpu: CpuInfo? = null,
     val memory: MemoryInfo? = null,
     val topProcesses: List<ProcessInfo> = emptyList(),
+    val allProcesses: List<ProcessInfo> = emptyList(),
+    val isLoadingProcesses: Boolean = false,
+    val processesError: Boolean = false,
     val lastUpdate: Long = 0
 )

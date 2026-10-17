@@ -43,6 +43,9 @@ class DeviceUseCase @Inject constructor(
     suspend fun getCpuInfo(): CpuInfo? = repository.getCpuInfo()
     suspend fun getMemoryInfo(): MemoryInfo? = repository.getMemoryInfo()
     suspend fun getTopProcesses(limit: Int = 20): List<ProcessInfo> = repository.getTopProcesses(limit)
+
+    suspend fun getProcesses() = repository.getProcesses()
+    suspend fun forceStop(packageName: String) = repository.forceStopApp(packageName)
     suspend fun setDemoMode(enabled: Boolean) = repository.setDemoMode(enabled)
     suspend fun getDemoMode(): Boolean = repository.getDemoMode()
     suspend fun createDiagnosticReport(): String = repository.createDiagnosticReport()

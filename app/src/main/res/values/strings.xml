@@ -423,4 +423,15 @@
     <string name="logcat_buffer_all">All buffers</string>
     <string name="logcat_buffer_main">Main</string>
     <string name="logcat_buffer_events">Events</string>
+    <string name="pm_title">All processes</string>
+    <string name="pm_open">All processes</string>
+    <string name="pm_search">Filter by name or pid</string>
+    <string name="pm_count">%1$d processes</string>
+    <string name="pm_stop">Stop</string>
+    <string name="pm_user">User</string>
+    <string name="pm_pid">PID %1$d  PPID %2$d</string>
+    <string name="pm_memory">RSS %1$s  VSZ %2$s</string>
+    <string name="pm_empty">No processes</string>
+    <string name="pm_load_error">Could not read the process table</string>
+    <string name="pm_close">Close</string>
 </resources>

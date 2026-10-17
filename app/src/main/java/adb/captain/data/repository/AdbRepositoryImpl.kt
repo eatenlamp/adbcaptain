@@ -598,6 +598,55 @@ class AdbRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getProcesses(): List<ProcessInfo> = withContext(Dispatchers.IO) {
+        val out = executeCommand("ps -A -o PID,PPID,USER,RSS,VSZ,NAME,ARGS")
+        if (out.startsWith("Error") || out.startsWith("Exception")) return@withContext emptyList()
+        parsePsTable(out)
+    }
+
+    /**
+     * Reads a `ps -A -o ...` table by column offsets taken from the header row,
+     * which is the only reliable way to keep values that contain spaces.
+     */
+    private fun parsePsTable(output: String): List<ProcessInfo> {
+        val lines = output.lines().filter { it.isNotBlank() }
+        if (lines.size < 2) return emptyList()
+        val header = lines.first()
+        val starts = mutableListOf<Int>()
+        var i = 0
+        while (i < header.length) {
+            if (!header[i].isWhitespace()) {
+                starts.add(i)
+                while (i < header.length && !header[i].isWhitespace()) i++
+            } else {
+                i++
+            }
+        }
+        fun cell(line: String, index: Int): String {
+            if (index >= starts.size) return ""
+            val from = starts[index]
+            val to = if (index + 1 < starts.size) starts[index + 1] else line.length
+            if (from >= line.length) return ""
+            return line.substring(from, minOf(to, line.length)).trim()
+        }
+        return lines.drop(1).mapNotNull { line ->
+            val pid = cell(line, 0).toIntOrNull() ?: return@mapNotNull null
+            ProcessInfo(
+                pid = pid,
+                ppid = cell(line, 1).toIntOrNull() ?: 0,
+                // ps may pad short values, which lets the next column bleed
+                // into this one; keep only the first token for text columns.
+                user = cell(line, 2).substringBefore(' '),
+                memoryUsage = cell(line, 3).toLongOrNull()?.times(1024) ?: 0L,
+                virtualMemory = cell(line, 4).toLongOrNull()?.times(1024) ?: 0L,
+                name = cell(line, 5).substringBefore(' '),
+                cpuUsage = 0f,
+                state = "",
+                cmdline = cell(line, 6)
+            )
+        }
+    }
+
     override suspend fun getMemoryInfo(): MemoryInfo? = withContext(Dispatchers.IO) {
         try {
             val output = executeCommand("cat /proc/meminfo")

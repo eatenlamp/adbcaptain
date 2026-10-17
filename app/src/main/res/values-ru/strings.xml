@@ -422,4 +422,15 @@
     <string name="logcat_buffer_all">Все буферы</string>
     <string name="logcat_buffer_main">Main</string>
     <string name="logcat_buffer_events">Events</string>
+    <string name="pm_title">Все процессы</string>
+    <string name="pm_open">Все процессы</string>
+    <string name="pm_search">Фильтр по имени или pid</string>
+    <string name="pm_count">Процессов: %1$d</string>
+    <string name="pm_stop">Остановить</string>
+    <string name="pm_user">Пользователь</string>
+    <string name="pm_pid">PID %1$d  PPID %2$d</string>
+    <string name="pm_memory">RSS %1$s  VSZ %2$s</string>
+    <string name="pm_empty">Нет процессов</string>
+    <string name="pm_load_error">Не удалось прочитать таблицу процессов</string>
+    <string name="pm_close">Закрыть</string>
 </resources>

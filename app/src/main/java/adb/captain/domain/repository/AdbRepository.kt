@@ -92,6 +92,9 @@ interface AdbRepository {
     suspend fun getCpuInfo(): CpuInfo?
     suspend fun getMemoryInfo(): MemoryInfo?
     suspend fun getTopProcesses(limit: Int): List<ProcessInfo>
+
+    /** Full process table with user, parent pid and command line. */
+    suspend fun getProcesses(): List<ProcessInfo>
     suspend fun getForegroundApp(): ForegroundApp?
     suspend fun setDemoMode(enabled: Boolean)
     suspend fun getDemoMode(): Boolean
@@ -168,8 +171,18 @@ data class ProcessInfo(
     val name: String,
     val cpuUsage: Float,
     val memoryUsage: Long,
-    val state: String
-)
+    val state: String,
+    val ppid: Int = 0,
+    val user: String = "",
+    val virtualMemory: Long = 0L,
+    val cmdline: String = ""
+) {
+    /** Package that can be force stopped for this process, when it looks like one. */
+    val stoppablePackage: String?
+        get() = name.takeIf { it.contains('.') && !it.endsWith(")") }
+            ?: cmdline.trim().removePrefix("process:").split(' ').firstOrNull()
+                ?.takeIf { it.contains('.') }
+}
 
 data class ForegroundApp(
     val packageName: String,
