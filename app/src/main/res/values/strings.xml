@@ -395,4 +395,11 @@
     <string name="debug_session_idle">No session started yet</string>
     <string name="debug_session_apps">Apps seen: %1$s</string>
     <string name="debug_notes">Notes</string>
+    <string name="debug_macros_title">Macros</string>
+    <string name="debug_macros_add">Add macro</string>
+    <string name="debug_macros_name">Macro name</string>
+    <string name="debug_macros_commands">Commands (one per line)</string>
+    <string name="debug_macros_empty">No macros yet</string>
+    <string name="debug_macros_run">Run</string>
+    <string name="debug_macros_saved">Macro saved</string>
 </resources>

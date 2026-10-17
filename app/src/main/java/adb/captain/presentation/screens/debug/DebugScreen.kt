@@ -13,16 +13,21 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import adb.captain.R
@@ -35,6 +40,8 @@ fun DebugScreen(
     viewModel: DebugViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val macros by viewModel.macros.collectAsStateWithLifecycle()
+    var showAddMacro by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -126,6 +133,54 @@ fun DebugScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp)
             )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.debug_macros_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
+                )
+                TextButton(onClick = { showAddMacro = true }) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(Modifier.width(4.dp))
+                    Text(stringResource(R.string.debug_macros_add))
+                }
+            }
+            if (macros.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.debug_macros_empty),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                )
+            }
+            macros.forEach { macro ->
+                MacroRow(
+                    name = macro.name,
+                    summary = macro.commands.joinToString(" ; "),
+                    running = uiState.runningMacroId == macro.id,
+                    onRun = { viewModel.runMacro(macro) },
+                    onDelete = { viewModel.deleteMacro(macro) }
+                )
+            }
+            uiState.macroOutput?.let { out ->
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant
+                ) {
+                    Text(
+                        text = out,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
+            }
             OptionCheckbox(
                 label = stringResource(R.string.debug_system_info),
                 checked = uiState.options.systemInfo,
@@ -209,6 +264,15 @@ fun DebugScreen(
             }
         }
     }
+    if (showAddMacro) {
+        AddMacroDialog(
+            onDismiss = { showAddMacro = false },
+            onSave = { name, commands ->
+                viewModel.saveMacro(name, commands)
+                showAddMacro = false
+            }
+        )
+    }
 }
 
 @Composable
@@ -232,6 +296,90 @@ private fun OptionCheckbox(
             text = label,
             style = MaterialTheme.typography.bodyMedium
         )
+    }
+}
+
+
+
+@Composable
+private fun AddMacroDialog(
+    onDismiss: () -> Unit,
+    onSave: (String, List<String>) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var commands by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.debug_macros_title)) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(stringResource(R.string.debug_macros_name)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = commands,
+                    onValueChange = { commands = it },
+                    label = { Text(stringResource(R.string.debug_macros_commands)) },
+                    minLines = 3,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.None,
+                        autoCorrectEnabled = false
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = name.isNotBlank() && commands.isNotBlank(),
+                onClick = { onSave(name, commands.lines()) }
+            ) { Text(stringResource(R.string.debug_macros_add)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(android.R.string.cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun MacroRow(
+    name: String,
+    summary: String,
+    running: Boolean,
+    onRun: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(name, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = summary,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2
+            )
+        }
+        if (running) {
+            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+        } else {
+            TextButton(onClick = onRun) { Text(stringResource(R.string.debug_macros_run)) }
+        }
+        IconButton(onClick = onDelete) {
+            Icon(Icons.Default.Delete, contentDescription = null)
+        }
     }
 }
 

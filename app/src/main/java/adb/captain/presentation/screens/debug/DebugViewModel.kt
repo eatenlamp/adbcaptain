@@ -11,14 +11,19 @@ package adb.captain.presentation.screens.debug
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import adb.captain.domain.model.DebugSession
+import adb.captain.domain.model.Macro
 import adb.captain.domain.repository.AdbRepository
 import adb.captain.domain.usecase.BugPackUseCase
+import adb.captain.domain.usecase.MacroUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -30,11 +35,37 @@ import javax.inject.Inject
 @HiltViewModel
 class DebugViewModel @Inject constructor(
     private val useCase: BugPackUseCase,
-    private val repository: AdbRepository
+    private val repository: AdbRepository,
+    private val macroUseCase: MacroUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DebugUiState())
     val uiState: StateFlow<DebugUiState> = _uiState.asStateFlow()
+
+    val macros: StateFlow<List<Macro>> = macroUseCase.observe()
+        .catch { emit(emptyList()) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun saveMacro(name: String, commands: List<String>) {
+        viewModelScope.launch {
+            macroUseCase.save(name, commands)
+            _uiState.update { it.copy(macroNotice = name) }
+        }
+    }
+
+    fun deleteMacro(macro: Macro) {
+        viewModelScope.launch { macroUseCase.delete(macro) }
+    }
+
+    fun runMacro(macro: Macro) {
+        if (_uiState.value.runningMacroId == macro.id) return
+        _uiState.update { it.copy(runningMacroId = macro.id, macroOutput = null) }
+        viewModelScope.launch {
+            val output = runCatching { macroUseCase.run(macro) }
+                .getOrElse { "Error: ${it.message}" }
+            _uiState.update { it.copy(runningMacroId = null, macroOutput = output) }
+        }
+    }
 
     private var sessionJob: Job? = null
     private val capturedLog = mutableListOf<String>()
@@ -136,7 +167,10 @@ data class DebugUiState(
     val sessionActive: Boolean = false,
     val sessionStartedAt: Long = 0L,
     val sessionPackages: List<String> = emptyList(),
-    val notes: String = ""
+    val notes: String = "",
+    val runningMacroId: Long? = null,
+    val macroOutput: String? = null,
+    val macroNotice: String? = null
 ) {
     /** Available once a session has been started at least once. */
     fun currentSessionOrNull(logTail: List<String> = emptyList()): DebugSession? =

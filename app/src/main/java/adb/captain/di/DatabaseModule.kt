@@ -11,14 +11,31 @@ package adb.captain.di
 import android.content.Context
 import androidx.room.Room
 import adb.captain.data.local.CommanderDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import adb.captain.data.local.SettingsManager
 import adb.captain.data.local.dao.CommandDao
+import adb.captain.data.local.dao.MacroDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+
+/** Adds the macros table without touching existing command history. */
+/** Adds the macros table without touching existing command history. */
+private val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS macros (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "name TEXT NOT NULL, " +
+                "commands TEXT NOT NULL, " +
+                "createdAt INTEGER NOT NULL)"
+        )
+    }
+}
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -31,8 +48,11 @@ object DatabaseModule {
             context,
             CommanderDatabase::class.java,
             "commander_db"
-        ).build()
+        ).addMigrations(MIGRATION_1_2).build()
     }
+
+    @Provides
+    fun provideMacroDao(db: CommanderDatabase): MacroDao = db.macroDao
 
     @Provides
     fun provideCommandDao(db: CommanderDatabase): CommandDao {
@@ -44,4 +64,5 @@ object DatabaseModule {
     fun provideSettingsManager(@ApplicationContext context: Context): SettingsManager {
         return SettingsManager(context)
     }
+
 }
