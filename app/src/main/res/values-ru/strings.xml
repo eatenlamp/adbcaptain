@@ -448,4 +448,6 @@
     <string name="intent_settings">Настройки</string>
     <string name="logcat_share">Поделиться Markdown</string>
     <string name="logcat_shared">Markdown готов к отправке</string>
+    <string name="terminal_tab_new">Новая вкладка</string>
+    <string name="terminal_tab_close">Закрыть вкладку</string>
 </resources>

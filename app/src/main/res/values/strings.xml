@@ -449,4 +449,6 @@
     <string name="intent_settings">Settings</string>
     <string name="logcat_share">Share as Markdown</string>
     <string name="logcat_shared">Markdown ready to share</string>
+    <string name="terminal_tab_new">New tab</string>
+    <string name="terminal_tab_close">Close tab</string>
 </resources>

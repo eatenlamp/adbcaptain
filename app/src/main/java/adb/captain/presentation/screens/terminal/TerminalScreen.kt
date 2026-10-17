@@ -12,12 +12,14 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
@@ -111,6 +113,14 @@ fun TerminalScreen(
             .fillMaxSize()
             .imePadding() // Makes the screen resize when keyboard is open
     ) {
+        TerminalTabStrip(
+            tabs = uiState.tabs,
+            activeTabId = uiState.activeTabId,
+            onSelect = viewModel::selectTab,
+            onClose = viewModel::closeTab,
+            onNew = { viewModel.newTab() }
+        )
+
         // Beginner Welcome Banner
         Surface(
             color = MaterialTheme.colorScheme.primaryContainer,
@@ -426,5 +436,74 @@ fun TerminalScreen(
                 .imePadding()
                 .padding(bottom = 72.dp)
         )
+    }
+}
+
+@Composable
+private fun TerminalTabStrip(
+    tabs: List<TerminalTab>,
+    activeTabId: Long,
+    onSelect: (Long) -> Unit,
+    onClose: (Long) -> Unit,
+    onNew: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 4.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        tabs.forEach { tab ->
+            val active = tab.id == activeTabId
+            Row(
+                modifier = Modifier
+                    .padding(end = 4.dp)
+                    .background(
+                        if (active) MaterialTheme.colorScheme.primaryContainer
+                        else MaterialTheme.colorScheme.surface,
+                        MaterialTheme.shapes.small
+                    )
+                    .clickable { onSelect(tab.id) }
+                    .padding(start = 10.dp, end = 2.dp, top = 4.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (tab.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(10.dp),
+                        strokeWidth = 1.5.dp
+                    )
+                    Spacer(Modifier.width(4.dp))
+                }
+                Text(
+                    text = tab.title,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (active) MaterialTheme.colorScheme.onPrimaryContainer
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    modifier = Modifier.widthIn(max = 140.dp)
+                )
+                if (tabs.size > 1) {
+                    IconButton(
+                        onClick = { onClose(tab.id) },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = stringResource(R.string.terminal_tab_close),
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                }
+            }
+        }
+        IconButton(onClick = onNew, modifier = Modifier.size(30.dp)) {
+            Icon(
+                Icons.Default.Add,
+                contentDescription = stringResource(R.string.terminal_tab_new),
+                modifier = Modifier.size(18.dp)
+            )
+        }
     }
 }
