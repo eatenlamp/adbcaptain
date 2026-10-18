@@ -29,6 +29,10 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ContainedLoadingIndicator
+import androidx.compose.material3.LoadingIndicator
+import adb.captain.ui.theme.ExpressiveShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,7 +51,7 @@ import kotlinx.coroutines.launch
 /**
  * Экран терминала с цветовой подсветкой, историей и командой help.
  */
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TerminalScreen(
     initialCommand: String? = null,
@@ -124,14 +128,30 @@ fun TerminalScreen(
         // Beginner Welcome Banner
         Surface(
             color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.fillMaxWidth()
+            shape = MaterialTheme.shapes.large,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 4.dp)
         ) {
             Row(
-                modifier = Modifier.padding(12.dp),
+                modifier = Modifier.padding(14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.Terminal, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.width(12.dp))
+                Surface(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = ExpressiveShape.softBurst(),
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Default.Terminal,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                Spacer(Modifier.width(14.dp))
                 Column {
                     Text(
                         stringResource(R.string.terminal_welcome_title),
@@ -169,8 +189,10 @@ fun TerminalScreen(
             }
             
             if (uiState.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
+                ContainedLoadingIndicator(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(64.dp)
                 )
             }
         }
@@ -182,18 +204,23 @@ fun TerminalScreen(
                 .padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.End
         ) {
-            IconButton(onClick = { showHistory = !showHistory }) {
-                Icon(Icons.Default.History, contentDescription = stringResource(R.string.term_history_title))
-            }
-            IconButton(
+            ToolBarAction(
+                onClick = { showHistory = !showHistory },
+                icon = Icons.Default.History,
+                contentDescription = stringResource(R.string.term_history_title),
+                active = showHistory
+            )
+            ToolBarAction(
                 onClick = { copyToClipboard(uiState.output.joinToString("\n") { it.text }) },
+                icon = Icons.Default.ContentCopy,
+                contentDescription = stringResource(R.string.term_copy_all),
                 enabled = uiState.output.isNotEmpty()
-            ) {
-                Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.term_copy_all))
-            }
-            IconButton(onClick = { viewModel.clearOutput() }) {
-                Icon(Icons.Default.Delete, contentDescription = "Clear Output")
-            }
+            )
+            ToolBarAction(
+                onClick = { viewModel.clearOutput() },
+                icon = Icons.Default.Delete,
+                contentDescription = "Clear Output"
+            )
         }
 
         // History Panel
@@ -202,8 +229,8 @@ fun TerminalScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp),
-                tonalElevation = 2.dp,
-                shape = MaterialTheme.shapes.medium
+                tonalElevation = 3.dp,
+                shape = MaterialTheme.shapes.extraLarge
             ) {
                 Column(modifier = Modifier.padding(vertical = 4.dp)) {
                     Row(
@@ -229,42 +256,103 @@ fun TerminalScreen(
                             color = MaterialTheme.colorScheme.outline
                         )
                     } else {
-                        val historyItems = remember(uiState.history) {
-                            uiState.history
-                                .map { it.text }
-                                .distinct()
+                        val groupedHistory = remember(uiState.history) {
+                            val distinct = uiState.history
+                                .distinctBy { it.text }
                                 .take(30)
+
+                            val counts = uiState.history.groupingBy { it.text }.eachCount()
+                            val frequentTexts = counts.filter { it.value >= 2 }
+                                .keys.sortedByDescending { counts[it]!! }
+                                .take(5)
+                                .toSet()
+
+                            val frequentItems = distinct.filter { it.text in frequentTexts }
+
+                            val today = java.time.LocalDate.now()
+                            fun dateLabel(ts: java.util.Date): String {
+                                val d = ts.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                                return when {
+                                    d == today -> "today"
+                                    d == today.minusDays(1) -> "yesterday"
+                                    d.isAfter(today.minusWeeks(1)) -> "this_week"
+                                    else -> "older"
+                                }
+                            }
+
+                            val dateGroups = distinct
+                                .filter { it.text !in frequentTexts }
+                                .groupBy { dateLabel(it.timestamp) }
+
+                            val result = mutableListOf<Pair<String, List<String>>>()
+                            if (frequentItems.isNotEmpty()) {
+                                result += "frequent" to frequentItems.map { it.text }
+                            }
+                            listOf("today", "yesterday", "this_week", "older").forEach { key ->
+                                val items = dateGroups[key]
+                                if (!items.isNullOrEmpty()) {
+                                    result += key to items.map { it.text }
+                                }
+                            }
+                            result
                         }
                         LazyColumn(modifier = Modifier.heightIn(max = 260.dp)) {
-                            items(historyItems) { item ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Surface(
-                                        onClick = {
-                                            command = item
-                                            showHistory = false
-                                        },
-                                        color = Color.Transparent,
-                                        modifier = Modifier.weight(1f)
+                            groupedHistory.forEach { (groupKey, items) ->
+                                item(key = "header_$groupKey") {
+                                    val label = when (groupKey) {
+                                        "frequent" -> stringResource(R.string.term_history_frequent)
+                                        "today" -> stringResource(R.string.term_history_today)
+                                        "yesterday" -> stringResource(R.string.term_history_yesterday)
+                                        "this_week" -> stringResource(R.string.term_history_this_week)
+                                        else -> stringResource(R.string.term_history_older)
+                                    }
+                                    Row(
+                                        modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(10.dp)
+                                                .background(MaterialTheme.colorScheme.primary, ExpressiveShape.gem())
+                                        )
+                                        Spacer(Modifier.width(8.dp))
                                         Text(
-                                            text = item,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontFamily = JetBrainsMono,
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                                            text = label,
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = MaterialTheme.colorScheme.primary
                                         )
                                     }
-                                    val isFavorite = favorites.contains(item)
-                                    IconButton(onClick = { viewModel.toggleFavorite(item) }) {
-                                        Icon(
-                                            imageVector = if (isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
-                                            contentDescription = stringResource(
-                                                if (isFavorite) R.string.term_favorite_remove else R.string.term_favorite_add
-                                            ),
-                                            tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                                        )
+                                }
+                                items(items, key = { "$groupKey:$it" }) { item ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Surface(
+                                            onClick = {
+                                                command = item
+                                                showHistory = false
+                                            },
+                                            color = Color.Transparent,
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Text(
+                                                text = item,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontFamily = JetBrainsMono,
+                                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                                            )
+                                        }
+                                        val isFavorite = favorites.contains(item)
+                                        IconButton(onClick = { viewModel.toggleFavorite(item) }) {
+                                            Icon(
+                                                imageVector = if (isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
+                                                contentDescription = stringResource(
+                                                    if (isFavorite) R.string.term_favorite_remove else R.string.term_favorite_add
+                                                ),
+                                                tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -327,6 +415,7 @@ fun TerminalScreen(
                                     .clickable { viewModel.toggleFavorite(favorite) }
                             )
                         },
+                        shape = ExpressiveShape.pill(),
                         modifier = Modifier.padding(end = 6.dp)
                     )
                 }
@@ -357,6 +446,7 @@ fun TerminalScreen(
                 AssistChip(
                     onClick = { viewModel.executeCommand(cmd) },
                     label = { Text(stringResource(labelRes)) },
+                    shape = ExpressiveShape.cookie(),
                     modifier = Modifier.padding(end = 4.dp)
                 )
             }
@@ -381,6 +471,7 @@ fun TerminalScreen(
                         SuggestionChip(
                             onClick = { command = suggestion },
                             label = { Text(suggestion, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
+                            shape = ExpressiveShape.pill(),
                             modifier = Modifier.padding(end = 4.dp)
                         )
                     }
@@ -420,11 +511,26 @@ fun TerminalScreen(
 
             Spacer(Modifier.width(8.dp))
 
-            IconButton(
+            val canSend = command.isNotBlank() && !uiState.isLoading
+            Surface(
                 onClick = { submit(command) },
-                enabled = command.isNotBlank() && !uiState.isLoading
+                enabled = canSend,
+                shape = ExpressiveShape.pill(),
+                color = if (canSend) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier
+                    .size(52.dp)
+                    .padding(4.dp)
             ) {
-                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send")
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.Send,
+                        contentDescription = "Send",
+                        tint = if (canSend) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
             }
         }
     }
@@ -439,6 +545,43 @@ fun TerminalScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ToolBarAction(
+    onClick: () -> Unit,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String,
+    enabled: Boolean = true,
+    active: Boolean = false
+) {
+    Surface(
+        onClick = onClick,
+        enabled = enabled,
+        shape = ExpressiveShape.circle(),
+        color = when {
+            active -> MaterialTheme.colorScheme.primaryContainer
+            else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        },
+        modifier = Modifier
+            .size(40.dp)
+            .padding(3.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = when {
+                    active -> MaterialTheme.colorScheme.onPrimaryContainer
+                    enabled -> MaterialTheme.colorScheme.onSurfaceVariant
+                    else -> MaterialTheme.colorScheme.outline
+                },
+                modifier = Modifier.size(19.dp)
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun TerminalTabStrip(
     tabs: List<TerminalTab>,
@@ -463,18 +606,15 @@ private fun TerminalTabStrip(
                     .background(
                         if (active) MaterialTheme.colorScheme.primaryContainer
                         else MaterialTheme.colorScheme.surface,
-                        MaterialTheme.shapes.small
+                        if (active) ExpressiveShape.pill() else ExpressiveShape.cookie()
                     )
                     .clickable { onSelect(tab.id) }
                     .padding(start = 10.dp, end = 2.dp, top = 4.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (tab.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(10.dp),
-                        strokeWidth = 1.5.dp
-                    )
-                    Spacer(Modifier.width(4.dp))
+                    LoadingIndicator(modifier = Modifier.size(12.dp))
+                    Spacer(Modifier.width(6.dp))
                 }
                 Text(
                     text = tab.title,
@@ -498,12 +638,20 @@ private fun TerminalTabStrip(
                 }
             }
         }
-        IconButton(onClick = onNew, modifier = Modifier.size(30.dp)) {
-            Icon(
-                Icons.Default.Add,
-                contentDescription = stringResource(R.string.terminal_tab_new),
-                modifier = Modifier.size(18.dp)
-            )
+        Surface(
+            onClick = onNew,
+            shape = ExpressiveShape.softBurst(),
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            modifier = Modifier.size(34.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = stringResource(R.string.terminal_tab_new),
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
         }
     }
 }

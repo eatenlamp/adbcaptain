@@ -40,6 +40,11 @@
     <string name="term_history_empty">No commands yet</string>
     <string name="term_history_clear">Clear history</string>
     <string name="term_history_hint">Tap a command to fill it</string>
+    <string name="term_history_today">Today</string>
+    <string name="term_history_yesterday">Yesterday</string>
+    <string name="term_history_this_week">This week</string>
+    <string name="term_history_older">Older</string>
+    <string name="term_history_frequent">Frequent</string>
     <string name="term_favorites_title">Pinned</string>
     <string name="term_favorite_add">Pin command</string>
     <string name="term_favorite_remove">Unpin command</string>

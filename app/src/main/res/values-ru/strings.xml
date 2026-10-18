@@ -39,6 +39,11 @@
     <string name="term_history_empty">Команд пока нет</string>
     <string name="term_history_clear">Очистить историю</string>
     <string name="term_history_hint">Нажмите на команду, чтобы подставить её</string>
+    <string name="term_history_today">Сегодня</string>
+    <string name="term_history_yesterday">Вчера</string>
+    <string name="term_history_this_week">На этой неделе</string>
+    <string name="term_history_older">Раньше</string>
+    <string name="term_history_frequent">Частые</string>
     <string name="term_favorites_title">Закреплённые</string>
     <string name="term_favorite_add">Закрепить команду</string>
     <string name="term_favorite_remove">Открепить команду</string>
