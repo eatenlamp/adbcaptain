@@ -5,7 +5,9 @@ A debugging workspace, built around one idea: stop copying things by hand.
 Logcat:
 - Save the filtered view to a file: a Save button writes exactly what you see, with the applied filters listed in the file header
 - Filter by app: tap the PID label of any entry, combine it with search and level chips
-- Follow foreground app: keep Logcat locked to whatever app is currently in front
+- Follow foreground app: keep Logcat locked to whatever app is currently in the front
+- Timeline: main and events buffers in a single stream, with chips to switch between All, Main and Events
+- Share as Markdown: send the filtered log to any app as a readable .md file, ideal for bug reports
 
 Debug tab:
 - Bug Pack collects a shareable ZIP in one tap: system properties, package and activity dumps, main and events logcat, processes, installed packages, battery, memory and CPU, each with a checkbox
@@ -18,14 +20,29 @@ App Inspector:
 - Permissions split into dangerous and normal, with granted and denied state
 - Install source shows which package installed the app
 
+Process Manager:
+- The real process table with PID, PPID, user, memory and command line, not just the top by CPU
+- Search by process name, PID or user, and force-stop any app from the list
+
+Intent Launcher:
+- Build an intent by hand: action, data URI, extras and component, with a live preview of the resulting command
+- Presets for opening a URL, sending text, dialling a number and jumping to settings
+- Send it with one tap, straight from the Apps screen
+
 Command Palette:
 - Search icon in the top bar reaches every screen, every saved macro and a set of common shell commands
 - Running a command jumps to the terminal and executes it right away
 
 Terminal:
+- Tabs: run several sessions at once, each with its own output buffer and its own running command
+- History Groups: commands are grouped into Frequent, Today, Yesterday, This week and Older
 - Event Log now reads the real events buffer instead of repeating the main log; added Log Tail for the old behaviour
 - Input fields no longer change the case of what you type
+
+Appearance:
+- Rebuilt on Material 3 Expressive, with morphing progress indicators and rounder shapes across every screen
 
 Fixes:
 - Logcat stayed empty in some cases because of a broken level check
 - Rooms database migrations can no longer prevent the app from starting
+- The send button no longer falls off the edge of the screen on wide displays

@@ -2,12 +2,14 @@ ADB Captain runs ADB commands right on your phone. No computer, no root - it wor
 
 What's inside:
 
-- Terminal. pm, am, dumpsys, settings, input - anything adb shell takes. Autocomplete pulls from your command history, and you can pin the commands you use most.
-- Apps. Every installed package in one list, user and system apps separated. Each one gets a plain safety rating, so you know what's safe to disable or remove.
+- Terminal. pm, am, dumpsys, settings, input - anything adb shell takes. Several sessions at once, each with its own output and its own command still running. Autocomplete pulls from your command history, history is grouped by how recent it is, and you can pin the commands you use most.
+- Debugging workspace. One tab for the job: a bug report ZIP, a timed session that records what you did and buffers the log while you reproduce a crash, saved macros for chains of commands, and crash logs grouped per app with the full stack trace.
+- Apps. Every installed package in one list, user and system apps separated. Each one gets a plain safety rating, so you know what's safe to disable or remove. An inspector shows activities, services, receivers and providers with the permissions they need, and an intent launcher lets you build and fire an intent by hand.
+- Processes. The real table with PID, parent, user and memory, searchable, with force-stop on any row.
 - Devices. Model, Android version, battery, connection status. Reboot and screenshots from the same screen.
 - Wireless ADB. Pair and connect to any device over Wi-Fi, then run shell commands on it. Saved devices, one-tap reconnect, optional auto-reconnect.
-- Logcat. Live system log, filterable by level and text.
+- Logcat. Live system log, filterable by level and text. Follow whatever app is in the front, save exactly what you see to a file, and share it as Markdown for a bug report.
 - Sideload and tools. Install an APK from storage, record the screen, flip Wi-Fi, Bluetooth or airplane mode, type text, open links.
-- Appearance. Light or dark theme, five accent palettes, or follow the system colors with Material You.
+- Appearance. Material 3 Expressive, with light or dark theme, five accent palettes, or follow the system colors with Material You.
 
 AGPL-3.0. No ads, no analytics, no accounts.
