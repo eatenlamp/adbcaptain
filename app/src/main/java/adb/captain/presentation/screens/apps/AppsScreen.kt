@@ -22,6 +22,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import adb.captain.ui.theme.ExpressiveProgress
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -233,7 +235,7 @@ fun AppsScreen(
 
             if (uiState.isLoading) {
                 Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                    ExpressiveProgress.contained()
                 }
             } else {
                 LazyColumn(
@@ -427,7 +429,7 @@ fun AppDetailsDialog(
         text = {
             if (isLoading) {
                 Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                    ExpressiveProgress.contained()
                 }
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -652,7 +654,7 @@ fun AppOpsSection(
 
         if (isLoading) {
             Spacer(Modifier.height(8.dp))
-            LinearProgressIndicator(Modifier.fillMaxWidth())
+            ExpressiveProgress.indeterminateBar(Modifier.fillMaxWidth())
         }
 
         appOps?.let { ops ->

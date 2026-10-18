@@ -17,6 +17,8 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import adb.captain.ui.theme.ExpressiveProgress
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -135,8 +137,8 @@ fun CpuCard(cpu: CpuInfo?) {
                 }
             }
             Spacer(Modifier.height(16.dp))
-            LinearProgressIndicator(
-                progress = { (cpu?.totalUsage ?: 0f) / 100f },
+            ExpressiveProgress.bar(
+                progress = (cpu?.totalUsage ?: 0f) / 100f,
                 modifier = Modifier.fillMaxWidth(),
                 color = cpuColor(cpu?.totalUsage ?: 0f)
             )
@@ -190,8 +192,8 @@ fun MemoryCard(memory: MemoryInfo?) {
             }
             Spacer(Modifier.height(16.dp))
             if (memory != null) {
-                LinearProgressIndicator(
-                    progress = { memoryUsagePercent(memory) / 100f },
+                ExpressiveProgress.bar(
+                    progress = memoryUsagePercent(memory) / 100f,
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -331,7 +333,7 @@ private fun ProcessListDialog(
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(12.dp),
                         horizontalArrangement = Arrangement.Center
-                    ) { CircularProgressIndicator() }
+                    ) { ExpressiveProgress.indicator(size = 22.dp) }
                 } else if (failed) {
                     Text(stringResource(R.string.pm_load_error))
                 } else {

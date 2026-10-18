@@ -30,6 +30,9 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import adb.captain.ui.theme.ExpressiveProgress
+import adb.captain.ui.theme.ExpressiveShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -131,6 +134,7 @@ fun LogcatScreen(
             Column(horizontalAlignment = Alignment.End) {
                 SmallFloatingActionButton(
                     onClick = { viewModel.toggleFollowForeground() },
+                    shape = ExpressiveShape.circle(),
                     containerColor = if (uiState.followForeground) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer
                 ) {
                     Icon(Icons.Default.MyLocation, contentDescription = followLabel)
@@ -138,6 +142,7 @@ fun LogcatScreen(
                 Spacer(Modifier.height(8.dp))
                 SmallFloatingActionButton(
                     onClick = { requestShare() },
+                    shape = ExpressiveShape.circle(),
                     containerColor = MaterialTheme.colorScheme.secondaryContainer
                 ) {
                     Icon(Icons.Default.Share, contentDescription = shareLabel)
@@ -145,6 +150,7 @@ fun LogcatScreen(
                 Spacer(Modifier.height(8.dp))
                 SmallFloatingActionButton(
                     onClick = { requestSave() },
+                    shape = ExpressiveShape.circle(),
                     containerColor = MaterialTheme.colorScheme.tertiaryContainer
                 ) {
                     Icon(Icons.Default.Save, contentDescription = saveLabel)
@@ -168,6 +174,7 @@ fun LogcatScreen(
                 }
                 SmallFloatingActionButton(
                     onClick = { viewModel.clearLogs() },
+                    shape = ExpressiveShape.circle(),
                     containerColor = MaterialTheme.colorScheme.secondaryContainer
                 ) {
                     Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.logcat_clear))
@@ -175,12 +182,17 @@ fun LogcatScreen(
                 Spacer(Modifier.height(12.dp))
                 FloatingActionButton(
                     onClick = { viewModel.toggleStream() },
+                    shape = ExpressiveShape.sunny(),
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 ) {
-                    Icon(
-                        if (uiState.isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
-                        contentDescription = stringResource(R.string.logcat_toggle)
-                    )
+                    if (!uiState.isPaused) {
+                        ExpressiveProgress.indicator(size = 24.dp)
+                    } else {
+                        Icon(
+                            if (uiState.isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
+                            contentDescription = stringResource(R.string.logcat_toggle)
+                        )
+                    }
                 }
             }
         }
@@ -207,6 +219,7 @@ fun LogcatScreen(
                 if (uiState.pidFilter != null) {
                     AssistChip(
                         onClick = { viewModel.setPidFilter(null) },
+                        shape = ExpressiveShape.pill(),
                         label = {
                             Text(stringResource(R.string.logcat_app_filter, uiState.pidFilter!!))
                         },
@@ -289,6 +302,7 @@ fun LogcatScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LevelChip(
     label: String,
@@ -297,6 +311,7 @@ fun LevelChip(
     onClick: () -> Unit
 ) {
     FilterChip(
+        shape = ExpressiveShape.cookie(),
         selected = selected,
         onClick = onClick,
         label = {
@@ -310,10 +325,11 @@ fun LevelChip(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun BufferChip(label: String, selected: Boolean, onClick: () -> Unit) {
     FilterChip(
+        shape = ExpressiveShape.pill(),
         selected = selected,
         onClick = onClick,
         label = { Text(label, style = MaterialTheme.typography.labelSmall) }

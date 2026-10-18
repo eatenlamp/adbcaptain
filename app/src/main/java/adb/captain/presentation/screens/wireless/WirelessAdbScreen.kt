@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import adb.captain.ui.theme.ExpressiveProgress
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -150,7 +151,7 @@ private fun ConnectionCard(
                 )
                 if (isBusy) {
                     Spacer(Modifier.width(12.dp))
-                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                    ExpressiveProgress.indicator(size = 18.dp)
                 }
             }
 

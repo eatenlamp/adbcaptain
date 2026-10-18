@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.*
+import adb.captain.ui.theme.ExpressiveProgress
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -138,7 +139,7 @@ fun SideloadScreen(
                     }
                     if (uiState.isInstalling) {
                         Spacer(Modifier.width(12.dp))
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                        ExpressiveProgress.indicator(size = 24.dp)
                     }
                 }
             }
@@ -334,7 +335,7 @@ fun MacrosSection(
             enabled = !isRunning && script.isNotBlank()
         ) {
             if (isRunning) {
-                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                ExpressiveProgress.indicator(size = 18.dp, color = MaterialTheme.colorScheme.onPrimary)
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.macros_running))
             } else {

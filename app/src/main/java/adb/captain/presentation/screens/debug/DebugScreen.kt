@@ -22,6 +22,9 @@ import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import adb.captain.ui.theme.ExpressiveProgress
+import adb.captain.ui.theme.ExpressiveShape
 import androidx.compose.runtime.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
@@ -256,7 +259,7 @@ fun DebugScreen(
                         .padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    ExpressiveProgress.contained(size = 72.dp)
                 }
             }
 
@@ -379,7 +382,7 @@ private fun MacroRow(
             )
         }
         if (running) {
-            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+            ExpressiveProgress.indicator(size = 20.dp)
         } else {
             TextButton(onClick = onRun) { Text(stringResource(R.string.debug_macros_run)) }
         }
