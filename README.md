@@ -1,8 +1,16 @@
 # ADB Captain
 
-An ADB toolkit for Android powered by Shizuku. No root.
+<p align="center">
+  <a href="https://f-droid.org/packages/adb.captain/"><img src="https://img.shields.io/f-droid/v/adb.captain.svg" alt="F-Droid"></a>
+  <a href="https://rustore.ru/apps/adb.captain.rustore/"><img src="https://static.rustore.ru/static/images/app-badge.svg" alt="RuStore" height="32"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg" alt="AGPL-3.0"></a>
+</p>
 
-App for debugging and managing Android devices: ADB commands, app management, logs, device info. Jetpack Compose, Material 3.
+**An ADB shell terminal, logcat viewer, package manager and debugger that run on your phone. No root, no computer, no PC cable - just [Shizuku](https://shizuku.rikka.app/).**
+
+Run `pm`, `am`, `dumpsys`, `settings`, `input`, `logcat` and anything else `adb shell` accepts, straight from an Android app. Inspect apps and their permissions, watch logs live, collect a bug report as a shareable ZIP, and see why an app crashed.
+
+Keywords: `adb`, `adb shell`, `adb client`, `android terminal`, `android shell`, `shizuku`, `shizuku manager`, `logcat`, `logcat viewer`, `android debugger`, `android debug`, `package manager`, `app inspector`, `no root adb`, `rootless adb`, `android developer`, `bug report`, `crash logs`, `process manager`.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/8ee96161-fa27-43b7-8946-da28c2ee092d" width="18%">
@@ -35,6 +43,19 @@ App for debugging and managing Android devices: ADB commands, app management, lo
 **Appearance** - built on Material 3 Expressive, with morphing progress indicators and rounder shapes across every screen.
 
 **Settings** - dark theme, history and auto-complete, Shizuku check, languages.
+
+---
+
+## Install
+
+- **F-Droid** - <https://f-droid.org/packages/adb.captain/>
+- **RuStore** - <https://rustore.ru/apps/adb.captain.rustore/>
+- **GitHub Releases** - <https://github.com/eatenlamp/adbcaptain/releases>
+
+F-Droid users get updates automatically once a new version is published here. GitHub Releases are
+signed with the project key; RuStore ships a separately signed build under its own certificate.
+
+Shizuku is required, because that is what gives the app shell permissions without root.
 
 ---
 

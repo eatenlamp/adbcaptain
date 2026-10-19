@@ -33,11 +33,14 @@ object LogcatParser {
 
     private val SPACE_REGEX = Regex("\\s+")
     private val PID_REGEX = Regex("""PID:(\d+)""")
+    private val PAREN_SPACE_REGEX = Regex("""\(\s+""")
 
     fun parse(line: String): LogEntry? {
         val trimmed = line.trim()
         if (trimmed.isEmpty() || trimmed.startsWith("------")) return null
-        val parts = SPACE_REGEX.split(trimmed)
+        // logcat pads the pid inside the parentheses of the time format, as in
+        // `I/Tag( 1234):`. Glue it back so tag, pid and message stay in one token.
+        val parts = SPACE_REGEX.split(PAREN_SPACE_REGEX.replace(trimmed, "("))
         if (parts.size < 3) return null
         return try {
             when {
@@ -54,7 +57,7 @@ object LogcatParser {
                 }
                 // time
                 parts.size >= 3 && isDateToken(parts[0]) && isTimeToken(parts[1]) &&
-                    parts[2].length >= 3 && isLevelChar(parts[2]) && parts[2][1] == '/' -> {
+                    parts[2].length >= 3 && isLevelChar(parts[2].substring(0, 1)) && parts[2][1] == '/' -> {
                     val levelChar = parts[2][0]
                     val tagAndPid = parts[2].substringAfter('/')
                     val tag = tagAndPid.substringBefore('(').removeSuffix(":").ifEmpty { "Unknown" }
