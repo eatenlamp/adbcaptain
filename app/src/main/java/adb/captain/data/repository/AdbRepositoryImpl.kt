@@ -42,7 +42,7 @@ import javax.inject.Inject
  * Реализация репозитория ADB с использованием Shizuku.
  */
 class AdbRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val mediaStoreWriter: MediaStoreWriter
 ) : AdbRepository {
 

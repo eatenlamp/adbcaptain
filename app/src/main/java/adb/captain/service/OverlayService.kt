@@ -28,6 +28,7 @@ import android.os.Looper
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
+import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -275,7 +276,7 @@ class OverlayService : Service() {
             addView(menuPanel)
         }
 
-        val wm = windowManager.defaultDisplay.width
+        val wm = rightContentEdge()
         val windowType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         } else {
@@ -561,6 +562,26 @@ class OverlayService : Service() {
             setColor(color)
             cornerRadius = radius.toFloat()
             stroke?.let { setStroke(it.first, it.second) }
+        }
+
+    /**
+     * Right edge of the area the overlay may occupy, in pixels.
+     *
+     * Display.getWidth() has been deprecated since API 13 and WindowManager's default display
+     * since API 30, and neither accounts for a display cutout or a gesture bar. Since the app
+     * itself offers wm size and wm density in the terminal, those geometry changes are exactly
+     * when the old lookup returned stale values and left the bubble partly off screen.
+     */
+    private fun rightContentEdge(): Int =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val metrics = windowManager.currentWindowMetrics
+            val insets = metrics.windowInsets.getInsetsIgnoringVisibility(
+                WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout()
+            )
+            metrics.bounds.width() - insets.right
+        } else {
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.width
         }
 
     private fun dp(value: Int): Int =

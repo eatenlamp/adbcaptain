@@ -28,7 +28,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SideloadViewModel @Inject constructor(
     private val useCase: SideloadUseCase,
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SideloadUiState())

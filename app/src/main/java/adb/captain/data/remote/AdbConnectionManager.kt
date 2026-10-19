@@ -9,6 +9,8 @@
 package adb.captain.data.remote
 
 import android.content.Context
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
 import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.muntashirakon.adb.AbsAdbConnectionManager
@@ -21,9 +23,14 @@ import java.security.PublicKey
 import java.security.SecureRandom
 import java.security.cert.Certificate
 import java.security.cert.CertificateFactory
+import java.security.KeyStore
 import java.security.spec.PKCS8EncodedKeySpec
 import java.util.Date
 import java.util.Random
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
 import javax.inject.Inject
 import javax.inject.Singleton
 import android.sun.security.x509.AlgorithmId
@@ -48,28 +55,116 @@ import android.sun.security.x509.X509CertInfo
  */
 @Singleton
 class AdbConnectionManager @Inject constructor(
-    @ApplicationContext context: Context
+    @param:ApplicationContext private val appContext: Context
 ) : AbsAdbConnectionManager() {
 
     private val privateKey: PrivateKey
     private val certificate: Certificate
 
     init {
-        val keyFile = File(context.filesDir, KEY_FILE)
-        val certFile = File(context.filesDir, CERT_FILE)
-        val loaded = loadKeyPair(keyFile, certFile)
+        val certFile = File(appContext.filesDir, CERT_FILE)
+        val legacyKeyFile = File(appContext.filesDir, KEY_FILE)
+        val secureKeyFile = File(appContext.filesDir, SECURE_KEY_FILE)
+
+        // The envelope written by this version wins, but a key pair stored by any older
+        // install is still read verbatim, so upgrading never forces a re-pair.
+        val secure = loadSecureKeyPair(secureKeyFile, certFile)
+        val legacy = if (secure == null) loadKeyPair(legacyKeyFile, certFile) else null
+        val loaded = secure ?: legacy
+
         if (loaded != null) {
             privateKey = loaded.first
             certificate = loaded.second
+            if (legacy != null) {
+                // Move an existing plaintext key behind the Android KeyStore. The encrypted
+                // copy is verified before the old file is removed, and any failure here is
+                // non fatal: the key stays where it was and pairing keeps working.
+                runCatching { storeSecureKeyPair(secureKeyFile, privateKey, certificate) }
+                    .onSuccess {
+                        legacyKeyFile.delete()
+                        Log.i(TAG, "Stored ADB key migrated to the Android KeyStore")
+                    }
+                    .onFailure { Log.w(TAG, "Keeping the ADB key in its previous form", it) }
+            }
         } else {
             val generated = generateKeyPair()
             privateKey = generated.first
             certificate = generated.second
             runCatching {
-                keyFile.writeBytes(privateKey.encoded)
+                storeSecureKeyPair(secureKeyFile, privateKey, certificate)
                 certFile.writeBytes(certificate.encoded)
+            }.onFailure {
+                Log.w(TAG, "Storing the ADB key without encryption", it)
+                runCatching {
+                    legacyKeyFile.writeBytes(privateKey.encoded)
+                    certFile.writeBytes(certificate.encoded)
+                }
             }
         }
+    }
+
+    /**
+     * Wraps the ADB private key in AES-GCM with a key that lives in the Android KeyStore,
+     * so the bytes on disk are useless on their own. Layout is a one byte IV length, the
+     * IV, then the ciphertext.
+     */
+    private fun storeSecureKeyPair(keyFile: File, privateKey: PrivateKey, certificate: Certificate) {
+        val cipher = Cipher.getInstance(TRANSFORMATION)
+        cipher.init(Cipher.ENCRYPT_MODE, wrappingKey())
+        val ciphertext = cipher.doFinal(privateKey.encoded)
+        val iv = cipher.iv
+        keyFile.outputStream().use { out ->
+            out.write(iv.size)
+            out.write(iv)
+            out.write(ciphertext)
+        }
+        File(appContext.filesDir, CERT_FILE).writeBytes(certificate.encoded)
+        // Read it straight back, so a truncated or miswritten file is caught here and
+        // never becomes the only copy of the key.
+        val verified = loadSecureKeyPair(keyFile, File(appContext.filesDir, CERT_FILE))
+        check(verified != null && verified.first == privateKey) { "secure ADB key store failed verification" }
+    }
+
+    private fun loadSecureKeyPair(keyFile: File, certFile: File): Pair<PrivateKey, Certificate>? {
+        if (!keyFile.exists() || !certFile.exists()) return null
+        return runCatching {
+            val stored = keyFile.readBytes()
+            require(stored.size > 1) { "secure key file is empty" }
+            val ivSize = stored[0].toInt()
+            require(ivSize in 1..32 && stored.size > ivSize + 1) { "secure key file is malformed" }
+            val iv = stored.copyOfRange(1, ivSize + 1)
+            val ciphertext = stored.copyOfRange(ivSize + 1, stored.size)
+            val cipher = Cipher.getInstance(TRANSFORMATION)
+            cipher.init(Cipher.DECRYPT_MODE, wrappingKey(), GCMParameterSpec(GCM_TAG_BITS, iv))
+            val key = KeyFactory.getInstance(KEY_ALGORITHM)
+                .generatePrivate(PKCS8EncodedKeySpec(cipher.doFinal(ciphertext)))
+            val cert = ByteArrayInputStream(certFile.readBytes()).use {
+                CertificateFactory.getInstance("X.509").generateCertificate(it)
+            }
+            key to cert
+        }.onFailure { Log.w(TAG, "Unable to decrypt the stored ADB key pair", it) }.getOrNull()
+    }
+
+    /**
+     * The wrapping key is created on first use and never leaves the KeyStore. If the user
+     * changes their screen lock the KeyStore entry can be invalidated, in which case this
+     * throws and the caller falls back to regenerating a key pair.
+     */
+    private fun wrappingKey(): SecretKey {
+        val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
+        (keyStore.getEntry(WRAPPING_KEY_ALIAS, null) as? KeyStore.SecretKeyEntry)?.let { return it.secretKey }
+        val generator = KeyGenerator.getInstance(AES_ALGORITHM, ANDROID_KEYSTORE)
+        generator.init(
+            KeyGenParameterSpec.Builder(
+                WRAPPING_KEY_ALIAS,
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+            )
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setKeySize(WRAPPING_KEY_BITS)
+                .build()
+        )
+        return generator.generateKey()
     }
 
     override fun getPrivateKey(): PrivateKey = privateKey
@@ -130,7 +225,15 @@ class AdbConnectionManager @Inject constructor(
     companion object {
         private const val TAG = "AdbConnectionManager"
         private const val KEY_FILE = "wireless_adb_key.pk8"
+        private const val SECURE_KEY_FILE = "wireless_adb_key.pk8.enc"
         private const val CERT_FILE = "wireless_adb_cert.der"
+        private const val ANDROID_KEYSTORE = "AndroidKeyStore"
+        private const val WRAPPING_KEY_ALIAS = "adbcaptain_wireless_adb_key"
+        private const val WRAPPING_KEY_BITS = 256
+        private const val GCM_TAG_BITS = 128
+        private const val KEY_ALGORITHM = "RSA"
+        private const val AES_ALGORITHM = "AES"
+        private const val TRANSFORMATION = "AES/GCM/NoPadding"
         private const val KEY_SIZE_BITS = 2048
         private const val CERT_VALIDITY_MS = 10L * 365 * 24 * 60 * 60 * 1000
     }

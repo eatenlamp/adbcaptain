@@ -33,7 +33,7 @@ import javax.inject.Inject
  * там пишем в публичную папку и сканируем её.
  */
 class MediaStoreWriter @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) {
 
     fun timestamp(): String =
