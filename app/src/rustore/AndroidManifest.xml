@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Store build only. The billing client returns the result of a purchase as a
+    deep link, so the activity has to be able to receive it. The scheme is
+    configured with the rustoreDeeplinkScheme property.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="adbcaptainrustore" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

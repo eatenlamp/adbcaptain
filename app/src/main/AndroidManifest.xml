@@ -23,7 +23,7 @@
       signing certificate, because any app can request a normal permission.
     -->
     <permission
-        android:name="adb.captain.permission.EXECUTE_COMMANDS"
+        android:name="${applicationId}.permission.EXECUTE_COMMANDS"
         android:protectionLevel="normal" />
 
 
@@ -81,7 +81,7 @@
         <service
             android:name=".ipc.ExecutionService"
             android:exported="true"
-            android:permission="adb.captain.permission.EXECUTE_COMMANDS">
+            android:permission="${applicationId}.permission.EXECUTE_COMMANDS">
             <intent-filter>
                 <action android:name="adb.captain.action.EXECUTE" />
             </intent-filter>

@@ -13,6 +13,8 @@ import androidx.lifecycle.viewModelScope
 import adb.captain.domain.model.DebugSession
 import adb.captain.domain.model.CrashReport
 import adb.captain.domain.model.Macro
+import adb.captain.domain.model.ProFeature
+import adb.captain.domain.repository.ProRepository
 import adb.captain.domain.repository.AdbRepository
 import adb.captain.domain.usecase.BugPackUseCase
 import adb.captain.domain.usecase.MacroUseCase
@@ -32,12 +34,14 @@ import java.io.ByteArrayOutputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import javax.inject.Inject
+import adb.captain.domain.model.ProLimits
 
 @HiltViewModel
 class DebugViewModel @Inject constructor(
     private val useCase: BugPackUseCase,
     private val repository: AdbRepository,
-    private val macroUseCase: MacroUseCase
+    private val macroUseCase: MacroUseCase,
+    private val proRepository: ProRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DebugUiState())
@@ -46,6 +50,13 @@ class DebugViewModel @Inject constructor(
     val macros: StateFlow<List<Macro>> = macroUseCase.observe()
         .catch { emit(emptyList()) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /**
+     * Whether another macro may be saved. The free build of the store is
+     * limited, the FOSS build never is.
+     */
+    fun canSaveMacro(currentCount: Int): Boolean =
+        proRepository.isUnlocked(ProFeature.UNLIMITED_MACROS) || currentCount < ProLimits.FREE_MACRO_COUNT
 
     fun saveMacro(name: String, commands: List<String>) {
         viewModelScope.launch {

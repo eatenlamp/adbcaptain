@@ -153,7 +153,19 @@ fun DebugScreen(
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f)
                 )
-                TextButton(onClick = { showAddMacro = true }) {
+                TextButton(
+                    onClick = {
+                        if (viewModel.canSaveMacro(macros.size)) {
+                            showAddMacro = true
+                        } else {
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    context.getString(R.string.debug_macros_limit)
+                                )
+                            }
+                        }
+                    }
+                ) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(Modifier.width(4.dp))
                     Text(stringResource(R.string.debug_macros_add))

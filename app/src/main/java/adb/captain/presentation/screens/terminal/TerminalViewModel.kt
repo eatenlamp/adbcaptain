@@ -24,6 +24,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * Terminal state is split into tabs. Each tab keeps its own buffer and its own
@@ -119,6 +122,27 @@ class TerminalViewModel @Inject constructor(
             state.copy(
                 tabs = state.tabs.map { if (it.id == tabId) it.copy(output = emptyList()) else it }
             )
+        }
+    }
+
+    /**
+     * Builds a Markdown report of the current tab, ready to be shared.
+     */
+    fun exportMarkdown(): String {
+        val tab = activeTab
+        val title = tab?.title ?: "Terminal"
+        val lines = tab?.output?.map { it.text } ?: emptyList()
+        return buildString {
+            appendLine("# $title")
+            appendLine()
+            appendLine("- Exported: ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())}")
+            appendLine("- Lines: ${lines.size}")
+            appendLine()
+            appendLine("## Output")
+            appendLine()
+            appendLine("```text")
+            lines.forEach { appendLine(it) }
+            appendLine("```")
         }
     }
 

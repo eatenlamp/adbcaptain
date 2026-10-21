@@ -40,6 +40,7 @@
     <string name="term_history_empty">No commands yet</string>
     <string name="term_history_clear">Clear history</string>
     <string name="term_history_hint">Tap a command to fill it</string>
+    <string name="debug_macros_limit">The free version keeps three macros. Upgrade to Pro for unlimited macros.</string>
     <string name="term_history_today">Today</string>
     <string name="term_history_yesterday">Yesterday</string>
     <string name="term_history_this_week">This week</string>

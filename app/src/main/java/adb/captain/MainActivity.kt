@@ -8,6 +8,7 @@
 
 package adb.captain
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -42,18 +43,25 @@ import adb.captain.presentation.screens.files.FilesScreen
 import adb.captain.presentation.screens.monitor.MonitorScreen
 import adb.captain.presentation.screens.debug.DebugScreen
 import adb.captain.presentation.screens.wireless.WirelessAdbScreen
+import adb.captain.data.store.StoreBilling
 import adb.captain.ui.theme.ADBCaptainTheme
 import adb.captain.ui.theme.AppTheme
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import javax.inject.Inject
 import dagger.hilt.android.AndroidEntryPoint
 import rikka.shizuku.Shizuku
 
 @OptIn(ExperimentalMaterial3Api::class)
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), Shizuku.OnRequestPermissionResultListener {
+
+    @Inject
+    lateinit var storeBilling: StoreBilling
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        storeBilling.onNewIntent(intent)
 
         if (ShizukuManager.isShizukuRunning() && !ShizukuManager.checkShizukuPermission()) {
             ShizukuManager.requestShizukuPermission(this)
@@ -220,6 +228,11 @@ class MainActivity : AppCompatActivity(), Shizuku.OnRequestPermissionResultListe
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        storeBilling.onNewIntent(intent)
     }
 
     override fun onDestroy() {

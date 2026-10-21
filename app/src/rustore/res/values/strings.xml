@@ -238,4 +238,11 @@
     <string name="help_sideload_body">Установка APK из памяти, запись экрана, управление Wi-Fi/Bluetooth/авиарежимом и громкостью, ввод текста и открытие ссылок. Плавающая кнопка даёт скриншоты и запись экрана в один тап из любого приложения.</string>
     <string name="help_safety_title">Безопасность</string>
     <string name="help_safety_body">Это реальные системные команды. Перезагрузка, удаление, отключение и очистка данных — мощные действия, используйте их аккуратно. Вы отвечаете за изменения, которые делаете.</string>
+    <!-- Pro -->
+    <string name="pro_title">Pro</string>
+    <string name="pro_active">Платные возможности активны</string>
+    <string name="pro_features">Безлимитные макросы и экспорт сессии терминала в Markdown</string>
+    <string name="pro_buy">Купить</string>
+    <string name="pro_donate">Поддержать разработчика</string>
+    <string name="term_export_markdown">Экспорт сессии в Markdown</string>
 </resources>

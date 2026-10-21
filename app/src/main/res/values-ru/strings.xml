@@ -39,6 +39,7 @@
     <string name="term_history_empty">Команд пока нет</string>
     <string name="term_history_clear">Очистить историю</string>
     <string name="term_history_hint">Нажмите на команду, чтобы подставить её</string>
+    <string name="debug_macros_limit">Бесплатная версия хранит три макроса. Pro-версия не ограничивает их количество.</string>
     <string name="term_history_today">Сегодня</string>
     <string name="term_history_yesterday">Вчера</string>
     <string name="term_history_this_week">На этой неделе</string>

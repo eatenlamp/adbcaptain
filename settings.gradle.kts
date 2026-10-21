@@ -21,6 +21,8 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
+        // Billing client of the store the RuStore build is published on.
+        maven { url = uri("https://artifactory-external.vkpartner.ru/artifactory/maven") }
     }
 }
 

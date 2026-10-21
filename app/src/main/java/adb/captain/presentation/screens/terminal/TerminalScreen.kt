@@ -221,6 +221,7 @@ fun TerminalScreen(
                 icon = Icons.Default.Delete,
                 contentDescription = "Clear Output"
             )
+            TerminalProActions(onExportMarkdown = { viewModel.exportMarkdown() })
         }
 
         // History Panel
@@ -547,7 +548,7 @@ fun TerminalScreen(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun ToolBarAction(
+internal fun ToolBarAction(
     onClick: () -> Unit,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     contentDescription: String,
