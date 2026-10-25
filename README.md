@@ -10,7 +10,6 @@
 
 Run `pm`, `am`, `dumpsys`, `settings`, `input`, `logcat` and anything else `adb shell` accepts, straight from an Android app. Inspect apps and their permissions, watch logs live, collect a bug report as a shareable ZIP, and see why an app crashed.
 
-Keywords: `adb`, `adb shell`, `adb client`, `android terminal`, `android shell`, `shizuku`, `shizuku manager`, `logcat`, `logcat viewer`, `android debugger`, `android debug`, `package manager`, `app inspector`, `no root adb`, `rootless adb`, `android developer`, `bug report`, `crash logs`, `process manager`.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/8ee96161-fa27-43b7-8946-da28c2ee092d" width="18%">
@@ -93,3 +92,8 @@ that notice is a violation of the license terms.
 ## License
 
 AGPL-3.0-or-later. Copyright © 2026 eatenlamp. See [LICENSE](LICENSE).
+
+---
+
+Keywords: `adb`, `adb shell`, `adb client`, `android terminal`, `android shell`, `shizuku`, `shizuku manager`, `logcat`, `logcat viewer`, `android debugger`, `android debug`, `package manager`, `app inspector`, `no root adb`, `rootless adb`, `android developer`, `bug report`, `crash logs`, `process manager`.
+
