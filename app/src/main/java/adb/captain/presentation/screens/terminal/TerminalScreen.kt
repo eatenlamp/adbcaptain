@@ -221,7 +221,7 @@ fun TerminalScreen(
                 icon = Icons.Default.Delete,
                 contentDescription = "Clear Output"
             )
-            TerminalProActions(onExportMarkdown = { viewModel.exportMarkdown() })
+            TerminalExportAction(onExportMarkdown = { viewModel.exportMarkdown() })
         }
 
         // History Panel

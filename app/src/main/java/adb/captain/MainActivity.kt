@@ -15,16 +15,20 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import adb.captain.data.local.MacroShortcuts
 import adb.captain.presentation.components.CommandPaletteOverlay
 import adb.captain.presentation.components.PaletteItem
 import adb.captain.presentation.components.PaletteViewModel
@@ -43,25 +47,29 @@ import adb.captain.presentation.screens.files.FilesScreen
 import adb.captain.presentation.screens.monitor.MonitorScreen
 import adb.captain.presentation.screens.debug.DebugScreen
 import adb.captain.presentation.screens.wireless.WirelessAdbScreen
-import adb.captain.data.store.StoreBilling
+import adb.captain.presentation.screens.more.MoreScreen
 import adb.captain.ui.theme.ADBCaptainTheme
 import adb.captain.ui.theme.AppTheme
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import javax.inject.Inject
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.MutableStateFlow
 import rikka.shizuku.Shizuku
+import javax.inject.Inject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), Shizuku.OnRequestPermissionResultListener {
 
     @Inject
-    lateinit var storeBilling: StoreBilling
+    lateinit var macroShortcuts: MacroShortcuts
+
+    /** Set when the app is opened from a macro shortcut. */
+    private val pendingMacroId = MutableStateFlow<Long?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        storeBilling.onNewIntent(intent)
+        handleShortcutIntent(intent)
 
         if (ShizukuManager.isShizukuRunning() && !ShizukuManager.checkShizukuPermission()) {
             ShizukuManager.requestShizukuPermission(this)
@@ -97,6 +105,7 @@ class MainActivity : AppCompatActivity(), Shizuku.OnRequestPermissionResultListe
                     val navController = rememberNavController()
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val currentDestination = navBackStackEntry?.destination
+                    val currentScreen = Screen.byRoute(currentDestination?.route)
 
                     // Show the tutorial on first launch (reads the persisted value once)
                     LaunchedEffect(Unit) {
@@ -105,125 +114,163 @@ class MainActivity : AppCompatActivity(), Shizuku.OnRequestPermissionResultListe
                             settingsViewModel.markTutorialSeen()
                         }
                     }
-                    
+
+                    fun navigateTo(route: String) {
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+
+                    fun isSelected(screen: Screen): Boolean {
+                        if (screen == Screen.More) {
+                            val route = currentDestination?.route
+                            return route != null && Screen.secondaryScreens.any { it.route == route }
+                        }
+                        return currentDestination?.hierarchy?.any { it.route == screen.route } == true
+                    }
+
                     var showPalette by remember { mutableStateOf(false) }
                     var pendingTerminalCommand by remember { mutableStateOf<String?>(null) }
                     val paletteViewModel: PaletteViewModel = hiltViewModel()
                     val paletteMacros by paletteViewModel.macros.collectAsStateWithLifecycle()
+                    val shortcutMacroId by pendingMacroId.collectAsState()
 
-                    val screens = listOf(
-                        Screen.Terminal,
-                        Screen.Devices,
-                        Screen.Apps,
-                        Screen.Logcat,
-                        Screen.Sideload,
-                        Screen.Files,
-                        Screen.Monitor,
-                        Screen.Debug,
-                        Screen.Settings
-                    )
+                    // Keep the launcher shortcuts in sync with the saved macros.
+                    LaunchedEffect(paletteMacros) {
+                        macroShortcuts.sync(paletteMacros)
+                    }
 
-                    Scaffold(
-                        modifier = Modifier.fillMaxSize(),
-                        topBar = {
-                            val currentScreen = screens.find { it.route == currentDestination?.route }
-                            if (currentScreen != null) {
-                                CenterAlignedTopAppBar(
-                                    title = { Text(stringResource(currentScreen.titleRes)) },
-                                    navigationIcon = {
-                                        IconButton(onClick = { showPalette = true }) {
-                                            Icon(
-                                                Icons.Default.Search,
-                                                contentDescription = stringResource(R.string.palette_open)
+                    // A shortcut or an external intent asks for one macro to run.
+                    LaunchedEffect(shortcutMacroId) {
+                        if (shortcutMacroId != null) {
+                            navigateTo(Screen.Debug.route)
+                        }
+                    }
+
+                    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                        // Phones get a bottom bar, tablets and foldables a rail.
+                        val expandedLayout = maxWidth >= 600.dp
+
+                        Scaffold(
+                            modifier = Modifier.fillMaxSize(),
+                            topBar = {
+                                if (currentScreen != null) {
+                                    CenterAlignedTopAppBar(
+                                        title = { Text(stringResource(currentScreen.titleRes)) },
+                                        navigationIcon = {
+                                            IconButton(onClick = { showPalette = true }) {
+                                                Icon(
+                                                    Icons.Default.Search,
+                                                    contentDescription = stringResource(R.string.palette_open)
+                                                )
+                                            }
+                                        },
+                                        colors = TopAppBarDefaults.topAppBarColors(
+                                            containerColor = MaterialTheme.colorScheme.surface
+                                        )
+                                    )
+                                }
+                            },
+                            bottomBar = {
+                                if (!expandedLayout) {
+                                    NavigationBar {
+                                        Screen.primaryScreens.forEach { screen ->
+                                            NavigationBarItem(
+                                                icon = { Icon(screen.icon, contentDescription = null) },
+                                                label = { Text(stringResource(screen.titleRes)) },
+                                                selected = isSelected(screen),
+                                                onClick = { navigateTo(screen.route) }
                                             )
                                         }
-                                    },
-                                    colors = TopAppBarDefaults.topAppBarColors(
-                                        containerColor = MaterialTheme.colorScheme.surface
-                                    )
-                                )
+                                    }
+                                }
                             }
-                        },
-                        bottomBar = {
-                            NavigationBar {
-                                screens.forEach { screen ->
-                                    NavigationBarItem(
-                                        icon = { Icon(screen.icon, contentDescription = null) },
-                                        label = { Text(stringResource(screen.titleRes)) },
-                                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                                        onClick = {
-                                            navController.navigate(screen.route) {
-                                                popUpTo(navController.graph.findStartDestination().id) {
-                                                    saveState = true
-                                                }
-                                                launchSingleTop = true
-                                                restoreState = true
+                        ) { innerPadding ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(innerPadding)
+                            ) {
+                                if (expandedLayout) {
+                                    NavigationRail {
+                                        Spacer(Modifier.height(8.dp))
+                                        // Every destination fits on tall tablets; the scroll
+                                        // keeps short landscape windows usable.
+                                        Column(
+                                            modifier = Modifier.verticalScroll(rememberScrollState())
+                                        ) {
+                                            Screen.all.forEach { screen ->
+                                                NavigationRailItem(
+                                                    icon = { Icon(screen.icon, contentDescription = null) },
+                                                    label = { Text(stringResource(screen.titleRes)) },
+                                                    selected = isSelected(screen),
+                                                    onClick = { navigateTo(screen.route) }
+                                                )
                                             }
                                         }
-                                    )
+                                    }
+                                }
+
+                                NavHost(
+                                    navController = navController,
+                                    startDestination = Screen.Terminal.route,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    composable(Screen.Terminal.route) {
+                                        TerminalScreen(initialCommand = pendingTerminalCommand)
+                                    }
+                                    composable(Screen.Devices.route) {
+                                        DevicesScreen(onOpenWireless = { navController.navigate("wireless") })
+                                    }
+                                    composable(Screen.Apps.route) { AppsScreen() }
+                                    composable(Screen.Logcat.route) { LogcatScreen() }
+                                    composable(Screen.Sideload.route) { SideloadScreen() }
+                                    composable(Screen.Files.route) { FilesScreen() }
+                                    composable(Screen.Monitor.route) { MonitorScreen() }
+                                    composable(Screen.Debug.route) {
+                                        DebugScreen(
+                                            initialMacroId = shortcutMacroId,
+                                            onInitialMacroHandled = { pendingMacroId.value = null }
+                                        )
+                                    }
+                                    composable(Screen.Settings.route) {
+                                        SettingsScreen(onOpenHelp = { navController.navigate("help") })
+                                    }
+                                    composable(Screen.More.route) {
+                                        MoreScreen(
+                                            onOpenScreen = { navigateTo(it.route) },
+                                            onOpenWireless = { navController.navigate("wireless") },
+                                            onOpenHelp = { navController.navigate("help") }
+                                        )
+                                    }
+                                    composable("help") { HelpScreen(onBack = { navController.popBackStack() }) }
+                                    composable("wireless") { WirelessAdbScreen(onBack = { navController.popBackStack() }) }
                                 }
                             }
                         }
-                    ) { innerPadding ->
-                        NavHost(
-                            navController = navController,
-                            startDestination = Screen.Terminal.route,
-                            modifier = Modifier.padding(innerPadding)
-                        ) {
-                            composable(Screen.Terminal.route) {
-                                TerminalScreen(initialCommand = pendingTerminalCommand)
-                            }
-                            composable(Screen.Devices.route) { DevicesScreen(onOpenWireless = { navController.navigate("wireless") }) }
-                            composable(Screen.Apps.route) { AppsScreen() }
-                            composable(Screen.Logcat.route) { LogcatScreen() }
-                            composable(Screen.Sideload.route) { SideloadScreen() }
-                            composable(Screen.Files.route) { FilesScreen() }
-                            composable(Screen.Monitor.route) { MonitorScreen() }
-                            composable(Screen.Debug.route) { DebugScreen() }
-                            composable(Screen.Settings.route) { SettingsScreen(onOpenHelp = { navController.navigate("help") }) }
-                            composable("help") { HelpScreen(onBack = { navController.popBackStack() }) }
-                            composable("wireless") { WirelessAdbScreen(onBack = { navController.popBackStack() }) }
-                        }
+                    }
+
                     if (showPalette) {
                         CommandPaletteOverlay(
-                            screens = screens.map { screen ->
+                            screens = Screen.all.map { screen ->
                                 PaletteItem(
                                     title = stringResource(screen.titleRes),
                                     subtitle = screen.route,
-                                    onRun = {
-                                        navController.navigate(screen.route) {
-                                            popUpTo(navController.graph.findStartDestination().id) {
-                                                saveState = true
-                                            }
-                                            launchSingleTop = true
-                                            restoreState = true
-                                        }
-                                    }
+                                    onRun = { navigateTo(screen.route) }
                                 )
                             },
                             macros = paletteMacros,
-                            onOpenMacros = {
-                                navController.navigate(Screen.Debug.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
+                            onRunMacro = { macro -> pendingMacroId.value = macro.id },
                             onRunCommand = { cmd ->
-                                navController.navigate(Screen.Terminal.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
+                                navigateTo(Screen.Terminal.route)
                                 pendingTerminalCommand = cmd
                             },
                             onDismiss = { showPalette = false }
                         )
-                    }
                     }
                 }
             }
@@ -232,7 +279,14 @@ class MainActivity : AppCompatActivity(), Shizuku.OnRequestPermissionResultListe
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        storeBilling.onNewIntent(intent)
+        setIntent(intent)
+        handleShortcutIntent(intent)
+    }
+
+    private fun handleShortcutIntent(intent: Intent?) {
+        if (intent?.action != MacroShortcuts.ACTION_RUN_MACRO) return
+        val id = intent.getLongExtra(MacroShortcuts.EXTRA_MACRO_ID, 0L)
+        if (id > 0L) pendingMacroId.value = id
     }
 
     override fun onDestroy() {

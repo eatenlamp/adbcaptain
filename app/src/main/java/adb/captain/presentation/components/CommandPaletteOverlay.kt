@@ -45,7 +45,7 @@ data class PaletteItem(
 fun CommandPaletteOverlay(
     screens: List<PaletteItem>,
     macros: List<Macro>,
-    onOpenMacros: () -> Unit,
+    onRunMacro: (Macro) -> Unit,
     onRunCommand: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -76,7 +76,7 @@ fun CommandPaletteOverlay(
             PaletteItem(
                 title = macro.name,
                 subtitle = macro.commands.joinToString(" ; "),
-                onRun = onOpenMacros
+                onRun = { onRunMacro(macro) }
             )
         }
     val screenItems = screens.filter { it.title.contains(trimmed, ignoreCase = true) }

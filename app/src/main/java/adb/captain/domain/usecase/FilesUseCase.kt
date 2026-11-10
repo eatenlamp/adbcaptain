@@ -21,4 +21,26 @@ class FilesUseCase @Inject constructor(
     suspend fun listFiles(path: String): List<FileEntry> = repository.listFiles(path)
     suspend fun delete(path: String) = repository.deleteFile(path)
     suspend fun createDirectory(path: String) = repository.createDirectory(path)
+
+    suspend fun copy(source: String, destinationDir: String): String =
+        repository.copyPath(source, destinationDir)
+
+    suspend fun move(source: String, destinationDir: String): String =
+        repository.movePath(source, destinationDir)
+
+    suspend fun rename(path: String, newName: String): String =
+        repository.renamePath(path, newName)
+
+    suspend fun properties(path: String): String? = repository.fileProperties(path)
+
+    suspend fun readText(path: String, maxBytes: Long = 262_144): String? =
+        repository.readTextFile(path, maxBytes)
+
+    suspend fun writeText(path: String, content: String): String =
+        repository.writeTextFile(path, content)
+
+    suspend fun pull(path: String): ByteArray? = repository.pullFile(path)
+
+    suspend fun push(remotePath: String, bytes: ByteArray): String =
+        repository.pushFile(remotePath, bytes)
 }

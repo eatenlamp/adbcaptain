@@ -143,10 +143,6 @@ fun SettingsScreen(
 
         HorizontalDivider()
 
-        ProSection()
-
-        HorizontalDivider()
-
         Text(stringResource(R.string.settings_shizuku), style = MaterialTheme.typography.titleMedium)
         
         Surface(

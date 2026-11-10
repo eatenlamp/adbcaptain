@@ -271,6 +271,123 @@ class AdbRepositoryImpl @Inject constructor(
         executeCommand("mkdir -p \"${path.replace("\"", "")}\"")
     }
 
+    override suspend fun copyPath(source: String, destinationDir: String): String =
+        withContext(Dispatchers.IO) {
+            transferPaths(source, destinationDir, "cp -r")
+        }
+
+    override suspend fun movePath(source: String, destinationDir: String): String =
+        withContext(Dispatchers.IO) {
+            transferPaths(source, destinationDir, "mv")
+        }
+
+    override suspend fun renamePath(path: String, newName: String): String =
+        withContext(Dispatchers.IO) {
+            val clean = newName.trim().replace("\"", "")
+            if (clean.isEmpty() || clean.contains('/')) return@withContext "Error: invalid name"
+            val parent = path.trimEnd('/').substringBeforeLast('/', "")
+            val target = joinPath(parent.ifEmpty { "/" }, clean)
+            val result = executeCommand("mv \"$path\" \"$target\"")
+            if (result.isErrorOutput()) "Error: ${result.ifBlank { "rename failed" }}" else target
+        }
+
+    override suspend fun fileProperties(path: String): String? = withContext(Dispatchers.IO) {
+        val output = executeCommand("stat -c '%n|%F|%s|%y|%a|%U:%G' \"$path\"")
+        if (output.isErrorOutput() || output.isBlank()) null else output.trim()
+    }
+
+    override suspend fun readTextFile(path: String, maxBytes: Long): String? =
+        withContext(Dispatchers.IO) {
+            val output = executeCommand("head -c $maxBytes \"$path\"")
+            if (output.isErrorOutput()) null else output
+        }
+
+    override suspend fun writeTextFile(path: String, content: String): String =
+        withContext(Dispatchers.IO) {
+            writeBytes(path, content.toByteArray())
+        }
+
+    override suspend fun pullFile(path: String): ByteArray? = withContext(Dispatchers.IO) {
+        val size = executeCommand("stat -c %s \"$path\"").trim().toLongOrNull()
+            ?: return@withContext null
+        if (size < 0L || size > MAX_TRANSFER_BYTES) return@withContext null
+        val out = java.io.ByteArrayOutputStream()
+        var offset = 0L
+        while (offset < size) {
+            val chunk = minOf(CHUNK_BYTES.toLong(), size - offset)
+            val encoded = executeCommand(
+                "tail -c +${offset + 1} \"$path\" | head -c $chunk | base64 -w0"
+            )
+            if (encoded.isErrorOutput()) return@withContext null
+            val decoded = runCatching {
+                android.util.Base64.decode(encoded, android.util.Base64.DEFAULT)
+            }.getOrNull() ?: return@withContext null
+            out.write(decoded)
+            offset += chunk
+        }
+        out.toByteArray()
+    }
+
+    override suspend fun pushFile(remotePath: String, bytes: ByteArray): String =
+        withContext(Dispatchers.IO) {
+            writeBytes(remotePath, bytes)
+        }
+
+    private suspend fun transferPaths(source: String, destinationDir: String, command: String): String {
+        val name = source.trimEnd('/').substringAfterLast('/')
+        if (name.isEmpty()) return "Error: invalid source"
+        var target = joinPath(destinationDir, name)
+        // Never overwrite: copy and move both get a fresh name when needed.
+        if (target == source || pathExists(target)) {
+            target = joinPath(destinationDir, freeName(destinationDir, name))
+        }
+        val result = executeCommand("$command \"$source\" \"$target\"")
+        return if (result.isErrorOutput()) "Error: ${result.ifBlank { "operation failed" }}" else target
+    }
+
+    private suspend fun pathExists(path: String): Boolean =
+        executeCommand("[ -e \"$path\" ] && echo yes").trim() == "yes"
+
+    private suspend fun freeName(dir: String, name: String): String {
+        val dot = name.lastIndexOf('.')
+        val base = if (dot > 0) name.substring(0, dot) else name
+        val ext = if (dot > 0) name.substring(dot) else ""
+        var index = 1
+        while (true) {
+            val candidate = if (index == 1) "$base (copy)$ext" else "$base (copy $index)$ext"
+            if (!pathExists(joinPath(dir, candidate))) return candidate
+            index++
+        }
+    }
+
+    private suspend fun writeBytes(path: String, bytes: ByteArray): String {
+        val truncated = executeCommand(": > \"$path\"")
+        if (truncated.isErrorOutput() || bytes.isEmpty()) {
+            return if (truncated.isErrorOutput()) "Error: ${truncated.ifBlank { "write failed" }}" else path
+        }
+        // Binder transactions are limited, so the file is sent in chunks.
+        var offset = 0
+        while (offset < bytes.size) {
+            val end = minOf(offset + CHUNK_BYTES, bytes.size)
+            val encoded = android.util.Base64.encodeToString(
+                bytes.copyOfRange(offset, end),
+                android.util.Base64.NO_WRAP
+            )
+            val result = executeCommand("printf '%s' '$encoded' | base64 -d >> \"$path\"")
+            if (result.isErrorOutput()) return "Error: ${result.ifBlank { "write failed" }}"
+            offset = end
+        }
+        return path
+    }
+
+    private fun joinPath(dir: String, name: String): String =
+        if (dir == "/") "/$name" else "${dir.trimEnd('/')}/$name"
+
+    private fun String.isErrorOutput(): Boolean {
+        val head = trimStart()
+        return head.startsWith("Error") || head.startsWith("Exception")
+    }
+
     override suspend fun getShowTouches(): Boolean =
         executeCommand("settings get system show_touches").trim() == "1"
 
@@ -1049,6 +1166,10 @@ class AdbRepositoryImpl @Inject constructor(
 
     private companion object {
         const val RECORD_TMP_DIR = "/data/local/tmp"
+
+        /** Base64 chunks keep every shell round trip inside the binder limit. */
+        const val CHUNK_BYTES = 128 * 1024
+        const val MAX_TRANSFER_BYTES = 32L * 1024 * 1024
         val SPACE_REGEX = Regex("\\s+")
         val NEW_PROCESS_METHOD: java.lang.reflect.Method by lazy {
             Shizuku::class.java.getDeclaredMethod(

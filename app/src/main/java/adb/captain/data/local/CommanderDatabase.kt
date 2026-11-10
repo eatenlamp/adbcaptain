@@ -14,8 +14,13 @@ import adb.captain.data.local.dao.CommandDao
 import adb.captain.data.local.dao.MacroDao
 import adb.captain.data.local.entity.CommandEntity
 import adb.captain.data.local.entity.MacroEntity
+import adb.captain.data.local.entity.MacroStepEntity
 
-@Database(entities = [CommandEntity::class, MacroEntity::class], version = 2, exportSchema = false)
+@Database(
+    entities = [CommandEntity::class, MacroEntity::class, MacroStepEntity::class],
+    version = 3,
+    exportSchema = false
+)
 abstract class CommanderDatabase : RoomDatabase() {
     abstract val commandDao: CommandDao
     abstract val macroDao: MacroDao

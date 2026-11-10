@@ -8,7 +8,9 @@
 
 package adb.captain.di
 
+import android.content.ContentValues
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
 import adb.captain.data.local.CommanderDatabase
 import androidx.room.migration.Migration
@@ -24,7 +26,6 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 /** Adds the macros table without touching existing command history. */
-/** Adds the macros table without touching existing command history. */
 private val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
@@ -34,6 +35,57 @@ private val MIGRATION_1_2 = object : Migration(1, 2) {
                 "commands TEXT NOT NULL, " +
                 "createdAt INTEGER NOT NULL)"
         )
+    }
+}
+
+/**
+ * Moves every stored macro from one newline separated blob into the steps
+ * table. The old column is left in place: it is still written for old bug
+ * packs and for downgrade safety.
+ */
+private val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS macro_steps (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "macroId INTEGER NOT NULL, " +
+                "position INTEGER NOT NULL, " +
+                "command TEXT NOT NULL, " +
+                "condition TEXT NOT NULL, " +
+                "conditionValue TEXT NOT NULL, " +
+                "onError TEXT NOT NULL, " +
+                "waitMs INTEGER NOT NULL, " +
+                "FOREIGN KEY(macroId) REFERENCES macros(id) " +
+                "ON UPDATE NO ACTION ON DELETE CASCADE)"
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS index_macro_steps_macroId ON macro_steps(macroId)"
+        )
+        // Read the old rows first: inserting while a cursor is open on the same
+        // database is legal but fragile on some SQLite builds.
+        val legacy = mutableListOf<Pair<Long, List<String>>>()
+        db.query("SELECT id, commands FROM macros").use { cursor ->
+            while (cursor.moveToNext()) {
+                val macroId = cursor.getLong(0)
+                val commands = cursor.getString(1) ?: continue
+                val list = commands.split('\n').map { it.trim() }.filter { it.isNotEmpty() }
+                if (list.isNotEmpty()) legacy.add(macroId to list)
+            }
+        }
+        legacy.forEach { (macroId, commands) ->
+            commands.forEachIndexed { index, command ->
+                val values = ContentValues().apply {
+                    put("macroId", macroId)
+                    put("position", index)
+                    put("command", command)
+                    put("condition", "ALWAYS")
+                    put("conditionValue", "")
+                    put("onError", "STOP")
+                    put("waitMs", 0L)
+                }
+                db.insert("macro_steps", SQLiteDatabase.CONFLICT_ABORT, values)
+            }
+        }
     }
 }
 
@@ -48,9 +100,9 @@ object DatabaseModule {
             context,
             CommanderDatabase::class.java,
             "commander_db"
-        ).addMigrations(MIGRATION_1_2)
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             // Safety net: a wrong or missing migration must never brick the app.
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
     }
 

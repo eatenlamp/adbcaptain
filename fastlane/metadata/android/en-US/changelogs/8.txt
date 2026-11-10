@@ -1,0 +1,25 @@
+Version 1.7
+
+Macros 2.0:
+- A macro is now a list of steps, and each step can wait, check the previous output and choose what to do on failure
+- Conditions: always, previous output contains, does not contain, is empty, is not empty
+- Error policy per step: stop the macro or keep going
+- {{variable}} placeholders are filled in before a run, {{serial}} comes from the connected device
+- Export any macro as readable JSON and import it back on another phone
+- Macros appear as launcher shortcuts for one-tap runs
+
+Files:
+- Long-press to select several files, then copy, cut, paste or delete them together
+- Rename any file or folder and open a properties sheet with type, size, owner, permissions and modified date
+- Upload files from the system picker and download them back to the device
+- Copy and move never overwrite: a free name is picked automatically
+
+Navigation:
+- Terminal, Apps, Logcat and Debug in the bottom bar, everything else under More
+- On tablets and foldables the bottom bar becomes a navigation rail with all destinations visible
+
+Everything is free:
+- The Pro tier is gone, along with the billing library. Unlimited macros and the Markdown terminal export are available in every build
+
+Under the hood:
+- Target SDK 37, database migration for macro steps, unit tests and a CI workflow that runs them on every push

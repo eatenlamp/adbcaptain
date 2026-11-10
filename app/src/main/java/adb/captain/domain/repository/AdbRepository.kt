@@ -50,6 +50,20 @@ interface AdbRepository {
     suspend fun deleteFile(path: String)
     suspend fun createDirectory(path: String)
 
+    /** Copies [source] into [destinationDir], returning the new path or "Error: …". */
+    suspend fun copyPath(source: String, destinationDir: String): String
+    suspend fun movePath(source: String, destinationDir: String): String
+    suspend fun renamePath(path: String, newName: String): String
+
+    /** Raw `stat` line for the properties sheet. */
+    suspend fun fileProperties(path: String): String?
+    suspend fun readTextFile(path: String, maxBytes: Long = 262_144): String?
+    suspend fun writeTextFile(path: String, content: String): String
+
+    /** Binary transfer through base64, used by the file picker actions. */
+    suspend fun pullFile(path: String): ByteArray?
+    suspend fun pushFile(remotePath: String, bytes: ByteArray): String
+
     suspend fun getShowTouches(): Boolean
     suspend fun setShowTouches(enabled: Boolean)
     suspend fun getAnimationScale(): Float

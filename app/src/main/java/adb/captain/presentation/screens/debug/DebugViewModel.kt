@@ -13,10 +13,10 @@ import androidx.lifecycle.viewModelScope
 import adb.captain.domain.model.DebugSession
 import adb.captain.domain.model.CrashReport
 import adb.captain.domain.model.Macro
-import adb.captain.domain.model.ProFeature
-import adb.captain.domain.repository.ProRepository
+import adb.captain.domain.model.MacroStep
 import adb.captain.domain.repository.AdbRepository
 import adb.captain.domain.usecase.BugPackUseCase
+import adb.captain.domain.usecase.MacroRunResult
 import adb.captain.domain.usecase.MacroUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -34,14 +34,12 @@ import java.io.ByteArrayOutputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import javax.inject.Inject
-import adb.captain.domain.model.ProLimits
 
 @HiltViewModel
 class DebugViewModel @Inject constructor(
     private val useCase: BugPackUseCase,
     private val repository: AdbRepository,
-    private val macroUseCase: MacroUseCase,
-    private val proRepository: ProRepository
+    private val macroUseCase: MacroUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DebugUiState())
@@ -51,17 +49,11 @@ class DebugViewModel @Inject constructor(
         .catch { emit(emptyList()) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    /**
-     * Whether another macro may be saved. The free build of the store is
-     * limited, the FOSS build never is.
-     */
-    fun canSaveMacro(currentCount: Int): Boolean =
-        proRepository.isUnlocked(ProFeature.UNLIMITED_MACROS) || currentCount < ProLimits.FREE_MACRO_COUNT
-
-    fun saveMacro(name: String, commands: List<String>) {
+    /** Creates a macro or replaces the one with the same id. */
+    fun saveMacro(name: String, steps: List<MacroStep>, id: Long = 0L) {
         viewModelScope.launch {
-            macroUseCase.save(name, commands)
-            _uiState.update { it.copy(macroNotice = name) }
+            macroUseCase.save(Macro(id = id, name = name, steps = steps))
+            _uiState.update { it.copy(macroNotice = name.trim()) }
         }
     }
 
@@ -69,14 +61,36 @@ class DebugViewModel @Inject constructor(
         viewModelScope.launch { macroUseCase.delete(macro) }
     }
 
-    fun runMacro(macro: Macro) {
+    fun runMacro(macro: Macro, variables: Map<String, String> = emptyMap()) {
         if (_uiState.value.runningMacroId == macro.id) return
         _uiState.update { it.copy(runningMacroId = macro.id, macroOutput = null) }
         viewModelScope.launch {
-            val output = runCatching { macroUseCase.run(macro) }
-                .getOrElse { "Error: ${it.message}" }
-            _uiState.update { it.copy(runningMacroId = null, macroOutput = output) }
+            val result = runCatching { macroUseCase.run(macro, variables) }
+                .getOrElse { MacroRunResult(output = "Error: ${it.message}", success = false) }
+            _uiState.update { it.copy(runningMacroId = null, macroOutput = result.output) }
         }
+    }
+
+    /** Serialises a macro for the export action. */
+    fun macroJson(macro: Macro): String = macroUseCase.encode(macro)
+
+    /** Parses and stores an imported macro. Returns false when the file is not one. */
+    suspend fun importMacro(text: String): Boolean {
+        val macro = macroUseCase.decode(text) ?: return false
+        macroUseCase.save(macro)
+        _uiState.update { it.copy(macroNotice = macro.name) }
+        return true
+    }
+
+    /** Loads a macro when the app was opened from one of its shortcuts. */
+    suspend fun findMacro(id: Long): Macro? = macroUseCase.find(id)
+
+    fun clearMacroOutput() {
+        _uiState.update { it.copy(macroOutput = null) }
+    }
+
+    fun clearMacroNotice() {
+        _uiState.update { it.copy(macroNotice = null) }
     }
 
     fun loadCrashes() {

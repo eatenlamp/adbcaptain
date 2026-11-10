@@ -15,6 +15,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.BatteryUnknown
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import adb.captain.ui.theme.ExpressiveProgress
@@ -770,7 +772,7 @@ private fun BatteryStatusPill(status: BatteryStatus) {
         BatteryStatus.UNKNOWN -> BatteryPill(
             R.string.battery_status_unknown,
             MaterialTheme.colorScheme.outline,
-            Icons.Default.BatteryUnknown
+            Icons.AutoMirrored.Filled.BatteryUnknown
         )
     }
 }
@@ -811,7 +813,7 @@ private fun BatteryHealthPill(health: BatteryHealth) {
         BatteryHealth.UNKNOWN -> BatteryPill(
             R.string.battery_health_unknown,
             MaterialTheme.colorScheme.outline,
-            Icons.Default.HelpOutline
+            Icons.AutoMirrored.Filled.HelpOutline
         )
     }
 }

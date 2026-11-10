@@ -10,7 +10,6 @@ package adb.captain.presentation.screens.terminal
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import adb.captain.R
@@ -20,10 +19,11 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Store only action: export the terminal session as a Markdown file.
+ * Exports the terminal session as a Markdown file. Every build has it: the
+ * app has no paid tier.
  */
 @Composable
-fun TerminalProActions(onExportMarkdown: () -> String) {
+fun TerminalExportAction(onExportMarkdown: () -> String) {
     val context = LocalContext.current
 
     ToolBarAction(

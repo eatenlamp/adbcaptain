@@ -31,11 +31,15 @@ Run `pm`, `am`, `dumpsys`, `settings`, `input`, `logcat` and anything else `adb 
 
 **Logcat** - live logs. Filter by level and tag. Auto-scroll. Copy entries. PID/TID. Save the filtered view to a file. Filter by app with a tap on the PID, or let Logcat follow whatever app is in the foreground. **Timeline** merges the main and events buffers into one stream with chips to switch between them. Share the filtered view as a Markdown file straight into a bug report.
 
-**Debug** - one place for diagnosing a problem. Bug Pack collects a shareable ZIP (system info, package and activity dumps, main and events logcat, processes, packages, battery, memory, CPU) with a checkbox per section. Debug Session records elapsed time, the apps that came to the foreground and buffers logcat while you reproduce the bug. Macros store a chain of commands under a name and run it in one tap. Crash logs are grouped per app with full stack traces.
+**Debug** - one place for diagnosing a problem. Bug Pack collects a shareable ZIP (system info, package and activity dumps, main and events logcat, processes, packages, battery, memory, CPU) with a checkbox per section. Debug Session records elapsed time, the apps that came to the foreground and buffers logcat while you reproduce the bug. **Macros 2.0** build a workflow out of steps, each with its own condition (run when the previous output contains, does not contain, is empty or is not empty), wait time and error policy (stop or continue). `{{variable}}` placeholders are filled in before the run, `{{serial}}` comes from the device automatically. Macros are exported and imported as readable JSON files and appear as launcher shortcuts for one-tap runs. Crash logs are grouped per app with full stack traces.
+
+**Files** - browse the device filesystem through Shizuku. Long-press for multi-select with copy, cut, paste and delete; rename any file or folder; open a properties sheet (type, size, owner, permissions, modified). Upload files from the picker and download them back, or install an APK in place. Copy and move never overwrite: a free name is picked automatically.
 
 **Process Manager** - the real process table with PID, PPID, user, memory and command line rather than just the top by CPU. Search by name, PID or user, and force-stop any app from the list.
 
-**Command Palette** - the search icon in the top bar reaches every screen, every macro and common shell commands, and runs them in the terminal right away.
+**Command Palette** - the search icon in the top bar reaches every screen, every macro and common shell commands. Macros run right from the palette; shell commands land in the terminal ready to execute.
+
+**Navigation** - Terminal, Apps, Logcat and Debug sit in the bottom bar, and everything else (Devices, Sideload, Files, Monitor, Settings, Wireless ADB, Help) lives in the compact More tab. On tablets and foldables the bottom bar becomes a navigation rail with every destination visible at once.
 
 **Sideload & Tools** - install APK (`pm install -r`). Screenshots and screen recording. Wake, unlock, stay awake, Wi-Fi / Bluetooth / airplane mode, volume. Text input, open links.
 

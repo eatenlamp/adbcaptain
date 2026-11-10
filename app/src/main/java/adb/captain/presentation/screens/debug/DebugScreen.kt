@@ -14,12 +14,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -31,26 +30,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import adb.captain.R
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DebugScreen(
+    initialMacroId: Long? = null,
+    onInitialMacroHandled: () -> Unit = {},
     viewModel: DebugViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val macros by viewModel.macros.collectAsStateWithLifecycle()
-    var showAddMacro by remember { mutableStateOf(false) }
+    var showEditor by remember { mutableStateOf(false) }
+    var editingMacro by remember { mutableStateOf<adb.captain.domain.model.Macro?>(null) }
+    var variablesMacro by remember { mutableStateOf<adb.captain.domain.model.Macro?>(null) }
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val savedMessage = stringResource(R.string.debug_done)
     val failedMessage = stringResource(R.string.debug_failed)
+    val exportFailedMessage = stringResource(R.string.debug_macros_export_failed)
+    val importFailedMessage = stringResource(R.string.debug_macros_import_failed)
+    val exportedMessage = stringResource(R.string.debug_macros_exported)
+    val importedMessage = stringResource(R.string.debug_macros_imported)
 
     // Ticks once a second so the elapsed label stays live while recording.
     var now by remember { mutableStateOf(System.currentTimeMillis()) }
@@ -87,6 +95,61 @@ fun DebugScreen(
                 .format(java.util.Date())
             saveLauncher.launch("bugpack_$stamp.zip")
         }
+    }
+
+    // Macro export: the JSON is built first, then handed to the file picker.
+    var pendingMacroJson by remember { mutableStateOf<String?>(null) }
+    val macroExportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri: Uri? ->
+        val json = pendingMacroJson
+        pendingMacroJson = null
+        if (uri == null || json == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val ok = runCatching {
+                context.contentResolver.openOutputStream(uri)?.use { out ->
+                    out.write(json.toByteArray())
+                } ?: error("output stream unavailable")
+            }.isSuccess
+            snackbarHostState.showSnackbar(if (ok) exportedMessage else exportFailedMessage)
+        }
+    }
+
+    val macroImportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val text = runCatching {
+                withContext(Dispatchers.IO) {
+                    context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+                }
+            }.getOrNull()
+            val ok = text != null && viewModel.importMacro(text)
+            snackbarHostState.showSnackbar(if (ok) importedMessage else importFailedMessage)
+        }
+    }
+
+    LaunchedEffect(uiState.macroNotice) {
+        val notice = uiState.macroNotice ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(notice)
+        viewModel.clearMacroNotice()
+    }
+
+    // Opened from a home-screen shortcut: run that macro right away.
+    LaunchedEffect(initialMacroId) {
+        val id = initialMacroId ?: return@LaunchedEffect
+        val macro = macros.firstOrNull { it.id == id } ?: viewModel.findMacro(id)
+        if (macro != null) {
+            if (macro.variables.isEmpty()) viewModel.runMacro(macro) else variablesMacro = macro
+        }
+        onInitialMacroHandled()
+    }
+
+    fun exportMacro(macro: adb.captain.domain.model.Macro) {
+        pendingMacroJson = viewModel.macroJson(macro)
+        val safeName = macro.name.replace(Regex("[^A-Za-z0-9._-]"), "_").ifBlank { "macro" }
+        macroExportLauncher.launch("$safeName.json")
     }
 
     Scaffold(
@@ -145,7 +208,7 @@ fun DebugScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 8.dp),
+                    .padding(start = 16.dp, end = 8.dp, top = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -153,17 +216,16 @@ fun DebugScreen(
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f)
                 )
+                IconButton(onClick = { macroImportLauncher.launch(arrayOf("application/json", "text/plain")) }) {
+                    Icon(
+                        Icons.Default.FileUpload,
+                        contentDescription = stringResource(R.string.debug_macros_import)
+                    )
+                }
                 TextButton(
                     onClick = {
-                        if (viewModel.canSaveMacro(macros.size)) {
-                            showAddMacro = true
-                        } else {
-                            scope.launch {
-                                snackbarHostState.showSnackbar(
-                                    context.getString(R.string.debug_macros_limit)
-                                )
-                            }
-                        }
+                        editingMacro = null
+                        showEditor = true
                     }
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null)
@@ -181,10 +243,20 @@ fun DebugScreen(
             }
             macros.forEach { macro ->
                 MacroRow(
-                    name = macro.name,
-                    summary = macro.commands.joinToString(" ; "),
+                    macro = macro,
                     running = uiState.runningMacroId == macro.id,
-                    onRun = { viewModel.runMacro(macro) },
+                    onRun = {
+                        if (macro.variables.isEmpty()) {
+                            viewModel.runMacro(macro)
+                        } else {
+                            variablesMacro = macro
+                        }
+                    },
+                    onEdit = {
+                        editingMacro = macro
+                        showEditor = true
+                    },
+                    onExport = { exportMacro(macro) },
                     onDelete = { viewModel.deleteMacro(macro) }
                 )
             }
@@ -285,12 +357,27 @@ fun DebugScreen(
             }
         }
     }
-    if (showAddMacro) {
-        AddMacroDialog(
-            onDismiss = { showAddMacro = false },
-            onSave = { name, commands ->
-                viewModel.saveMacro(name, commands)
-                showAddMacro = false
+    if (showEditor) {
+        MacroEditorDialog(
+            initial = editingMacro,
+            onDismiss = {
+                showEditor = false
+                editingMacro = null
+            },
+            onSave = { name, steps, id ->
+                viewModel.saveMacro(name, steps, id)
+                showEditor = false
+                editingMacro = null
+            }
+        )
+    }
+    variablesMacro?.let { macro ->
+        MacroVariablesDialog(
+            macro = macro,
+            onDismiss = { variablesMacro = null },
+            onRun = { values ->
+                variablesMacro = null
+                viewModel.runMacro(macro, values)
             }
         )
     }
@@ -321,88 +408,6 @@ private fun OptionCheckbox(
 }
 
 
-
-@Composable
-private fun AddMacroDialog(
-    onDismiss: () -> Unit,
-    onSave: (String, List<String>) -> Unit
-) {
-    var name by remember { mutableStateOf("") }
-    var commands by remember { mutableStateOf("") }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.debug_macros_title)) },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text(stringResource(R.string.debug_macros_name)) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = commands,
-                    onValueChange = { commands = it },
-                    label = { Text(stringResource(R.string.debug_macros_commands)) },
-                    minLines = 3,
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.None,
-                        autoCorrectEnabled = false
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = name.isNotBlank() && commands.isNotBlank(),
-                onClick = { onSave(name, commands.lines()) }
-            ) { Text(stringResource(R.string.debug_macros_add)) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(android.R.string.cancel))
-            }
-        }
-    )
-}
-
-@Composable
-private fun MacroRow(
-    name: String,
-    summary: String,
-    running: Boolean,
-    onRun: () -> Unit,
-    onDelete: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(name, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                text = summary,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2
-            )
-        }
-        if (running) {
-            ExpressiveProgress.indicator(size = 20.dp)
-        } else {
-            TextButton(onClick = onRun) { Text(stringResource(R.string.debug_macros_run)) }
-        }
-        IconButton(onClick = onDelete) {
-            Icon(Icons.Default.Delete, contentDescription = null)
-        }
-    }
-}
 
 @Composable
 private fun SessionCard(

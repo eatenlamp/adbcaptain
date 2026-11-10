@@ -31,7 +31,6 @@ class SettingsManager(private val context: Context) {
         val RECORD_QUALITY = stringPreferencesKey("record_quality")
         val RECORD_MAX_FPS = booleanPreferencesKey("record_max_fps")
         val HIDE_OVERLAY_IN_CAPTURE = booleanPreferencesKey("hide_overlay_in_capture")
-        val PRO_UNLOCKED = booleanPreferencesKey("pro_unlocked")
     }
 
     val tutorialSeen: Flow<Boolean> = context.dataStore.data.map { it[TUTORIAL_SEEN] ?: false }
@@ -92,10 +91,5 @@ class SettingsManager(private val context: Context) {
     val hideOverlayInCapture: Flow<Boolean> = context.dataStore.data.map { it[HIDE_OVERLAY_IN_CAPTURE] ?: true }
     suspend fun setHideOverlayInCapture(value: Boolean) {
         context.dataStore.edit { it[HIDE_OVERLAY_IN_CAPTURE] = value }
-    }
-
-    val proUnlocked: Flow<Boolean> = context.dataStore.data.map { it[PRO_UNLOCKED] ?: false }
-    suspend fun setProUnlocked(unlocked: Boolean) {
-        context.dataStore.edit { it[PRO_UNLOCKED] = unlocked }
     }
 }

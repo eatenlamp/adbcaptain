@@ -4,65 +4,33 @@ The project ships two product flavors from one source tree:
 
 | Flavor | Application id | Signing key | Purpose |
 |---|---|---|---|
-| `fdroid` | `adb.captain` | project release key | F-Droid and GitHub Releases. Pure FOSS, no store library, no limits. |
-| `rustore` | `adb.captain.rustore` | separate RuStore key | RuStore. Same features, plus the paid tier. |
+| `fdroid` | `adb.captain` | project release key | F-Droid and GitHub Releases. Pure FOSS. |
+| `rustore` | `adb.captain.rustore` | separate RuStore key | RuStore. Same features, no billing client. |
 
 Both flavors are always part of the build graph. The F-Droid metadata
 (`fdroid/adb.captain.yml`) builds the `fdroid` flavor only, so the store build
-never reaches F-Droid and the FOSS APK stays free of any store dependency.
+never reaches F-Droid.
 
 ```bash
 ./gradlew assembleFdroidRelease
 ./gradlew assembleRustoreRelease
 ```
 
-## Paid tier
+## No paid tier
 
-The store build can sell a Pro version through the billing client of the store.
-The FOSS build has no store library at all: `app/src/fdroid` provides a no-op
-implementation, and `STORE_FEATURES_ENABLED` is `false` there, so nothing is
-limited. The store build sets that flag to `true`, which turns on the limits.
+ADB Captain has no Pro version and no in-app purchases. Every feature,
+including unlimited macros and the Markdown terminal export, is free in both
+builds. The `rustore` flavor differs only in the application id and signing
+key, so both APKs can be installed side by side.
 
-What Pro unlocks today:
+The project intentionally has no store billing dependency: RuStore BillingClient
+is deprecated, and shipping a purchase flow for features that are now free would
+only add weight and tracking. There is also no donation button in the app; the
+store page's own "support the developer" button is configured entirely in the
+RuStore console.
 
-- **Unlimited macros.** The free build keeps three.
-- **Export a terminal session as Markdown**, for pasting into a bug report.
+## Building
 
-Both are listed in `adb.captain.domain.model.ProFeature`. Adding another paid
-feature means adding a case there and one check where it matters, nothing else.
-
-### Setup in the store console
-
-1. Create the product in the RuStore console and enable in-app purchases.
-2. Note the console application id and the product id.
-3. Put them into `gradle.properties` (or pass them on the command line):
-
-```properties
-rustoreConsoleApplicationId=123456
-rustoreProductIds=pro
-rustoreDeeplinkScheme=adbcaptainrustore
-rustoreDeveloperPayload=adb-captain
-```
-
-The deeplink scheme has to match the intent filter in
-`app/src/rustore/AndroidManifest.xml`.
-
-### Building with the billing client
-
-The billing client lives on a maven repository of the store, so the build needs
-access to it:
-
-```kotlin
-// settings.gradle.kts
-maven { url = uri("https://artifactory-external.vkpartner.ru/artifactory/maven") }
-```
-
-The repository answers with 404 for requests that do not come from Russia. On a
-network that cannot reach it, the store flavor cannot be built.
-
-### Donation button
-
-The store build shows a "support the developer" button in the settings. It opens
-the listing of the app in the store, where the donation button of the store page
-is configured in the console. The FOSS build has neither the button nor the
-strings behind it.
+No extra maven repository, no `gradle.properties` keys and no store console
+setup are required. The store flavor builds offline with the same dependencies
+as the FOSS flavor.

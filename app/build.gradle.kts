@@ -30,9 +30,9 @@ android {
     defaultConfig {
         applicationId = "adb.captain"
         minSdk = 24
-        targetSdk = 36
-        versionCode = 7
-        versionName = "1.6"
+        targetSdk = 37
+        versionCode = 8
+        versionName = "1.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -81,36 +81,12 @@ android {
     productFlavors {
         create("fdroid") {
             dimension = "store"
-            // The FOSS build has no store, so it never limits anything.
-            buildConfigField("boolean", "STORE_FEATURES_ENABLED", "false")
             // Pure FOSS build for F-Droid and GitHub Releases. All features, no tracking.
             signingConfig = if (keystoreProps != null) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
         }
         create("rustore") {
             dimension = "store"
-            // The store build gates the paid features behind a purchase.
-            buildConfigField("boolean", "STORE_FEATURES_ENABLED", "true")
-            buildConfigField(
-                "String",
-                "RUSTORE_CONSOLE_APPLICATION_ID",
-                "\"${project.findProperty("rustoreConsoleApplicationId") ?: "0"}\""
-            )
-            buildConfigField(
-                "String",
-                "RUSTORE_DEEPLINK_SCHEME",
-                "\"${project.findProperty("rustoreDeeplinkScheme") ?: "adbcaptainrustore"}\""
-            )
-            buildConfigField(
-                "String",
-                "RUSTORE_DEVELOPER_PAYLOAD",
-                "\"${project.findProperty("rustoreDeveloperPayload") ?: "adb-captain"}\""
-            )
-            buildConfigField(
-                "String",
-                "RUSTORE_PRODUCT_IDS",
-                "\"${project.findProperty("rustoreProductIds") ?: "pro"}\""
-            )
-            // Same FOSS build for RuStore. No paid features, no analytics.
+            // Same FOSS build for RuStore. All features, no analytics.
             // Unique package so it can be installed alongside the F-Droid build.
             applicationId = "adb.captain.rustore"
             // Store-specific source set (app/src/rustore) makes Russian the
@@ -155,9 +131,6 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
-    // Store build only. The FOSS build never sees a store library.
-    "rustoreImplementation"(platform("ru.rustore.sdk:bom:10.0.0"))
-    "rustoreImplementation"("ru.rustore.sdk:billingclient")
     // Material 3 Expressive components (LoadingIndicator, ButtonGroup, FloatingToolbar, MaterialShapes)
     implementation("androidx.compose.material3:material3:1.5.0-alpha20")
     implementation(libs.androidx.compose.material.icons.extended)
@@ -195,6 +168,7 @@ dependencies {
     implementation("dev.rikka.shizuku:provider:13.1.5")
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)

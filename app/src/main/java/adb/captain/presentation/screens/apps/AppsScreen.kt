@@ -19,7 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -154,7 +154,7 @@ fun AppsScreen(
                     Icon(Icons.Default.SelectAll, contentDescription = stringResource(R.string.apps_select_all))
                 }
                 IconButton(onClick = { showIntentLauncher = true }) {
-                    Icon(Icons.Default.Send, contentDescription = stringResource(R.string.intent_title))
+                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = stringResource(R.string.intent_title))
                 }
                 Box {
                     var exportMenu by remember { mutableStateOf(false) }
