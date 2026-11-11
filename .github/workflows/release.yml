@@ -168,6 +168,53 @@ jobs:
             sha256sum "$apk"
           done
 
+      - name: Compose release notes
+        env:
+          TAG: ${{ steps.ver.outputs.tag }}
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          set -euo pipefail
+          code=$(grep -oP 'versionCode\s*=\s*\K[0-9]+' app/build.gradle.kts)
+          en="fastlane/metadata/android/en-US/changelogs/${code}.txt"
+          ru="fastlane/metadata/android/ru-RU/changelogs/${code}.txt"
+
+          {
+            echo "**ADB Captain** — rootless ADB toolkit powered by Shizuku."
+            echo
+            if [ -f "$en" ]; then
+              echo "## What's new"
+              echo
+              tail -n +2 "$en"
+              echo
+            fi
+            if [ -f "$ru" ]; then
+              echo "## Что нового"
+              echo
+              tail -n +2 "$ru"
+              echo
+            fi
+
+            echo "## Downloads"
+            echo
+            echo "| File | Size | SHA-256 |"
+            echo "| --- | --- | --- |"
+            for apk in app/build/outputs/apk/*/release/adb-captain-*.apk; do
+              echo "| \`$(basename "$apk")\` | $(du -h "$apk" | cut -f1) | \`$(sha256sum "$apk" | cut -d' ' -f1)\` |"
+            done
+            echo
+            echo "- \`adb-captain-${TAG}.apk\` is the F-Droid build (\`adb.captain\`), signed with the project release key."
+            echo "- \`adb-captain-rustore-${TAG}.apk\` is the RuStore build (\`adb.captain.rustore\`), Russian by default. It has a separate signature, so both APKs can be installed side by side."
+            echo
+            echo "## Build"
+            echo
+            echo "- versionName \`${VERSION}\`, versionCode \`${code}\`"
+            echo "- Commit \`${GITHUB_SHA}\`"
+            echo "- AGPL-3.0-or-later. No ads, no analytics, no accounts, no billing."
+            echo "- Reproducible: this tag is rebuilt a second time in CI and compared byte for byte against the APK attached here."
+          } > release-notes.md
+
+          head -30 release-notes.md
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -175,20 +222,5 @@ jobs:
           name: ADB Captain ${{ steps.ver.outputs.tag }}
           draft: true
           overwrite_files: true
-          body: |
-            **ADB Captain** — rootless ADB toolkit powered by Shizuku.
-
-            ## What's in this release
-
-            - Terminal: run any ADB command (pm, am, dumpsys, settings, input), autocomplete from history
-            - Apps: installed packages in one list, user/system separated, safety ratings
-            - Devices: model, Android version, battery, connection status, reboot, screenshots
-            - Logcat: live system log, filterable by level and text
-            - Sideload & tools: install APKs, screen recording, quick toggles, type text, open links
-
-            ## Build
-
-            - Flavor: `fdroid` (pure FOSS, no ads, no analytics, no accounts) — signed with the project release key
-            - Flavor: `rustore` (RuStore variant, Russian by default) — attached as `adb-captain-rustore-*.apk`
-            - License: AGPL-3.0-or-later
+          body_path: release-notes.md
           files: app/build/outputs/apk/*/release/adb-captain-*.apk
