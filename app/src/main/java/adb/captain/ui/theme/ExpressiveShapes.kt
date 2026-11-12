@@ -17,6 +17,10 @@ import androidx.compose.ui.graphics.Shape
 /**
  * Material 3 Expressive silhouettes. Each helper resolves a [MaterialShapes] polygon into a
  * [Shape] that can be handed to any component accepting a `shape` parameter.
+ *
+ * Concave silhouettes (cookie, softBurst, sunny) must not be combined with elevation or
+ * `Modifier.shadow`: Skia tessellates concave shadows on the render thread and can burn
+ * seconds per frame on some GPUs, which looks like a frozen UI.
  */
 object ExpressiveShape {
 

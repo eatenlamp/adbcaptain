@@ -89,8 +89,12 @@ fun WirelessAdbScreen(
     // Android 17 gates mDNS and LAN sockets behind ACCESS_LOCAL_NETWORK; without it the
     // system forces its own "choose a device" picker on every discovery request.
     val withPermissions: (Boolean, () -> Unit) -> Unit = { needsNotification, action ->
+        val hasLocalNetworkPermission = runCatching {
+            context.packageManager.getPermissionInfo(Manifest.permission.ACCESS_LOCAL_NETWORK, 0)
+        }.isSuccess
         val missing = buildList {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN &&
+            if (hasLocalNetworkPermission &&
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA &&
                 ContextCompat.checkSelfPermission(
                     context,
                     Manifest.permission.ACCESS_LOCAL_NETWORK

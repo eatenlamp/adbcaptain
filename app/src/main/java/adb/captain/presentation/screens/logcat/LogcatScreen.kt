@@ -183,6 +183,16 @@ fun LogcatScreen(
                 FloatingActionButton(
                     onClick = { viewModel.toggleStream() },
                     shape = ExpressiveShape.sunny(),
+                    // VerySunny is concave, and Skia tessellates concave shadows on the
+                    // render thread. On some GPUs (POCO F6 / Adreno + Vulkan) one such
+                    // frame costs several seconds and the UI thread ANRs while waiting.
+                    // The shape stays, the drop shadow is simply disabled.
+                    elevation = FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 0.dp,
+                        pressedElevation = 0.dp,
+                        focusedElevation = 0.dp,
+                        hoveredElevation = 0.dp
+                    ),
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 ) {
                     if (!uiState.isPaused) {
