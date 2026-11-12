@@ -220,7 +220,7 @@ jobs:
         with:
           tag_name: ${{ steps.ver.outputs.tag }}
           name: ADB Captain ${{ steps.ver.outputs.tag }}
-          draft: true
+          draft: false
           overwrite_files: true
           body_path: release-notes.md
           files: app/build/outputs/apk/*/release/adb-captain-*.apk
