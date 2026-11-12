@@ -1,4 +1,4 @@
-/*
+﻿/*
  * SPDX-FileCopyrightText: 2026 eatenlamp <https://github.com/eatenlamp>
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
@@ -8,6 +8,13 @@
 
 package adb.captain.presentation.screens.wireless
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -15,20 +22,24 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import adb.captain.service.WirelessPairingService
 import adb.captain.ui.theme.ExpressiveProgress
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import adb.captain.R
 import adb.captain.domain.model.SavedAdbDevice
 import adb.captain.domain.repository.RemoteAdbState
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +49,76 @@ fun WirelessAdbScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var pendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+
+    val startPairingService: () -> Unit = {
+        WirelessPairingService.start(context)
+        // The pairing dialog lives in Settings and closes if the user leaves it, so going
+        // there right away (with the notification already armed) is the intended flow.
+        runCatching {
+            context.startActivity(
+                Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+        }
+        scope.launch {
+            snackbarHostState.showSnackbar(context.getString(R.string.wireless_notify_started))
+        }
+    }
+
+    val permissionsLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        val action = pendingAction
+        pendingAction = null
+        when {
+            result[Manifest.permission.ACCESS_LOCAL_NETWORK] == false -> scope.launch {
+                snackbarHostState.showSnackbar(
+                    context.getString(R.string.wireless_local_network_permission)
+                )
+            }
+            result[Manifest.permission.POST_NOTIFICATIONS] == false -> scope.launch {
+                snackbarHostState.showSnackbar(context.getString(R.string.wireless_notify_permission))
+            }
+            else -> action?.invoke()
+        }
+    }
+
+    // Android 17 gates mDNS and LAN sockets behind ACCESS_LOCAL_NETWORK; without it the
+    // system forces its own "choose a device" picker on every discovery request.
+    val withPermissions: (Boolean, () -> Unit) -> Unit = { needsNotification, action ->
+        val missing = buildList {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN &&
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_LOCAL_NETWORK
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                add(Manifest.permission.ACCESS_LOCAL_NETWORK)
+            }
+            if (needsNotification &&
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                add(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+        if (missing.isEmpty()) {
+            action()
+        } else {
+            pendingAction = action
+            permissionsLauncher.launch(missing.toTypedArray())
+        }
+    }
+
+    val startNotificationPairing: () -> Unit = {
+        withPermissions(true, startPairingService)
+    }
 
     LaunchedEffect(uiState.message) {
         uiState.message?.let {
@@ -73,6 +154,8 @@ fun WirelessAdbScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            NotificationPairingCard(onStart = startNotificationPairing)
+
             ConnectionCard(
                 connection = uiState.connection,
                 isBusy = uiState.isBusy,
@@ -80,7 +163,7 @@ fun WirelessAdbScreen(
                 port = uiState.port,
                 onHostChange = viewModel::updateHost,
                 onPortChange = viewModel::updatePort,
-                onConnect = viewModel::connect,
+                onConnect = { withPermissions(false, viewModel::connect) },
                 onSave = viewModel::saveCurrent,
                 onDisconnect = viewModel::disconnect
             )
@@ -93,13 +176,13 @@ fun WirelessAdbScreen(
                 onHostChange = viewModel::updatePairHost,
                 onPortChange = viewModel::updatePairPort,
                 onCodeChange = viewModel::updatePairCode,
-                onPair = viewModel::pair
+                onPair = { withPermissions(false, viewModel::pair) }
             )
 
             if (uiState.savedDevices.isNotEmpty()) {
                 SavedDevicesCard(
                     devices = uiState.savedDevices,
-                    onConnect = viewModel::connectSaved,
+                    onConnect = { device -> withPermissions(false) { viewModel.connectSaved(device) } },
                     onDelete = viewModel::deleteSaved
                 )
             }
@@ -112,6 +195,49 @@ fun WirelessAdbScreen(
                 onCommandChange = viewModel::updateShellCommand,
                 onRun = viewModel::runShell
             )
+        }
+    }
+}
+
+@Composable
+private fun NotificationPairingCard(onStart: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.WifiTethering,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    stringResource(R.string.wireless_notify_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                stringResource(R.string.wireless_notify_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Spacer(Modifier.height(12.dp))
+            Button(onClick = onStart) {
+                Icon(
+                    Icons.Default.NotificationsActive,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.wireless_notify_button))
+            }
         }
     }
 }
@@ -306,7 +432,7 @@ private fun SavedDevicesCard(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(device.name, style = MaterialTheme.typography.bodyLarge)
                         Text(
-                            device.endpoint + if (device.autoReconnect) " • auto" else "",
+                            device.endpoint + if (device.autoReconnect) " вЂў auto" else "",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.outline
                         )

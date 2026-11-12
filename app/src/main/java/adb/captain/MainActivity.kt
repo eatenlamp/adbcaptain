@@ -21,6 +21,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -181,7 +182,16 @@ class MainActivity : AppCompatActivity(), Shizuku.OnRequestPermissionResultListe
                                         Screen.primaryScreens.forEach { screen ->
                                             NavigationBarItem(
                                                 icon = { Icon(screen.icon, contentDescription = null) },
-                                                label = { Text(stringResource(screen.titleRes)) },
+                                                label = {
+                                                    // "Приложения" does not fit at the default
+                                                    // label size and used to break mid-word.
+                                                    Text(
+                                                        text = stringResource(screen.titleRes),
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                },
                                                 selected = isSelected(screen),
                                                 onClick = { navigateTo(screen.route) }
                                             )

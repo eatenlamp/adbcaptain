@@ -53,7 +53,10 @@ enum class StepFailure {
 object MacroVariables {
     const val SERIAL = "serial"
 
-    private val pattern = Regex("""\{\{\s*([a-zA-Z0-9_.-]+)\s*}}""")
+    // Both braces are escaped on purpose. The JVM accepts a bare `}}`, but
+    // Android compiles patterns with ICU, which rejects it with "Syntax error
+    // near index ..." and takes the whole object down with ExceptionInInitializerError.
+    private val pattern = Regex("""\{\{\s*([a-zA-Z0-9_.-]+)\s*\}\}""")
 
     fun names(macro: Macro): List<String> = names(macro.steps.map { it.command })
 

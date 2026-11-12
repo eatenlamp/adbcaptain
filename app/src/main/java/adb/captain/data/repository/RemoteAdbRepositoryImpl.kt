@@ -59,6 +59,9 @@ class RemoteAdbRepositoryImpl @Inject constructor(
     override suspend fun pair(host: String, port: Int, code: String): Result<Unit> =
         withContext(Dispatchers.IO) {
             runCatching {
+                // LibADB blocks until the exchange finishes and throws when the code is
+                // rejected; its boolean result is always true, so failure arrives as an
+                // exception and is turned into Result.failure by runCatching.
                 manager.pair(host.trim(), port, code.trim())
                 Unit
             }

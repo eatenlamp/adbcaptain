@@ -12,6 +12,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Android 17: mDNS discovery and LAN sockets (wireless ADB) are gated behind this. -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <!-- MediaStore не требует прав с Android 10; ниже нужен только для API 24-28 -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
@@ -76,6 +78,21 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="floating overlay for screenshots and screen recording" />
         </service>
+
+        <!-- Waits for the wireless debugging pairing dialog and accepts the code
+             straight from the notification shade. -->
+        <service
+            android:name=".service.WirelessPairingService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="wireless ADB pairing over mDNS" />
+        </service>
+
+        <receiver
+            android:name=".service.PairingCodeReceiver"
+            android:exported="false" />
 
         <!-- Command bridge for the paid ADB Orchestra companion. -->
         <service

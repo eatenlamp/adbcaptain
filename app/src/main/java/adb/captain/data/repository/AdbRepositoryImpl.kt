@@ -258,7 +258,10 @@ class AdbRepositoryImpl @Inject constructor(
     }
 
     override suspend fun listFiles(path: String): List<FileEntry> = withContext(Dispatchers.IO) {
-        val output = executeCommand("ls -la \"$path\"")
+        // The trailing slash makes toybox `ls` follow a symlinked directory such as
+        // /sdcard instead of printing the link itself as the only entry.
+        val target = path.trimEnd('/') + "/"
+        val output = executeCommand("ls -la \"$target\"")
         if (output.startsWith("Error") || output.startsWith("Exception")) return@withContext emptyList()
         parseLsOutput(output, path)
     }
@@ -1203,13 +1206,16 @@ class AdbRepositoryImpl @Inject constructor(
             if (perms.startsWith(".")) continue
             val size = fields[4].toLongOrNull() ?: 0L
             val modified = "${fields[5]} ${fields[6]} ${fields[7]}"
-            val name = fields.drop(8).joinToString(" ")
-            if (name == "." || name.isEmpty()) continue
-            if (name == "..") continue
+            // `ls -l` prints symlinks as "name -> target"; keep just the name so the
+            // entry stays inside the current directory when it is opened.
+            val rawName = fields.drop(8).joinToString(" ").substringBefore(" -> ")
+            val name = rawName.substringAfterLast('/').ifEmpty { rawName }
+            if (name == "." || name == ".." || name.isEmpty()) continue
+            val parent = parentPath.trimEnd('/')
             entries.add(
                 FileEntry(
                     name = name,
-                    path = if (parentPath == "/") "/$name" else "$parentPath/$name",
+                    path = if (parent.isEmpty()) "/$name" else "$parent/$name",
                     isDirectory = isDir || isLink,
                     size = size,
                     modified = modified
