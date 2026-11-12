@@ -1,4 +1,4 @@
-Version 1.7.1
+Version 1.7
 
 Wireless ADB:
 - Pair this phone without leaving Settings: the six-digit code is typed right in the notification
