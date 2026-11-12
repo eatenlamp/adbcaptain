@@ -224,3 +224,13 @@ jobs:
           overwrite_files: true
           body_path: release-notes.md
           files: app/build/outputs/apk/*/release/adb-captain-*.apk
+
+      - name: Sync title and notes on the existing release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.ver.outputs.tag }}
+        run: |
+          set -euo pipefail
+          gh release edit "$TAG" \
+            --title "ADB Captain $TAG" \
+            --notes-file release-notes.md
