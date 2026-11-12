@@ -21,6 +21,7 @@ import java.security.KeyPairGenerator
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.SecureRandom
+import java.security.Signature
 import java.security.cert.Certificate
 import java.security.cert.CertificateFactory
 import java.security.KeyStore
@@ -68,8 +69,12 @@ class AdbConnectionManager @Inject constructor(
 
         // The envelope written by this version wins, but a key pair stored by any older
         // install is still read verbatim, so upgrading never forces a re-pair.
-        val secure = loadSecureKeyPair(secureKeyFile, certFile)
-        val legacy = if (secure == null) loadKeyPair(legacyKeyFile, certFile) else null
+        val secure = loadSecureKeyPair(secureKeyFile, certFile)?.takeIf { matchesOrLog(it) }
+        val legacy = if (secure == null) {
+            loadKeyPair(legacyKeyFile, certFile)?.takeIf { matchesOrLog(it) }
+        } else {
+            null
+        }
         val loaded = secure ?: legacy
 
         if (loaded != null) {
@@ -122,7 +127,11 @@ class AdbConnectionManager @Inject constructor(
         // Read it straight back, so a truncated or miswritten file is caught here and
         // never becomes the only copy of the key.
         val verified = loadSecureKeyPair(keyFile, File(appContext.filesDir, CERT_FILE))
-        check(verified != null && verified.first == privateKey) { "secure ADB key store failed verification" }
+        check(
+            verified != null &&
+                verified.first.encoded.contentEquals(privateKey.encoded) &&
+                verified.second.encoded.contentEquals(certificate.encoded)
+        ) { "secure ADB key store failed verification" }
     }
 
     private fun loadSecureKeyPair(keyFile: File, certFile: File): Pair<PrivateKey, Certificate>? {
@@ -172,6 +181,32 @@ class AdbConnectionManager @Inject constructor(
     override fun getCertificate(): Certificate = certificate
 
     override fun getDeviceName(): String = "ADB Captain"
+
+    /**
+     * ADB's TLS handshake sends the stored certificate and proves possession of the stored
+     * private key. If the two do not belong together (an interrupted write can leave a fresh
+     * key next to an old certificate) every pairing dies with
+     * CERTIFICATE_AND_PRIVATE_KEY_MISMATCH, so such a pair is treated as missing and replaced.
+     */
+    private fun matchesOrLog(pair: Pair<PrivateKey, Certificate>): Boolean {
+        val matches = runCatching {
+            val probe = "adbcaptain-adb-key-probe".toByteArray()
+            val signature = Signature.getInstance("SHA256withRSA").run {
+                initSign(pair.first)
+                update(probe)
+                sign()
+            }
+            Signature.getInstance("SHA256withRSA").run {
+                initVerify(pair.second.publicKey)
+                update(probe)
+                verify(signature)
+            }
+        }.getOrDefault(false)
+        if (!matches) {
+            Log.w(TAG, "Stored ADB key does not match its certificate, generating a new pair")
+        }
+        return matches
+    }
 
     private fun loadKeyPair(keyFile: File, certFile: File): Pair<PrivateKey, Certificate>? {
         if (!keyFile.exists() || !certFile.exists()) return null

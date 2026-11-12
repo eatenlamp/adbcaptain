@@ -1199,16 +1199,22 @@ class AdbRepositoryImpl @Inject constructor(
             val trimmed = line.trim()
             if (trimmed.isEmpty() || trimmed.startsWith("total")) continue
             val fields = trimmed.split(SPACE_REGEX)
-            if (fields.size < 9) continue
+            // `ls -l` prints: perms, links, owner, group, size, date, time, name.
+            // Character and block devices replace the size with "major, minor", which
+            // shifts the date by one column.
+            if (fields.size < 8) continue
             val perms = fields[0]
             val isDir = perms.startsWith("d")
             val isLink = perms.startsWith("l")
             if (perms.startsWith(".")) continue
-            val size = fields[4].toLongOrNull() ?: 0L
-            val modified = "${fields[5]} ${fields[6]} ${fields[7]}"
+            val deviceFile = fields[4].endsWith(",")
+            val dateIndex = if (deviceFile) 6 else 5
+            if (fields.size < dateIndex + 3) continue
+            val size = if (deviceFile) 0L else fields[4].toLongOrNull() ?: 0L
+            val modified = "${fields[dateIndex]} ${fields[dateIndex + 1]}"
             // `ls -l` prints symlinks as "name -> target"; keep just the name so the
             // entry stays inside the current directory when it is opened.
-            val rawName = fields.drop(8).joinToString(" ").substringBefore(" -> ")
+            val rawName = fields.drop(dateIndex + 2).joinToString(" ").substringBefore(" -> ")
             val name = rawName.substringAfterLast('/').ifEmpty { rawName }
             if (name == "." || name == ".." || name.isEmpty()) continue
             val parent = parentPath.trimEnd('/')
