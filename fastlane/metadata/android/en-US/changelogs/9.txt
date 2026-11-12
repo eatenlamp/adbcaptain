@@ -1,0 +1,11 @@
+Version 1.7.1
+
+Wireless ADB:
+- Pair this phone without leaving Settings: the six-digit code is typed right in the notification
+- The pairing dialog no longer has to be reopened, the connection is established as soon as the code is accepted
+- Android 17: Wi-Fi ADB asks for the local network permission instead of opening the system device picker
+- A stored ADB key that no longer matches its certificate is detected and replaced, fixing CERTIFICATE_AND_PRIVATE_KEY_MISMATCH while pairing
+
+Fixes:
+- Logs: the concave play button cast a shadow that could freeze the screen for seconds and trigger "App isn't responding"
+- Files: /sdcard listed only the entries whose names contain spaces
