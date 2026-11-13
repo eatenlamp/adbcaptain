@@ -107,11 +107,24 @@ jobs:
 
           meta=fdroid/adb.captain.yml
           if [ -f "$meta" ]; then
-            sed -i -E "s/^  - versionName: .*/  - versionName: '$newv'/" "$meta"
-            sed -i -E "s/^    versionCode: .*/    versionCode: $newc/" "$meta"
-            sed -i -E "s/^    commit: .*/    commit: $src_sha/" "$meta"
-            sed -i -E "s/^CurrentVersion: .*/CurrentVersion: '$newv'/" "$meta"
-            sed -i -E "s/^CurrentVersionCode: .*/CurrentVersionCode: $newc/" "$meta"
+            python3 - "$meta" "$newv" "$newc" "$src_sha" <<'PY'
+import re, sys
+
+path, name, code, commit = sys.argv[1:5]
+text = open(path, encoding="utf-8").read()
+entry = (
+    f"\n  - versionName: '{name}'\n"
+    f"    versionCode: {code}\n"
+    f"    commit: {commit}\n"
+    "    subdir: app\n"
+    "    gradle:\n"
+    "      - fdroid\n"
+)
+text = text.replace("\nAllowedAPKSigningKeys:", entry + "\nAllowedAPKSigningKeys:", 1)
+text = re.sub(r"^CurrentVersion: .*$", f"CurrentVersion: '{name}'", text, flags=re.M)
+text = re.sub(r"^CurrentVersionCode: .*$", f"CurrentVersionCode: {code}", text, flags=re.M)
+open(path, "w", encoding="utf-8").write(text)
+PY
             git add "$meta"
             git commit -m "Sync F-Droid metadata for $tag"
           fi
